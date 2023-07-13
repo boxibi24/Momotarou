@@ -1,0 +1,821 @@
+import json
+from time import perf_counter
+import dill
+from ui.NodeEditor.utils import *
+from ui.NodeEditor.classes.link import Link
+from ui.NodeEditor.classes.pin import OutputPinType, InputPinType
+from ui.NodeEditor.classes.node import NodeTypeFlag
+from multiprocessing import Queue
+
+
+class DPGNodeEditor:
+
+    @property
+    def id(self) -> int:
+        return self._id
+
+    @property
+    def node_instance_dict(self) -> dict:
+        return self._node_instance_dict
+
+    @property
+    def data_link_list(self) -> list:
+        return self._data_link_list
+
+    @property
+    def flow_link_list(self) -> list:
+        return self._flow_link_list
+
+    @property
+    def node_data_link_dict(self) -> dict:
+        return self._node_data_link_dict
+
+    @node_data_link_dict.setter
+    def node_data_link_dict(self, value):
+        self._node_data_link_dict = value
+
+    @property
+    def node_flow_link_dict(self) -> dict:
+        return self._node_flow_link_dict
+
+    @node_flow_link_dict.setter
+    def node_flow_link_dict(self, value):
+        self._node_flow_link_dict = value
+
+    @property
+    def node_dict(self) -> dict:
+        return self._node_dict
+
+    @property
+    def export_event_dict(self) -> dict:
+        return self._export_event_dict
+
+    @export_event_dict.setter
+    def export_event_dict(self, value: dict):
+        self._export_event_dict = value
+
+    @property
+    def event_dict(self) -> OrderedDict:
+        return self._event_dict
+
+    def __init__(self,
+                 parent_tab,
+                 splitter_panel,
+                 setting_dict=None,
+                 imported_module_dict=None,
+                 use_debug_print=False,
+                 logging_queue=Queue(),
+                 ):
+        # ------ SETTINGS ------
+        self._use_debug_print = use_debug_print
+        if setting_dict is None:
+            self._setting_dict = {}
+        else:
+            self._setting_dict = setting_dict
+        # dict to keep track of the imported modules
+        if imported_module_dict is None:
+            self._imported_module_dict = {}
+        else:
+            self._imported_module_dict = imported_module_dict
+        # ----- PARENT ITEMS -----
+        # Shared splitter panel from master app
+        self.splitter_panel = splitter_panel
+        # ----- ATTRIBUTES ------
+        self.last_pos = [0, 0]
+        self._node_instance_dict = {}
+        self._node_dict = {}
+        self._flow_link_list = []
+        self._data_link_list = []
+        self._node_data_link_dict = OrderedDict([])
+        self._node_flow_link_dict = OrderedDict([])
+        # dict of event nodes as keys and their first connected node as value
+        self._export_event_dict = {}
+        # dict of events nodes for splitter entries
+        self._event_dict = OrderedDict([])
+
+        # ------ LOGGER ----------
+        self.logger = create_queueHandler_logger(__name__ + '_' + dpg.get_item_label(parent_tab),
+                                                 logging_queue, self._use_debug_print)
+        self.logger.info('***** Loading Child Node Editor *****')
+
+        self._id = dpg.add_node_editor(
+            callback=self.callback_link,
+            delink_callback=self.callback_delink,
+            minimap=True,
+            minimap_location=dpg.mvNodeMiniMap_Location_BottomRight,
+            parent=parent_tab
+        )
+
+    def callback_file_save(self, sender, app_data):
+        # Aggregate the following into 1 json dict:
+        # 1: Flow link list
+        # 2: Data link list
+        # 3: Node dict
+        setting_dict = OrderedDict()
+        # Deconstruct flow link instances into list of [source_pin_tag, target_pin_tag]
+        flow_link_list = []
+        for link in self.flow_link_list:
+            source_pin_tag = link.source_pin_instance.pin_tag
+            target_pin_tag = link.target_pin_instance.pin_tag
+            flow_link_list.append([source_pin_tag, target_pin_tag])
+        # Deconstruct flow link instances into list of [source_pin_tag, target_pin_tag]
+        data_link_list = []
+        for link in self.data_link_list:
+            source_pin_tag = link.source_pin_instance.pin_tag
+            target_pin_tag = link.target_pin_instance.pin_tag
+            data_link_list.append([source_pin_tag, target_pin_tag])
+        # Refresh the events list
+        setting_dict['events'] = self.export_event_dict
+        setting_dict.update({'flows': flow_link_list, 'data_links': data_link_list})
+        # Update the is exposed status of the nodes and the pins value
+        try:
+            for node_info in self.node_dict['nodes']:
+                node_instance = node_info['node_instance']
+                node_info.update({'is_exposed': node_instance.is_exposed})
+                for pin_info in node_info['pins']:
+                    pin_value = pin_info.get('value', None)
+                    if pin_value is None:
+                        continue
+                    # If source
+                    pin_info.update({'value': dpg_get_value(pin_info['pin_instance'].value_tag)})
+                # Clears out complex structs inside nodes' internal_data since pickle can't handle serializing them
+                for key in node_instance.internal_data.keys():
+                    if node_instance.internal_data[key].__class__ in [str, int, float, type(None)]:
+                        continue
+                    node_instance.internal_data[key] = None
+        except KeyError:
+            self.logger.exception('Cannot export an empty node graph')
+            return 1
+
+        # Deep copying existing node dict, so we don't mistakenly modify it
+        copy_node_dict = None
+        try:
+            # Used dill instead of deep copy cause dict contains references to modules
+            # which pickle does not support deserializing
+            copy_node_dict = dill.loads(dill.dumps(self.node_dict))
+        except TypeError:
+            self.logger.exception("Could not perform deep copy of node dict")
+            # pprint(self.node_dict)
+        except Exception:
+            self.logger.exception("Something wrong copying node dict")
+        if copy_node_dict:
+            for node in copy_node_dict['nodes']:
+                # Remove redundant entries : node_instance
+                node.pop('node_instance')
+                # Remove redundant entries : pin_instances
+                for pin in node['pins']:
+                    pin.pop('pin_instance')
+                # Update node position
+                node['position']['x'], node['position']['y'] = dpg.get_item_pos(node['id'])
+
+            setting_dict.update(copy_node_dict)
+
+            with open(app_data['file_path_name'], 'w') as fp:
+                json.dump(setting_dict, fp, indent=4)
+
+            self.logger.info('**** File saved ****')
+            self.logger.debug(f'    sender          :     {str(sender)}')
+            self.logger.debug(f'    data            :     {str(app_data)}')
+            self.logger.debug(f'    setting_dict    :     {setting_dict}')
+            self.logger.debug(f'    node_dict       :     {self.node_dict}')
+        else:
+            self.logger.critical("Data is null, export terminated!")
+
+    def callback_file_import(self, sender, app_data):  # Import means to append the existing node graph
+        self.logger.info('**** Start file importing ****')
+        self.logger.debug(f"Sender : {sender}")
+        self.logger.debug(f"Appdata: {app_data}")
+        pin_mapping = {}
+        if app_data['file_name'] != '.':
+            # Read JSON
+            try:
+                with open(app_data['file_path_name']) as fp:
+                    setting_dict = json.load(fp)
+            except FileNotFoundError:
+                self.logger.exception('File does not exist!')
+            if not setting_dict:
+                self.logger.error("Could not load Json file")
+                raise Exception("Could not load Json for import!")
+            self.logger.debug(f"Imported setting dict: {setting_dict}")
+            # Initialize Node
+            for node in setting_dict['nodes']:
+                node_type = node.get('type', None)
+                if not node_type:
+                    self.logger.error(f"Could not find node type from this node: {node}")
+                import_path = '.'.join(node_type.split('.')[:-1])
+                self.logger.debug(f'import path : {import_path}')
+                module = self._imported_module_dict.get(import_path, None)
+                self.logger.debug(f"Node to be imported: {node}")
+                self.logger.debug(f'current module dict: {self._imported_module_dict}')
+                self.logger.debug(f' Module to be imported: {module}')
+                if module:
+                    # Creating new nodes using imported info
+                    added_node = self.callback_add_node(sender='Menu_' + node['label'],
+                                                        app_data=False,
+                                                        user_data=[import_path, module],
+                                                        pos=[node['position']['x'], node['position']['y']])
+                    # Perform mapping new pins IDs to old ones to replicate exported connections
+                    imported_pins = node.get('pins', None)
+                    if imported_pins:
+                        # Loop through a list of to-be-imported pins
+                        for imported_pin in imported_pins:
+                            imported_pin_label = imported_pin.get('label')
+                            if imported_pin_label:
+                                for added_pin in added_node.pin_list:
+                                    # Get the matching pin id from the newly created pins list of the newly created node
+                                    if imported_pin_label == added_pin['label']:
+                                        try:
+                                            pin_mapping.update({imported_pin['id']: added_pin['id']})
+                                        except KeyError:
+                                            self.logger.exception('Error querying value from pin dicts:')
+                                            break
+
+                            else:
+                                self.logger.error(f"Could not get label for this pin : {imported_pin}")
+                                continue
+                    else:
+                        self.logger.error(f'Failed to query pins info for this node : {node}')
+                    # Perform applying imported pin value to newly created pins
+                    for new_pin_info in added_node.pin_list:
+                        # if this new pin does not require value then skip
+                        if new_pin_info.get('value', None):
+                            continue
+                        # Get value from imported pin info that matches label:
+                        imported_value = None
+                        # Also store the tag of 'Prompt user for input?' value if found
+                        is_exposed_value_tag = None
+                        for imported_pin_info in node['pins']:
+                            if imported_pin_info['label'] == new_pin_info['label']:
+                                imported_value = imported_pin_info.get('value', None)
+                        if new_pin_info['label'] == 'Prompt user for input?':
+                            is_exposed_value_tag = new_pin_info['pin_instance'].value_tag
+                        if imported_value is None:
+                            continue
+                        # Set the imported value to this new pin's value
+                        try:
+                            dpg_set_value(new_pin_info['pin_instance'].value_tag, imported_value)
+                        except:
+                            self.logger.exception(
+                                f'Something wrong setting up the pin value of this pin {new_pin_info}')
+
+                        # Emulate a pin value change callback explicitly for 'Prompt user for input?' pin'
+                        if is_exposed_value_tag:
+                            added_node.on_pin_value_change(is_exposed_value_tag)
+                            continue
+                        # Else only do a normal internal input update
+                        else:
+                            added_node.update_internal_input_data()
+                            continue
+
+                else:
+                    self.logger.error(f"Could not find an entry in imported module dict for {node['type']}")
+                self.logger.debug(f'pin_mapping: {pin_mapping}')
+
+            # Initialize Flow links
+            for link in setting_dict['flows']:
+                self.callback_link(sender=self.id, app_data=[pin_mapping[link[0]], pin_mapping[link[1]]])
+            # Initialize Data Links
+            for link in setting_dict['data_links']:
+                self.callback_link(sender=self.id, app_data=[pin_mapping[link[0]], pin_mapping[link[1]]])
+
+            self.logger.info('**** File imported ****')
+            self.logger.debug(f'     sender              :   {sender}')
+            self.logger.debug(f'     app_data            :   {app_data}')
+            self.logger.debug(f'     self.data_link_list :   {self.data_link_list}')
+            self.logger.debug(f'     self.flow_link_list :   {self.flow_link_list}')
+            self.logger.debug(f'     node_connection_dict:   {self.node_data_link_dict}')
+
+    def callback_file_open(self, sender, app_data):
+
+        # First clear out everything from the current node graph
+        self.node_dict.clear()
+        self.flow_link_list.clear()
+        self.data_link_list.clear()
+        for node_instance in self.node_instance_dict.values():
+            dpg.delete_item(node_instance.node_tag)
+        self.node_instance_dict.clear()
+        self.logger.info('**** Cleared current node graph ****')
+        self.logger.debug(f'     sender              :   {sender}')
+        self.logger.debug(f'     app_data            :   {app_data}')
+        self.logger.debug(f'     self.data_link_list :   {self.data_link_list}')
+        self.logger.debug(f'     self.flow_link_list :   {self.flow_link_list}')
+        self.logger.debug(f'     node_connection_dict:   {self.node_data_link_dict}')
+        self.logger.debug(f'     node_instance_dict  :   {self.node_instance_dict}')
+        # Then perform file JSON import
+        self.callback_file_import(sender, app_data)
+
+    def callback_add_node(self, sender, app_data, user_data, pos=None):
+        """
+        Callback function of adding a node from menu bar
+        """
+        # For variables, override node_label, stored in user_data[2]
+        label = None
+        try:
+            label = user_data[2]
+        except IndexError:
+            pass
+        # Grab node instance using node label passed in as event
+        intermediate_node = user_data[1].Node(
+            parent=self.id,
+            setting_dict=self._setting_dict,
+            pos=[0, 0],
+            label=label
+        )
+        # Get current node_editor instance
+        # Stack nodes nicely if found last clicked position
+        if self.last_pos is not None and pos is None:
+            self.last_pos[0] += 10
+            self.last_pos[1] += 10
+
+        # print(self.node_instance_dict)
+        if pos:
+            intermediate_node.pos = pos
+        else:
+            intermediate_node.pos = self.last_pos
+        # Clear node selection after adding a node to avoid last_pos being overriden
+        dpg.clear_selected_nodes(node_editor=self.id)
+        # For debugging event node
+        # TODO: Remove this hardcode
+        if sender == 'Menu_Button Event':
+            node = intermediate_node.create_node(callback=self.execute_event)
+        else:
+            node = intermediate_node.create_node()
+        # Store event list to display it on Splitter
+        if node.node_type == NodeTypeFlag.Event:
+            # temp_dict = self.splitter_panel.event_dict
+            # temp_dict.update({node.node_tag: {'name': node.node_label, 'category': 'default'}})
+            self._event_dict.update({node.node_tag: {'name': node.node_label, 'category': 'default'}})
+            self.splitter_panel.event_dict = self._event_dict
+        # Store the node instance along with its tag
+        self.node_instance_dict[node.node_tag] = node
+        # add pins entries to private _node_dict
+        if not self._node_dict.get('nodes'):
+            self._node_dict['nodes'] = []
+        self._node_dict['nodes'].append(OrderedDict({
+            'id': node.node_tag,
+            'label': node.node_label,
+            'node_instance': node,
+            'pins': node.pin_list,
+            'meta_type': node.node_type,
+            'type': user_data[0] + '.' + node.__class__.__name__,
+            'is_exposed': node.is_exposed,
+            'position':
+                {
+                    'x': self.last_pos[0],
+                    'y': self.last_pos[1]
+                }
+        }))
+        self.node_data_link_dict = sort_data_link_dict(self.data_link_list)
+        self.node_flow_link_dict = sort_flow_link_dict(self.flow_link_list)
+        self.logger.info('**** Node added ****')
+        self.logger.debug(f'    Node ID         :    {str(node.node_tag)}')
+        self.logger.debug(f'    sender          :    {str(sender)}')
+        self.logger.debug(f'    data            :    {str(app_data)}')
+        self.logger.debug(f'    user_data       :    {str(user_data)}')
+        return node
+
+    def callback_link(self, sender, app_data: list):
+        source_pin_type = None
+        destination_pin_type = None
+        source_pin_tag = dpg.get_item_alias(app_data[0])
+        target_pin_tag = dpg.get_item_alias(app_data[1])
+        source_pin_instance = None
+        target_pin_instance = None
+        source_node_tag = None
+        target_node_tag = None
+        source_node_instance = None
+        target_node_instance = None
+        link = None
+        # Loop through the node_dict to find pin id that matches with source and get its type
+        found_flag = False
+        for node in self.node_dict['nodes']:
+            pin_dict_list = node['pins']
+            for pin_dict in pin_dict_list:
+                if pin_dict['id'] == source_pin_tag:
+                    source_pin_type = pin_dict['pin_type']
+                    found_flag = True
+                    source_node_tag = node['id']
+                    source_pin_instance = pin_dict['pin_instance']
+                    source_node_instance = node['node_instance']
+                    break
+            if found_flag:
+                break
+        # Loop through the node_dict to find pin id that matches with target and get its type
+        found_flag = False
+        for node in self.node_dict['nodes']:
+            pin_dict_list = node['pins']
+            for pin_dict in pin_dict_list:
+                if pin_dict['id'] == target_pin_tag:
+                    destination_pin_type = pin_dict['pin_type']
+                    found_flag = True
+                    target_node_tag = node['id']
+                    target_pin_instance = pin_dict['pin_instance']
+                    target_node_instance = node['node_instance']
+                    break
+            if found_flag:
+                break
+
+        # Perform "Type check" before linking
+        if not source_pin_type:
+            self.logger.warning("Could not get source pin type")
+        elif not destination_pin_type:
+            self.logger.warning("Could not get target pin type")
+        # TODO: implement ways to prevent nodes looping
+        # elif destination_node_tag in self.node_connection_dict:
+        #     raise RuntimeError("Cannot loop the nodes")
+        elif not (source_pin_type == destination_pin_type or destination_pin_type == InputPinType.WildCard):
+            self.logger.warning("Cannot connect pins with different types")
+        # Cannot connect exec pin to wildcard pins also
+        elif source_pin_type == OutputPinType.Exec and destination_pin_type == InputPinType.WildCard:
+            self.logger.warning("Cannot connect exec pins to wildcards")
+        elif not source_pin_instance:
+            self.logger.warning("Cannot find source pin instance from node dict")
+        elif not target_pin_instance:
+            self.logger.warning("Cannot find target pin instance from node dict")
+        else:
+            # First link occurrence
+            if source_pin_type == OutputPinType.Exec:  # Direct flow links to flow_link_list
+                if len(self.flow_link_list) == 0:
+                    # Also disallowing already connected Exec pin to perform further linkage
+                    if not source_pin_instance.is_connected:
+                        try:
+                            link = Link(source_node_tag,
+                                        source_node_instance,
+                                        source_pin_instance,
+                                        source_pin_type,
+                                        target_node_tag,
+                                        target_node_instance,
+                                        target_pin_instance,
+                                        destination_pin_type,
+                                        self.id)
+                        except:
+                            self.logger.exception("Failed to link")
+
+                        if link:
+                            self.flow_link_list.append(link)
+                            # Set pin's connected status
+                            source_pin_instance.is_connected = True
+                            target_pin_instance.is_connected = True
+                            source_pin_instance.connected_link_list.append(link)
+                            target_pin_instance.connected_link_list.append(link)
+                            # Update event dict to store target node tag if it's connected to an event node
+                            if source_node_instance.node_type == NodeTypeFlag.Event:
+                                self.export_event_dict.update({source_node_tag: target_node_tag})
+                        else:
+                            self.logger.error("Cannot add a null link")
+                # Check if duplicate linkage, can happen if user swap link direction
+                else:
+                    if not source_pin_instance.is_connected:
+                        duplicate_flag = False
+                        for node_link in self.flow_link_list:
+                            if target_pin_instance == node_link.target_pin_instance:
+                                duplicate_flag = True
+                        if not duplicate_flag:
+                            try:
+                                link = Link(source_node_tag,
+                                            source_node_instance,
+                                            source_pin_instance,
+                                            source_pin_type,
+                                            target_node_tag,
+                                            target_node_instance,
+                                            target_pin_instance,
+                                            destination_pin_type,
+                                            self.id)
+                            except:
+                                self.logger.exception("Failed to link")
+                            if link:
+                                self.flow_link_list.append(link)
+                                # Set pin's connected status
+                                source_pin_instance.is_connected = True
+                                target_pin_instance.is_connected = True
+                                source_pin_instance.connected_link_list.append(link)
+                                target_pin_instance.connected_link_list.append(link)
+                                # Update event dict to store target node tag if it's connected to an event node
+                                if source_node_instance.node_type == NodeTypeFlag.Event:
+                                    self.export_event_dict.update({source_node_tag: target_node_tag})
+                            else:
+                                self.logger.error("Cannot add a null link")
+            else:  # Direct data links to data_link_list
+                if len(self.data_link_list) == 0:
+                    try:
+                        link = Link(source_node_tag,
+                                    source_node_instance,
+                                    source_pin_instance,
+                                    source_pin_type,
+                                    target_node_tag,
+                                    target_node_instance,
+                                    target_pin_instance,
+                                    destination_pin_type,
+                                    self.id)
+                    except:
+                        self.logger.exception("Failed to link")
+
+                    if link:
+                        self.data_link_list.append(link)
+                        # Mark the target node as dirty
+                        target_node_instance.is_dirty = True
+                        # Also update the nodes' data_link_list
+                        source_node_instance.succeeding_data_link_list.append(link)
+                        # Set pin's connected status
+                        source_pin_instance.is_connected = True
+                        target_pin_instance.is_connected = True
+                        source_pin_instance.connected_link_list.append(link)
+                        target_pin_instance.connected_link_list.append(link)
+                        if target_pin_instance.label != 'Prompt user for input?':
+                            # if exist bool input for prompting users values
+                            bool_pin_instance = None
+                            for pin_info in target_node_instance.pin_list:
+                                if pin_info['label'] == 'Prompt user for input?':
+                                    bool_pin_instance = pin_info['pin_instance']
+                                    break
+                            # Disable any existing link to it
+                            to_delete_link = None
+                            if bool_pin_instance:
+                                for link in self.data_link_list:
+                                    if link.target_pin_instance == bool_pin_instance:
+                                        to_delete_link = link
+                            if to_delete_link:
+                                self.callback_delink('linkHandler', app_data=to_delete_link.link_id)
+                            # Set its value to false and hide it
+                            if bool_pin_instance:
+                                dpg_set_value(bool_pin_instance.value_tag, False)
+                                dpg.configure_item(bool_pin_instance.pin_tag, show=False)
+                    else:
+                        self.logger.error("Cannot add a null link")
+                # Check if duplicate linkage, can happen if user swap link direction
+                else:
+                    duplicate_flag = False
+                    for node_link in self.data_link_list:
+                        if target_pin_instance == node_link.target_pin_instance:
+                            duplicate_flag = True
+                    if not duplicate_flag:
+                        try:
+                            link = Link(source_node_tag,
+                                        source_node_instance,
+                                        source_pin_instance,
+                                        source_pin_type,
+                                        target_node_tag,
+                                        target_node_instance,
+                                        target_pin_instance,
+                                        destination_pin_type,
+                                        self.id)
+                        except:
+                            self.logger.exception("Failed to link")
+                        if link:
+                            self.data_link_list.append(link)
+                            # Mark the target node as dirty
+                            target_node_instance.is_dirty = True
+                            # Also update the nodes' data_link_list
+                            source_node_instance.succeeding_data_link_list.append(link)
+                            # Set pin's connected status and store the link instance into both of the pins
+                            source_pin_instance.is_connected = True
+                            target_pin_instance.is_connected = True
+                            source_pin_instance.connected_link_list.append(link)
+                            target_pin_instance.connected_link_list.append(link)
+                            if target_pin_instance.label != 'Prompt user for input?':
+                                # if exist bool input for prompting users values
+                                bool_pin_instance = None
+                                for pin_info in target_node_instance.pin_list:
+                                    if pin_info['label'] == 'Prompt user for input?':
+                                        bool_pin_instance = pin_info['pin_instance']
+                                        break
+                                # Disable any existing link to it
+                                to_delete_link = None
+                                if bool_pin_instance:
+                                    for link in self.data_link_list:
+                                        if link.target_pin_instance == bool_pin_instance:
+                                            to_delete_link = link
+                                if to_delete_link:
+                                    self.callback_delink('linkHandler', app_data=to_delete_link.link_id)
+                                # Set its value to false and hide it
+                                if bool_pin_instance:
+                                    dpg_set_value(bool_pin_instance.value_tag, False)
+                                    dpg.configure_item(bool_pin_instance.pin_tag, show=False)
+                        else:
+                            self.logger.error("Cannot add a null link")
+        self.node_data_link_dict = sort_data_link_dict(self.data_link_list)
+        self.node_flow_link_dict = sort_flow_link_dict(self.flow_link_list)
+        if link:
+            self.logger.info('**** Nodes linked ****')
+
+        # Debug print
+        if link:
+            self.logger.debug(f'    sender                     :     {sender}')
+            self.logger.debug(f'    source_pin_tag             :     {source_pin_instance}')
+            self.logger.debug(f'    target_pin_tag             :     {target_pin_instance}')
+            self.logger.debug(f'    self.data_link_list        :     {self.data_link_list}')
+            self.logger.debug(f'    self.flow_link_list        :     {self.flow_link_list}')
+            self.logger.debug(f'    self.node_dict             :     {self.node_dict}')
+            self.logger.debug(f'    self.node_data_link_dict   :     {self.node_data_link_dict}')
+            self.logger.debug(f'    self.node_flow_link_dict   :     {self.node_flow_link_dict}')
+            self.logger.debug(f'    self.event_dict            :     {self.export_event_dict}')
+
+    def callback_delink(self, sender, app_data):
+        # Remove instance from link list hence trigger its destructor
+        for link in self.data_link_list:
+            if link.link_id == app_data:
+                try:
+                    self.data_link_list.remove(link)
+                except ValueError:
+                    self.logger.exception("Could not find the link for removal")
+                except:
+                    self.logger.exception("Some thing is wrong deleting the link")
+                else:
+                    dpg.delete_item(link.link_id)
+                    self.node_data_link_dict = sort_data_link_dict(self.data_link_list)
+                    # Safely set target pin's status to not connected
+                    link.target_pin_instance.is_connected = False
+                    # Set target pin's connected link instance to None
+                    link.target_pin_instance.connected_link_list.clear()
+                    # Now check if source pin (output pin) is not connecting to another link
+                    found_flag = False
+                    source_pin_tag = link.source_pin_instance.pin_tag
+                    for alt_link in self.data_link_list:
+                        if source_pin_tag == alt_link.source_pin_instance.pin_tag:
+                            found_flag = True
+                            link.source_pin_instance.connected_link_list.remove(link)
+                            break
+                    if not found_flag:
+                        link.source_pin_instance.is_connected = False
+                        link.source_pin_instance.connected_link_list.clear()
+                    # Check if the target node does not have other inputs link then enable its bool status for
+                    # prompting user input
+                    target_node_tag = link.target_node_tag
+                    if not self.node_data_link_dict.get(target_node_tag, None):
+                        # Get the node's bool prompt user input pin instance
+                        bool_pin_instance = None
+                        for pin_info in link.target_node_instance.pin_list:
+                            if pin_info['label'] == 'Prompt user for input?':
+                                bool_pin_instance = pin_info['pin_instance']
+                                break
+                        if bool_pin_instance:
+                            dpg.configure_item(bool_pin_instance.value_tag, show=True)
+                            dpg.configure_item(bool_pin_instance.pin_tag, show=True)
+                    return 0
+
+        for link in self.flow_link_list:
+            if link.link_id == app_data:
+                try:
+                    self.flow_link_list.remove(link)
+                except ValueError:
+                    self.logger.exception("Could not find flow link for removal ")
+                except:
+                    self.logger.exception("Some thing is wrong deleting the link")
+                else:
+                    dpg.delete_item(link.link_id)
+                    self.node_flow_link_dict = sort_flow_link_dict(self.flow_link_list)
+                    # Can safely set duo pins' status to not connected
+                    link.source_pin_instance.is_connected = False
+                    link.target_pin_instance.is_connected = False
+                    # Also set the connected link instance of the pins to None
+                    link.source_pin_instance.connected_link_list.clear()
+                    link.target_pin_instance.connected_link_list.clear()
+                    # Also remove this entry from event dict
+                    if link.source_node_instance.node_type == NodeTypeFlag.Event:
+                        self.export_event_dict.pop(link.source_node_instance.node_tag)
+                    return 0
+
+        self.logger.info('**** Link broke ****')
+        self.logger.debug(f'     sender                      :    {sender}')
+        self.logger.debug(f'     app_data                    :    {app_data}')
+        self.logger.debug(f'     self.data_link_list         :    {self.data_link_list}')
+        self.logger.debug(f'     self.flow_link_list         :    {self.flow_link_list}')
+        self.logger.debug(f'     self.node_data_link_dict    :    {self.node_data_link_dict}')
+        self.logger.debug(f'     self.node_flow_link_dict    :    {self.node_flow_link_dict}')
+
+    def execute_event(self, sender, app_data, user_data):
+        t1_start = 0
+        if self._use_debug_print:
+            t1_start = perf_counter()
+        event_node_tag = user_data
+        self.logger.info(f'**** Exec event : {event_node_tag} ****')
+        # Dirty mark and propagate any exposed input nodes
+        for node_instance in self.node_instance_dict.values():
+            if node_instance.is_exposed:
+                # set the node to dirty to trigger dirty propagation
+                node_instance.is_dirty = True
+
+        # Get first node instance that is connected to this user_data node
+        current_node_tag = self.export_event_dict.get(event_node_tag, None)
+        if not current_node_tag:
+            self.logger.error('Cannot find the event, this could be due to the event node not connecting to anything!')
+            return 1
+        current_node = self.node_instance_dict.get(current_node_tag, None)
+
+        # This will propagate the flow chain until it meets the end (unconnected Exec out)
+        anchors = []
+        if anchors:
+            anchors.clear()
+        self.forward_propagate_flow(current_node, anchors)
+        self.flow_control_redirect(anchors)
+        self.logger.info(f'**** Event {event_node_tag} finished ****')
+        if self._use_debug_print:
+            t1_stop = perf_counter()
+            self.logger.debug(f"Elapsed time for the event {event_node_tag}: {t1_stop - t1_start} ")
+
+    def flow_control_redirect(self, anchors: list):
+        if not anchors:
+            return 0
+        for anchor in anchors:
+            sub_anchors = []
+            if sub_anchors:
+                sub_anchors.clear()
+            self.forward_propagate_flow(anchor, sub_anchors)
+            if sub_anchors:
+                self.flow_control_redirect(sub_anchors)
+
+    def forward_propagate_flow(self, current_node, anchors: list):
+        if self._use_debug_print:
+            t1_start = perf_counter()
+            current_node_elapsed_time = self.compute_node(current_node)
+            t1_stop = perf_counter()
+            self.logger.debug(f"**** Executing {current_node.node_tag} ****")
+            self.logger.debug(f"Compute time: {current_node_elapsed_time}")
+            backward_propagate_time = t1_stop - t1_start - current_node_elapsed_time
+            self.logger.debug(f"Time to backward propagate: {backward_propagate_time}")
+        else:
+            self.compute_node(current_node)
+        # Get next node to compute
+        next_node = None
+        # Branch node got to explicitly decide next_node based on its condition bool value
+        if current_node.node_label == 'Branch':
+            condition = current_node.internal_data.get('Condition', None)
+            if condition is None:
+                self.logger.error(f'Can not query condition value for this branch node : {current_node.node_tag}')
+                return -1
+            if condition is True or condition == 'True':
+                for pin_info in current_node.pin_list:
+                    if pin_info['meta_type'] == 'FlowOut':
+                        if pin_info['pin_instance'].is_connected and pin_info['label'] == 'True':
+                            next_node = pin_info['pin_instance'].connected_link_list[0].target_node_instance
+                            break
+            else:
+                for pin_info in current_node.pin_list:
+                    if pin_info['meta_type'] == 'FlowOut':
+                        if pin_info['pin_instance'].is_connected and pin_info['label'] == 'False':
+                            next_node = pin_info['pin_instance'].connected_link_list[0].target_node_instance
+                            break
+        # If normal Blueprint node which has only one Exec pin out then next_node is deterministic
+        else:
+            # First found exec out pin will be the next node (this might be changed later)
+            for pin_info in current_node.pin_list:
+                if pin_info['meta_type'] == 'FlowOut':
+                    if pin_info['pin_instance'].is_connected:
+                        next_node = pin_info['pin_instance'].connected_link_list[0].target_node_instance
+                    break
+        # Store anchors point if current node is sequential nodes
+        if current_node.node_type == NodeTypeFlag.Sequential:
+            if current_node.node_label == 'Sequence':
+                for pin_info in current_node.pin_list:
+                    if pin_info['meta_type'] == 'FlowOut':
+                        if pin_info['pin_instance'].is_connected:
+                            anchors.append(pin_info['pin_instance'].connected_link_list[0].target_node_instance)
+                return 0
+            elif current_node.node_label == 'Do N':
+                iteration_num = current_node.internal_data.get('N', None)
+                if iteration_num and next_node:
+                    for i in range(iteration_num):
+                        anchors.append(next_node)
+                    return 0
+                else:
+                    self.logger.error(
+                        f'Could not find anchors point upon processing this node: {current_node.node_tag} ')
+        if next_node:
+            self.forward_propagate_flow(next_node, anchors)
+        else:
+            return 0
+
+    def compute_node(self, node):
+        # Blueprint nodes still need to be executed even if it's clean
+        if not node.is_dirty and (node.node_type & NodeTypeFlag.Blueprint or node.node_type & NodeTypeFlag.Sequential):
+            node.compute_internal_output_data()
+        # If the node is dirty, perform computing output values from inputs
+        if node.is_dirty and node.node_type & NodeTypeFlag.Pure:
+            # Get all the links that's connected to this node's inputs
+            input_links = self.node_data_link_dict.get(node.node_tag, None)
+            if input_links:
+                for input_link in input_links:
+                    pre_node_instance = self.node_instance_dict.get(input_link[0].parent)
+                    if not pre_node_instance:
+                        self.logger.error(
+                            f'Could not find node instance that matches this tag : {input_link[0].parent}')
+                        continue
+                    # If the pre-node also is dirty and not an exec node (to avoid premature-execution),
+                    # recursively compute its output values as well
+                    if pre_node_instance.is_dirty and pre_node_instance.node_type != NodeTypeFlag.Blueprint:
+                        self.compute_node(pre_node_instance)
+            # Debug timer starts
+            t1_start = 0
+            if self._use_debug_print:
+                t1_start = perf_counter()
+            # After getting the clean inputs, perform computing outputs values for this node
+            node.compute_internal_output_data()
+            # Debug timer stops
+            if self._use_debug_print:
+                t1_stop = perf_counter()
+                elapsed_time = t1_stop - t1_start
+                return elapsed_time
+            return 0
+        # If the current node is already clean, can safely skip computation and use it outputs values right away
+        else:
+            return 0
