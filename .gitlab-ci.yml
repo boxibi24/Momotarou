@@ -47,7 +47,7 @@ before_script:
 
 pages:
   script:
-    - pip install sphinx sphinx-book-theme sphinx-autodoc-typehints myst-nb sphinx-thebe
+    - pip install dearpygui sphinx sphinx-book-theme sphinx-autodoc-typehints myst-nb sphinx-thebe
     - cd docs
     - make html
     - mv build/html/ ../public/
