@@ -35,19 +35,19 @@ before_script:
 #     - pip install tox flake8  # you can also use tox
 #     - tox -e py36,flake8
 
-run:
-  script:
-    - python setup.py bdist_wheel
-    # an alternative approach is to install and run:
-    - pip install dist/*
-    # run the command here
-  artifacts:
-    paths:
-      - dist/*.whl
+# run:
+#   script:
+#     - python setup.py bdist_wheel
+#     # an alternative approach is to install and run:
+#     - pip install dist/*
+#     # run the command here
+#   artifacts:
+#     paths:
+#       - dist/*.whl
 
 pages:
   script:
-    - pip install sphinx sphinx-book-theme myst-nb sphinx-thebe
+    - pip install sphinx sphinx-book-theme sphinx-autodoc-typehints myst-nb sphinx-thebe
     - cd docs
     - make html
     - mv build/html/ ../public/
