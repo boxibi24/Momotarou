@@ -47,6 +47,7 @@ before_script:
 
 pages:
   script:
+    - pip install -r ./requirement.txt
     - pip install sphinx sphinx-book-theme sphinx-autodoc-typehints myst-nb sphinx-thebe
     - cd docs
     - make html
