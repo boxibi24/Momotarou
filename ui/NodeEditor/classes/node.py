@@ -72,7 +72,8 @@ class BaseNode:
                  import_path='',
                  node_tag=None,
                  succeeding_data_link_list=None,
-                 label=None
+                 label=None,
+                 internal_data=None
                  ):
         self._tag_node_name = None
         self._node_setting_dict = None
@@ -92,7 +93,10 @@ class BaseNode:
         self._node_tag = generate_uuid()
         self._pin_list = []
         self._import_path = import_path
-        self._internal_data = {}
+        if internal_data is None:
+            self._internal_data = {}
+        else:
+            self._internal_data = internal_data
         self._is_prompt_for_input_tag = ''
         if self.node_type & NodeTypeFlag.Event:
             self._is_dirty = False
@@ -307,7 +311,8 @@ class BaseNode:
     def create_node(self, **kwargs):
         assert not hasattr(super(), 'CreateNode')
         if kwargs:
-            self.callback = kwargs['callback']
+            self.callback = kwargs.get('callback', None)
+            self._internal_data = kwargs.get('internal_data', None)
         node = NodeInstance(self.parent,
                             self.setting_dict,
                             self.callback,
@@ -315,7 +320,8 @@ class BaseNode:
                             self.node_label,
                             self.node_type,
                             self.pin_dict,
-                            run_function=self.run)
+                            run_function=self.run,
+                            internal_data=self.internal_data)
         return node
 
     @staticmethod
@@ -353,7 +359,6 @@ class BaseNode:
     def update_internal_input_data(self):
         for pin_info in self.pin_list:
             if pin_info['meta_type'] == 'DataIn':
-                # if self._internal_data.get(pin_info['label'], None) is not None:
                 pin_value = dpg.get_value(pin_info['pin_instance'].value_tag)
                 if pin_value is not None:
                     self._internal_data.update({pin_info['label']: pin_value})
@@ -413,12 +418,10 @@ class NodeInstance(BaseNode):
                  node_type=None,
                  pin_dict=None,
                  run_function=None,
+                 internal_data=None
                  ):
-        super().__init__(parent, setting_dict, callback, pos)
-        self.parent = parent
-        self.setting_dict = setting_dict
-        self.callback = callback
-        self.pos = pos
+        super().__init__(parent=parent, setting_dict=setting_dict, callback=callback,
+                         pos=pos, internal_data=internal_data)
         self.node_label = node_label
         self.node_type = node_type
         self.pin_dict = pin_dict

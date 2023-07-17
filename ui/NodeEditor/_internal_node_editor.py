@@ -6,7 +6,7 @@ from ui.NodeEditor.classes.link import Link
 from ui.NodeEditor.classes.pin import OutputPinType, InputPinType
 from ui.NodeEditor.classes.node import NodeTypeFlag
 from multiprocessing import Queue
-
+from copy import deepcopy
 
 class DPGNodeEditor:
 
@@ -58,6 +58,10 @@ class DPGNodeEditor:
     def event_dict(self) -> OrderedDict:
         return self._event_dict
 
+    @property
+    def var_dict(self) -> OrderedDict:
+        return self._vars_dict
+
     def __init__(self,
                  parent_tab,
                  splitter_panel,
@@ -67,6 +71,7 @@ class DPGNodeEditor:
                  logging_queue=Queue(),
                  ):
         # ------ SETTINGS ------
+        self.splitter_var_dict = OrderedDict([])
         self._use_debug_print = use_debug_print
         if setting_dict is None:
             self._setting_dict = {}
@@ -92,6 +97,8 @@ class DPGNodeEditor:
         self._export_event_dict = {}
         # dict of events nodes for splitter entries
         self._event_dict = OrderedDict([])
+        # dict of vars and its value stored in a list (make use of referencing_
+        self._vars_dict = OrderedDict([])
 
         # ------ LOGGER ----------
         self.logger = create_queueHandler_logger(__name__ + '_' + dpg.get_item_label(parent_tab),
@@ -319,7 +326,8 @@ class DPGNodeEditor:
             parent=self.id,
             setting_dict=self._setting_dict,
             pos=[0, 0],
-            label=label
+            label=label,
+            internal_data={'var_value': self._vars_dict.get(label, None)} if label else None
         )
         # Get current node_editor instance
         # Stack nodes nicely if found last clicked position
@@ -342,8 +350,6 @@ class DPGNodeEditor:
             node = intermediate_node.create_node()
         # Store event list to display it on Splitter
         if node.node_type == NodeTypeFlag.Event:
-            # temp_dict = self.splitter_panel.event_dict
-            # temp_dict.update({node.node_tag: {'name': node.node_label, 'category': 'default'}})
             self._event_dict.update({node.node_tag: {'name': node.node_label, 'category': 'default'}})
             self.splitter_panel.event_dict = self._event_dict
         # Store the node instance along with its tag
@@ -819,3 +825,20 @@ class DPGNodeEditor:
         # If the current node is already clean, can safely skip computation and use it outputs values right away
         else:
             return 0
+
+    def add_var(self, var_info: dict):
+        # Save one for the splitter's var_dict
+        self.splitter_var_dict.update(var_info)
+        var_tag: str = list(var_info.keys())[0]
+        var_name: list = var_info[var_tag]['name']
+        var_type: list = var_info[var_tag]['type']
+        if self._vars_dict.get(var_tag, None) is None:
+            self._vars_dict.update({
+                var_tag: {
+                    'name': var_name,
+                    'type': var_type,
+                    'value': [None]
+                }})
+        else:
+            self._vars_dict[var_tag]['name'][0] = var_name[0]
+            self._vars_dict[var_tag]['type'][0] = var_type[0]

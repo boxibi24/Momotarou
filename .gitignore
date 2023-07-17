@@ -136,3 +136,4 @@ dmypy.json
 .idea
 /docs/source/generated/
 /docs/source/_autosummary/
+/dpg.ini

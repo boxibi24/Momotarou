@@ -129,7 +129,7 @@ class NodeEditor:
                 dpg.add_table_column(label='Event Graph')
                 dpg.add_table_column(label='Details', width_fixed=True, init_width_or_weight=300)
                 with dpg.table_row():
-                    self.splitter_panel = Splitter()
+                    self.splitter_panel = Splitter(parent_instance=self)
                     with dpg.tab_bar(reorderable=True, callback=self.callback_tab_bar_change) as self._tab_bar_id:
                         new_tab = dpg.add_tab(label='Default', parent=self._tab_bar_id,
                                               closable=True, payload_type='var', drop_callback=self.var_drop_callback)
@@ -194,6 +194,8 @@ class NodeEditor:
         self.detail_panel.refresh_ui()
         # Also do a refresh of splitter
         self.splitter_panel.event_dict = self.current_node_editor_instance.event_dict
+        print(f' Stored dict: {self.current_node_editor_instance.splitter_var_dict}')
+        self.splitter_panel.var_dict = self.current_node_editor_instance.splitter_var_dict
 
     def refresh_node_editor_dict(self):
         key_list = list(self._node_editor_dict.keys())
@@ -228,16 +230,17 @@ class NodeEditor:
             min_size=[10, 10]
         ) as self._var_drop_popup_id:
             # Get variable selectable
-            dpg.add_selectable(label='Get ' + app_data[1],
+            _var_name = self.current_node_editor_instance.var_dict[app_data]['name'][0]
+            dpg.add_selectable(label='Get ' + _var_name,
                                tag='__get_var',
                                callback=self.callback_get_internal_node_module,
-                               user_data=app_data[0][app_data[1]])
+                               user_data=app_data)
             dpg.add_separator()
             # Set variable selectable
-            dpg.add_selectable(label='Set ' + app_data[1],
+            dpg.add_selectable(label='Set ' + _var_name,
                                tag='__set_var',
                                callback=self.callback_get_internal_node_module,
-                               user_data=app_data[0][app_data[1]])
+                               user_data=app_data)
 
     def callback_get_internal_node_module(self, sender, app_data, user_data):
         """
@@ -252,16 +255,18 @@ class NodeEditor:
                 self.logger.exception('Could not query _internal modules:')
                 return -1
             # Get the module & import path to construct user data for callback_add_node
+            _var_type = self.current_node_editor_instance.var_dict[user_data]['type'][0]
+            _var_name = self.current_node_editor_instance.var_dict[user_data]['name'][0]
             try:
-                _var_module_tuple = _internal_module_dict['Get ' + user_data[1]]
+                _var_module_tuple = _internal_module_dict['Get ' + _var_type]
             except KeyError:
-                self.logger.exception(f'Could not find internal module matched with this variable type: {user_data}')
+                self.logger.exception(f'Could not find internal module matched with this variable type: {_var_type}')
                 return -1
             # Run child Node Editor's callback_add_node
             self.current_node_editor_instance.callback_add_node(sender, app_data,
                                                                 user_data=(_var_module_tuple[0],
                                                                            _var_module_tuple[1],
-                                                                           'Get ' + user_data[0]))
+                                                                           'Get ' + _var_name))
 
         elif sender_tag == '__set_var':
             # Get the imported internal modules
@@ -271,13 +276,15 @@ class NodeEditor:
                 self.logger.exception('Could not query _internal modules:')
                 return -1
             # Get the module & import path to construct user data for callback_add_node
+            _var_type = self.current_node_editor_instance.var_dict[user_data]['type'][0]
+            _var_name = self.current_node_editor_instance.var_dict[user_data]['name'][0]
             try:
-                _var_module_tuple = _internal_module_dict['Set ' + user_data[1]]
+                _var_module_tuple = _internal_module_dict['Set ' + _var_type]
             except KeyError:
-                self.logger.exception(f'Could not find internal module matched with this variable type: {user_data}')
+                self.logger.exception(f'Could not find internal module matched with this variable type: {_var_type}')
                 return -1
             # Run child Node Editor's callback_add_node
             self.current_node_editor_instance.callback_add_node(sender, app_data,
                                                                 user_data=(_var_module_tuple[0],
                                                                            _var_module_tuple[1],
-                                                                           'Set ' + user_data[0]))
+                                                                           'Set ' + _var_name))

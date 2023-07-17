@@ -13,6 +13,8 @@ class Node(BaseNode):
     pin_dict = {
         'Int out': OutputPinType.Int
     }
+    # Var node need to store a reference to a shared internal data across multiple calls of the same var
+
 
     @staticmethod
     def run(internal_data_dict):
