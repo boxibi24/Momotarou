@@ -146,7 +146,9 @@ class Splitter:
             dpg.add_table_column(init_width_or_weight=400)
             dpg.add_table_column(init_width_or_weight=300)
             with dpg.table_row():
-                dpg.add_selectable(label=default_name)
+                dpg.add_selectable(label=default_name,
+                                   callback=self._parent_instance.detail_panel.callback_show_var_detail,
+                                   user_data=new_var_tag)
                 with dpg.drag_payload(parent=dpg.last_item(),
                                       drag_data=new_var_tag,
                                       payload_type='var'):
@@ -192,5 +194,21 @@ class Splitter:
         self._old_var_dict = self._var_dict
 
     def combo_update_callback(self, sender, app_data, user_data):
-        self._combo_dict[user_data][1][0] = app_data
+        _var_tag = user_data
+        new_var_type = app_data
+        self._combo_dict[_var_tag][1][0] = new_var_type
+        # Need to refresh the child Node Graph's var value & default value also
+        self._parent_instance.current_node_editor_instance.var_dict[_var_tag]['value'][0] = None
+        default_var_value = None
+        # set default var value based on value type
+        if new_var_type in ['String', 'MultilineString', 'Password']:
+            default_var_value = ''
+        elif new_var_type == 'Int':
+            default_var_value = 0
+        elif new_var_type == 'Float':
+            default_var_value = 0.0
+        elif new_var_type == 'Bool':
+            default_var_value = False
+        self._parent_instance.current_node_editor_instance.var_dict[_var_tag]['default_value'][0] = default_var_value
+
 

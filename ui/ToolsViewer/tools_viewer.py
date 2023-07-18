@@ -5,6 +5,7 @@ from importlib import import_module
 from multiprocessing import Queue, current_process
 import psutil
 
+#TODO re-apply new NG logics to this, including: var node loading, caching, dirty trigger for var on exec
 class ToolsViewer:
     """Main class to handle exported data from Node Editor and display them to DPG widgets
     """

@@ -231,22 +231,24 @@ class NodeEditor:
         ) as self._var_drop_popup_id:
             # Get variable selectable
             _var_name = self.current_node_editor_instance.var_dict[app_data]['name'][0]
+            _var_tag = app_data
             dpg.add_selectable(label='Get ' + _var_name,
                                tag='__get_var',
                                callback=self.callback_get_internal_node_module,
-                               user_data=app_data)
+                               user_data=_var_tag)
             dpg.add_separator()
             # Set variable selectable
             dpg.add_selectable(label='Set ' + _var_name,
                                tag='__set_var',
                                callback=self.callback_get_internal_node_module,
-                               user_data=app_data)
+                               user_data=_var_tag)
 
     def callback_get_internal_node_module(self, sender, app_data, user_data):
         """
         Callback function to add variable node on the child Node Editor
         """
         sender_tag = dpg.get_item_alias(sender)
+        _var_tag = user_data
         if sender_tag == '__get_var':
             # Get the imported internal modules
             try:
@@ -255,8 +257,8 @@ class NodeEditor:
                 self.logger.exception('Could not query _internal modules:')
                 return -1
             # Get the module & import path to construct user data for callback_add_node
-            _var_type = self.current_node_editor_instance.var_dict[user_data]['type'][0]
-            _var_name = self.current_node_editor_instance.var_dict[user_data]['name'][0]
+            _var_type = self.current_node_editor_instance.var_dict[_var_tag]['type'][0]
+            _var_name = self.current_node_editor_instance.var_dict[_var_tag]['name'][0]
             try:
                 _var_module_tuple = _internal_module_dict['Get ' + _var_type]
             except KeyError:
@@ -266,7 +268,8 @@ class NodeEditor:
             self.current_node_editor_instance.callback_add_node(sender, app_data,
                                                                 user_data=(_var_module_tuple[0],
                                                                            _var_module_tuple[1],
-                                                                           'Get ' + _var_name))
+                                                                           (_var_tag,
+                                                                            'Get ' + _var_name)))
 
         elif sender_tag == '__set_var':
             # Get the imported internal modules
@@ -276,8 +279,8 @@ class NodeEditor:
                 self.logger.exception('Could not query _internal modules:')
                 return -1
             # Get the module & import path to construct user data for callback_add_node
-            _var_type = self.current_node_editor_instance.var_dict[user_data]['type'][0]
-            _var_name = self.current_node_editor_instance.var_dict[user_data]['name'][0]
+            _var_type = self.current_node_editor_instance.var_dict[_var_tag]['type'][0]
+            _var_name = self.current_node_editor_instance.var_dict[_var_tag]['name'][0]
             try:
                 _var_module_tuple = _internal_module_dict['Set ' + _var_type]
             except KeyError:
@@ -287,4 +290,5 @@ class NodeEditor:
             self.current_node_editor_instance.callback_add_node(sender, app_data,
                                                                 user_data=(_var_module_tuple[0],
                                                                            _var_module_tuple[1],
-                                                                           'Set ' + _var_name))
+                                                                           (_var_tag,
+                                                                            'Set ' + _var_name)))

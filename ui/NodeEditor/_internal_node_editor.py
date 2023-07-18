@@ -315,19 +315,21 @@ class DPGNodeEditor:
         """
         Callback function of adding a node from menu bar
         """
-        # For variables, override node_label, stored in user_data[2]
+        # For variables, override node_label, stored in user_data[2][1]
+        user_data_len = len(user_data)
         label = None
-        try:
-            label = user_data[2]
-        except IndexError:
-            pass
+        _var_tag = ''
+        if user_data_len == 3:
+            label = user_data[2][1]
+            _var_tag = user_data[2][0]
         # Grab node instance using node label passed in as event
         intermediate_node = user_data[1].Node(
             parent=self.id,
             setting_dict=self._setting_dict,
             pos=[0, 0],
             label=label,
-            internal_data={'var_value': self._vars_dict.get(label, None)} if label else None
+            internal_data={'var_value': self._vars_dict[_var_tag]['value'],
+                           'default_var_value': self._vars_dict[_var_tag]['default_value']} if _var_tag else None
         )
         # Get current node_editor instance
         # Stack nodes nicely if found last clicked position
@@ -832,13 +834,27 @@ class DPGNodeEditor:
         var_tag: str = list(var_info.keys())[0]
         var_name: list = var_info[var_tag]['name']
         var_type: list = var_info[var_tag]['type']
+        default_var_value = None
+        # set default var value based on value type
+        if var_type[0] in ['String', 'MultilineString', 'Password']:
+            default_var_value = ''
+        elif var_type[0] == 'Int':
+            default_var_value = 0
+        elif var_type[0] == 'Float':
+            default_var_value = 0.0
+        elif var_type[0] == 'Bool':
+            default_var_value = False
+
         if self._vars_dict.get(var_tag, None) is None:
             self._vars_dict.update({
                 var_tag: {
                     'name': var_name,
                     'type': var_type,
-                    'value': [None]
+                    'value': [None],
+                    'default_value': [default_var_value]
                 }})
         else:
             self._vars_dict[var_tag]['name'][0] = var_name[0]
             self._vars_dict[var_tag]['type'][0] = var_type[0]
+# TODO: Per execution trigger, if found any set node will reset all its get nodes to dirty
+# TODO: Per execution trigger, reset all var nodes' value to None

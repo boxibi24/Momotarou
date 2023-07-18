@@ -17,11 +17,10 @@ class Node(BaseNode):
 
     @staticmethod
     def run(internal_data_dict):
-        if True:
-            try:
-                internal_data_dict.update({'Int out': simpledialog.askinteger(title="Int input",
-                                                                              prompt="Give me your number Now!:")})
-            except:
-                return 2
-        # else:
-        #     internal_data_dict.update({'Int out': internal_data_dict['Int in']})
+        var_value = internal_data_dict.get('var_value', None)
+        if var_value is None:
+            # KeyError could not find var_value in internal_data_dict
+            return 8
+        else:
+            internal_data_dict['var_value'][0] = internal_data_dict['Int in']
+            internal_data_dict['Int out'] = internal_data_dict['Int in']

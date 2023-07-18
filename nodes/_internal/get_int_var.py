@@ -13,16 +13,14 @@ class Node(BaseNode):
     pin_dict = {
         'Int out': OutputPinType.Int
     }
-    # Var node need to store a reference to a shared internal data across multiple calls of the same var
 
+    # Var node need to store a reference to a shared internal data across multiple calls of the same var
 
     @staticmethod
     def run(internal_data_dict):
-        if internal_data_dict.get('Prompt user for input?', None):
-            try:
-                internal_data_dict.update({'Int out': simpledialog.askinteger(title="Int input",
-                                                                              prompt="Give me your number Now!:")})
-            except:
-                return 2
-        else:
-            internal_data_dict.update({'Int out': internal_data_dict['Int in']})
+        var_value = internal_data_dict.get('var_value', None)
+        if var_value is None:
+            return 8
+        if var_value[0] is None:
+            var_value[0] = internal_data_dict['default_var_value'][0]
+        internal_data_dict['Int out'] = var_value[0]
