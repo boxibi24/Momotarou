@@ -62,6 +62,10 @@ class DPGNodeEditor:
     def var_dict(self) -> OrderedDict:
         return self._vars_dict
 
+    @property
+    def splitter_var_dict(self) -> OrderedDict:
+        return self._splitter_var_dict
+
     def __init__(self,
                  parent_tab,
                  splitter_panel,
@@ -71,7 +75,7 @@ class DPGNodeEditor:
                  logging_queue=Queue(),
                  ):
         # ------ SETTINGS ------
-        self.splitter_var_dict = OrderedDict([])
+        self._splitter_var_dict = OrderedDict([])
         self._use_debug_print = use_debug_print
         if setting_dict is None:
             self._setting_dict = {}
@@ -103,7 +107,6 @@ class DPGNodeEditor:
         # ------ LOGGER ----------
         self.logger = create_queueHandler_logger(__name__ + '_' + dpg.get_item_label(parent_tab),
                                                  logging_queue, self._use_debug_print)
-        self.logger.info('***** Loading Child Node Editor *****')
 
         self._id = dpg.add_node_editor(
             callback=self.callback_link,
@@ -112,6 +115,7 @@ class DPGNodeEditor:
             minimap_location=dpg.mvNodeMiniMap_Location_BottomRight,
             parent=parent_tab
         )
+        self.logger.info('***** Child Node Editor initialized! *****')
 
     def callback_file_save(self, sender, app_data):
         # Aggregate the following into 1 json dict:
@@ -249,13 +253,13 @@ class DPGNodeEditor:
                             continue
                         # Get value from imported pin info that matches label:
                         imported_value = None
-                        # Also store the tag of 'Prompt user for input?' value if found
-                        is_exposed_value_tag = None
                         for imported_pin_info in node['pins']:
                             if imported_pin_info['label'] == new_pin_info['label']:
                                 imported_value = imported_pin_info.get('value', None)
-                        if new_pin_info['label'] == 'Prompt user for input?':
-                            is_exposed_value_tag = new_pin_info['pin_instance'].value_tag
+                        # # Also store the tag of 'Prompt user for input?' value if found
+                        # is_exposed_value_tag = None
+                        # if new_pin_info['label'] == 'Prompt user for input?':
+                        #     is_exposed_value_tag = new_pin_info['pin_instance'].value_tag
                         if imported_value is None:
                             continue
                         # Set the imported value to this new pin's value
@@ -265,14 +269,14 @@ class DPGNodeEditor:
                             self.logger.exception(
                                 f'Something wrong setting up the pin value of this pin {new_pin_info}')
 
-                        # Emulate a pin value change callback explicitly for 'Prompt user for input?' pin'
-                        if is_exposed_value_tag:
-                            added_node.on_pin_value_change(is_exposed_value_tag)
-                            continue
-                        # Else only do a normal internal input update
-                        else:
-                            added_node.update_internal_input_data()
-                            continue
+                        # # Emulate a pin value change callback explicitly for 'Prompt user for input?' pin'
+                        # if is_exposed_value_tag:
+                        #     added_node.on_pin_value_change(is_exposed_value_tag)
+                        #     continue
+                        # # Else only do a normal internal input update
+                        # else:
+                        #     added_node.update_internal_input_data()
+                        #     continue
 
                 else:
                     self.logger.error(f"Could not find an entry in imported module dict for {node['type']}")
@@ -366,7 +370,7 @@ class DPGNodeEditor:
             'pins': node.pin_list,
             'meta_type': node.node_type,
             'type': user_data[0] + '.' + node.__class__.__name__,
-            'is_exposed': node.is_exposed,
+            # 'is_exposed': node.is_exposed,
             'position':
                 {
                     'x': self.last_pos[0],
@@ -529,25 +533,25 @@ class DPGNodeEditor:
                         target_pin_instance.is_connected = True
                         source_pin_instance.connected_link_list.append(link)
                         target_pin_instance.connected_link_list.append(link)
-                        if target_pin_instance.label != 'Prompt user for input?':
-                            # if exist bool input for prompting users values
-                            bool_pin_instance = None
-                            for pin_info in target_node_instance.pin_list:
-                                if pin_info['label'] == 'Prompt user for input?':
-                                    bool_pin_instance = pin_info['pin_instance']
-                                    break
-                            # Disable any existing link to it
-                            to_delete_link = None
-                            if bool_pin_instance:
-                                for link in self.data_link_list:
-                                    if link.target_pin_instance == bool_pin_instance:
-                                        to_delete_link = link
-                            if to_delete_link:
-                                self.callback_delink('linkHandler', app_data=to_delete_link.link_id)
-                            # Set its value to false and hide it
-                            if bool_pin_instance:
-                                dpg_set_value(bool_pin_instance.value_tag, False)
-                                dpg.configure_item(bool_pin_instance.pin_tag, show=False)
+                        # if target_pin_instance.label != 'Prompt user for input?':
+                        #     # if exist bool input for prompting users values
+                        #     bool_pin_instance = None
+                        #     for pin_info in target_node_instance.pin_list:
+                        #         if pin_info['label'] == 'Prompt user for input?':
+                        #             bool_pin_instance = pin_info['pin_instance']
+                        #             break
+                        #     # Disable any existing link to it
+                        #     to_delete_link = None
+                        #     if bool_pin_instance:
+                        #         for link in self.data_link_list:
+                        #             if link.target_pin_instance == bool_pin_instance:
+                        #                 to_delete_link = link
+                        #     if to_delete_link:
+                        #         self.callback_delink('linkHandler', app_data=to_delete_link.link_id)
+                        #     # Set its value to false and hide it
+                        #     if bool_pin_instance:
+                        #         dpg_set_value(bool_pin_instance.value_tag, False)
+                        #         dpg.configure_item(bool_pin_instance.pin_tag, show=False)
                     else:
                         self.logger.error("Cannot add a null link")
                 # Check if duplicate linkage, can happen if user swap link direction
@@ -580,25 +584,25 @@ class DPGNodeEditor:
                             target_pin_instance.is_connected = True
                             source_pin_instance.connected_link_list.append(link)
                             target_pin_instance.connected_link_list.append(link)
-                            if target_pin_instance.label != 'Prompt user for input?':
-                                # if exist bool input for prompting users values
-                                bool_pin_instance = None
-                                for pin_info in target_node_instance.pin_list:
-                                    if pin_info['label'] == 'Prompt user for input?':
-                                        bool_pin_instance = pin_info['pin_instance']
-                                        break
-                                # Disable any existing link to it
-                                to_delete_link = None
-                                if bool_pin_instance:
-                                    for link in self.data_link_list:
-                                        if link.target_pin_instance == bool_pin_instance:
-                                            to_delete_link = link
-                                if to_delete_link:
-                                    self.callback_delink('linkHandler', app_data=to_delete_link.link_id)
-                                # Set its value to false and hide it
-                                if bool_pin_instance:
-                                    dpg_set_value(bool_pin_instance.value_tag, False)
-                                    dpg.configure_item(bool_pin_instance.pin_tag, show=False)
+                            # if target_pin_instance.label != 'Prompt user for input?':
+                            #     # if exist bool input for prompting users values
+                            #     bool_pin_instance = None
+                            #     for pin_info in target_node_instance.pin_list:
+                            #         if pin_info['label'] == 'Prompt user for input?':
+                            #             bool_pin_instance = pin_info['pin_instance']
+                            #             break
+                            #     # Disable any existing link to it
+                            #     to_delete_link = None
+                            #     if bool_pin_instance:
+                            #         for link in self.data_link_list:
+                            #             if link.target_pin_instance == bool_pin_instance:
+                            #                 to_delete_link = link
+                            #     if to_delete_link:
+                            #         self.callback_delink('linkHandler', app_data=to_delete_link.link_id)
+                            #     # Set its value to false and hide it
+                            #     if bool_pin_instance:
+                            #         dpg_set_value(bool_pin_instance.value_tag, False)
+                            #         dpg.configure_item(bool_pin_instance.pin_tag, show=False)
                         else:
                             self.logger.error("Cannot add a null link")
         self.node_data_link_dict = sort_data_link_dict(self.data_link_list)
@@ -646,20 +650,20 @@ class DPGNodeEditor:
                     if not found_flag:
                         link.source_pin_instance.is_connected = False
                         link.source_pin_instance.connected_link_list.clear()
-                    # Check if the target node does not have other inputs link then enable its bool status for
-                    # prompting user input
-                    target_node_tag = link.target_node_tag
-                    if not self.node_data_link_dict.get(target_node_tag, None):
-                        # Get the node's bool prompt user input pin instance
-                        bool_pin_instance = None
-                        for pin_info in link.target_node_instance.pin_list:
-                            if pin_info['label'] == 'Prompt user for input?':
-                                bool_pin_instance = pin_info['pin_instance']
-                                break
-                        if bool_pin_instance:
-                            dpg.configure_item(bool_pin_instance.value_tag, show=True)
-                            dpg.configure_item(bool_pin_instance.pin_tag, show=True)
-                    return 0
+                    # # Check if the target node does not have other inputs link then enable its bool status for
+                    # # prompting user input
+                    # target_node_tag = link.target_node_tag
+                    # if not self.node_data_link_dict.get(target_node_tag, None):
+                    #     # Get the node's bool prompt user input pin instance
+                    #     bool_pin_instance = None
+                    #     for pin_info in link.target_node_instance.pin_list:
+                    #         if pin_info['label'] == 'Prompt user for input?':
+                    #             bool_pin_instance = pin_info['pin_instance']
+                    #             break
+                    #     if bool_pin_instance:
+                    #         dpg.configure_item(bool_pin_instance.value_tag, show=True)
+                    #         dpg.configure_item(bool_pin_instance.pin_tag, show=True)
+                    # return 0
 
         for link in self.flow_link_list:
             if link.link_id == app_data:
@@ -692,19 +696,29 @@ class DPGNodeEditor:
         self.logger.debug(f'     self.node_flow_link_dict    :    {self.node_flow_link_dict}')
 
     def execute_event(self, sender, app_data, user_data):
-        # Reset every vars' value to None
+        # Reset every vars' value to None if it's not exposed, else get from user input box
         for var_info in self._vars_dict.values():
-            var_info['value'][0] = None
+            if var_info['is_exposed'][0] is False:
+                var_info['value'][0] = None
+            else:
+                var_info['value'][0] = dpg_get_value(var_info['user_input_box_id'])
         t1_start = 0
         if self._use_debug_print:
             t1_start = perf_counter()
         event_node_tag = user_data
         self.logger.info(f'**** Exec event : {event_node_tag} ****')
         # Dirty mark and propagate any exposed input nodes
-        for node_instance in self.node_instance_dict.values():
-            if node_instance.is_exposed:
-                # set the node to dirty to trigger dirty propagation
-                node_instance.is_dirty = True
+        for var_tag, value in self._vars_dict.items():
+            if not value['is_exposed'][0]:
+                continue
+            for node in self.node_instance_dict.values():
+                if 'Get ' + value['name'][0] == node.node_label:
+                    node.is_dirty = True
+
+        # for node_instance in self.node_instance_dict.values():
+        #     if node_instance.is_exposed:
+        #         # set the node to dirty to trigger dirty propagation
+        #         node_instance.is_dirty = True
 
         # Get first node instance that is connected to this user_data node
         current_node_tag = self.export_event_dict.get(event_node_tag, None)
@@ -838,7 +852,7 @@ class DPGNodeEditor:
 
     def add_var(self, var_info: dict):
         # Save one for the splitter's var_dict
-        self.splitter_var_dict.update(var_info)
+        self._splitter_var_dict.update(var_info)
         var_tag: str = list(var_info.keys())[0]
         var_name: list = var_info[var_tag]['name']
         var_type: list = var_info[var_tag]['type']
@@ -859,14 +873,32 @@ class DPGNodeEditor:
                     'name': var_name,
                     'type': var_type,
                     'value': [None],
-                    'default_value': [default_var_value]
+                    'default_value': [default_var_value],
+                    'is_exposed': [False]
                 }})
         else:
             self._vars_dict[var_tag]['name'][0] = var_name[0]
             self._vars_dict[var_tag]['type'][0] = var_type[0]
-# TODO: input box shown on TV represents var_value
-# TODO: anytime default value change (NG), reset the var_value to None, and set the Get nodes to dirty
-# -> listen to default_var_value changes -> trigger self.dirty
-# TODO: If var_value change (Set nodes)-> trigger dirty propagation
-# -> listen to var_value changes -> trigger
-# TODO: at begin event execution, set every vars' values to None. If var is  exposed, check if its value is None then get user input
+
+        self.logger.debug('**** Added new var entries ****')
+        self.logger.debug(f'var_dict: {self._vars_dict}')
+        self.logger.debug(f'splitter_var_dict:  {self._splitter_var_dict}')
+# TODO: input box shown on TV represents var_value TODO: anytime default value change (NG), reset the var_value to
+    #  None, and set the Get nodes to dirty (DONE) -> listen to default_var_value changes -> trigger self.dirty TODO:
+    #   If var_value change (Set nodes)-> trigger dirty propagation (DONE) -> listen to var_value changes -> trigger
+    #   TODO: at begin event execution, set every vars' values to None. If var is  exposed, check if its value is
+    #    None then get user input (DONE)
+
+# TODO: display any exposed var on Event Graph list, at the top
+# TODO: at the beginning, grab user input to the var's value, if it's empty, set the value to None
+# TODO: add checkbox is_required?, If yes, when grabbing for input, the input field  cannot be None
+
+    def register_var_user_input_box(self, var_tag, user_box_id):
+        """
+        Callback function upon enabling variable's exposed for user input flag
+        """
+        self._vars_dict[var_tag]['user_input_box_id'] = user_box_id
+        self.logger.debug(f'**** Register {var_tag} to take input from dpg item : {user_box_id} ****')
+        self.logger.debug(f'Current var dict of {var_tag}: {self._vars_dict[var_tag]}')
+
+

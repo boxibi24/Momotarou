@@ -97,7 +97,7 @@ class BaseNode:
             self._internal_data = {}
         else:
             self._internal_data = internal_data
-        self._is_prompt_for_input_tag = ''
+        # self._is_prompt_for_input_tag = ''
         if self.node_type & NodeTypeFlag.Event:
             self._is_dirty = False
         else:
@@ -134,8 +134,8 @@ class BaseNode:
                 'pin_type': pin.pin_type
             }))
             # Special bool for is_exposed enabling
-            if label == 'Prompt user for input?' and pin_type == InputPinType.Bool:
-                self._is_prompt_for_input_tag = pin.value_tag
+            # if label == 'Prompt user for input?' and pin_type == InputPinType.Bool:
+            #     self._is_prompt_for_input_tag = pin.value_tag
             # Store value also for data input pins
             if pin_type != InputPinType.Exec:
                 self.pin_list[-1].update({'value': dpg_get_value(pin.value_tag)})
@@ -184,7 +184,7 @@ class BaseNode:
             parent=parent,
             label=label,
             pos=_pos
-        ):
+        ) as self.node_id:
             if self.pin_dict:
                 # First check node type to add common pins
                 if self.node_type & NodeTypeFlag.Pure:
@@ -301,12 +301,12 @@ class BaseNode:
     def succeeding_data_link_list(self, value: list):
         self._succeeding_data_link_list = value
 
-    @property
-    def is_exposed(self) -> bool:
-        if self._is_prompt_for_input_tag:
-            return dpg_get_value(self._is_prompt_for_input_tag)
-        else:
-            return False
+    # @property
+    # def is_exposed(self) -> bool:
+    #     if self._is_prompt_for_input_tag:
+    #         return dpg_get_value(self._is_prompt_for_input_tag)
+    #     else:
+    #         return False
 
     def create_node(self, **kwargs):
         assert not hasattr(super(), 'CreateNode')
@@ -392,18 +392,18 @@ class BaseNode:
                         break
 
     def on_pin_value_change(self, sender):
-        if sender == self._is_prompt_for_input_tag:
-            is_disable_inputs = dpg_get_value(sender)
-            if is_disable_inputs:
-                for pin_info in self.pin_list:
-                    if pin_info['meta_type'] == 'DataIn' and \
-                        pin_info['pin_instance'].value_tag != self._is_prompt_for_input_tag:
-                        dpg.configure_item(pin_info['pin_instance'].value_tag, show=False)
-            else:
-                for pin_info in self.pin_list:
-                    if pin_info['meta_type'] == 'DataIn' and \
-                        pin_info['pin_instance'].value_tag != self._is_prompt_for_input_tag:
-                        dpg.configure_item(pin_info['pin_instance'].value_tag, show=True)
+        # if sender == self._is_prompt_for_input_tag:
+        #     is_disable_inputs = dpg_get_value(sender)
+        #     if is_disable_inputs:
+        #         for pin_info in self.pin_list:
+        #             if pin_info['meta_type'] == 'DataIn' and \
+        #                 pin_info['pin_instance'].value_tag != self._is_prompt_for_input_tag:
+        #                 dpg.configure_item(pin_info['pin_instance'].value_tag, show=False)
+        #     else:
+        #         for pin_info in self.pin_list:
+        #             if pin_info['meta_type'] == 'DataIn' and \
+        #                 pin_info['pin_instance'].value_tag != self._is_prompt_for_input_tag:
+        #                 dpg.configure_item(pin_info['pin_instance'].value_tag, show=True)
         self.is_dirty = True
         self.update_internal_input_data()
 

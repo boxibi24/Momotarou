@@ -76,6 +76,7 @@ class PinBase:
         self._input_window_width = input_window_width - 76
         self._show_data = show_data
         self._default_data = default_data
+        # Turn on this flag to show output pin value
         self._debug_mode = False
         self._is_connected = False
         self._connected_link_list = []
@@ -97,10 +98,16 @@ class PinBase:
         """
         self._is_connected = value
         if self.value_tag:
-            try:
-                dpg.configure_item(self.value_tag, show=not value)
-            except:
-                pass
+            if self.attribute_type == dpg.mvNode_Attr_Input:
+                try:
+                    dpg.configure_item(self.value_tag, show=not value)
+                except:
+                    pass
+            elif self.attribute_type == dpg.mvNode_Attr_Output and self._debug_mode:
+                try:
+                    dpg.configure_item(self.value_tag, show=not value)
+                except:
+                    pass
 
     @property
     def connected_link_list(self):

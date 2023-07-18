@@ -127,7 +127,7 @@ class NodeEditor:
                            borders_outerV=False, borders_innerV=False, borders_innerH=False):
                 dpg.add_table_column(label='My Project', width_fixed=True, init_width_or_weight=300)
                 dpg.add_table_column(label='Event Graph')
-                dpg.add_table_column(label='Details', width_fixed=True, init_width_or_weight=300)
+                dpg.add_table_column(label='Details (click UI item again to refresh data)', width_fixed=True, init_width_or_weight=300)
                 with dpg.table_row():
                     self.splitter_panel = Splitter(parent_instance=self)
                     with dpg.tab_bar(reorderable=True, callback=self.callback_tab_bar_change) as self._tab_bar_id:
@@ -194,8 +194,8 @@ class NodeEditor:
         self.detail_panel.refresh_ui()
         # Also do a refresh of splitter
         self.splitter_panel.event_dict = self.current_node_editor_instance.event_dict
-        print(f' Stored dict: {self.current_node_editor_instance.splitter_var_dict}')
         self.splitter_panel.var_dict = self.current_node_editor_instance.splitter_var_dict
+        self.splitter_panel.exposed_var_dict = self.current_node_editor_instance.var_dict
 
     def refresh_node_editor_dict(self):
         key_list = list(self._node_editor_dict.keys())
