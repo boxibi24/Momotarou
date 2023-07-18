@@ -74,6 +74,7 @@ class DetailPanel:
             # KeyError could not find key {user_data} in current_node_graph 's var_dict
             return 8
         print(f'var_detail {var_detail}')
+        var_name_reference = var_detail['name']
         var_name = var_detail['name'][0]
         var_type = var_detail['type'][0]
         var_value = var_detail['value'][0]
@@ -102,33 +103,39 @@ class DetailPanel:
                 if var_type == 'String':
                     dpg.add_input_text(on_enter=True, default_value=default_var_value,
                                        callback=self.callback_default_var_value_update,
-                                       user_data=default_var_value_reference)
+                                       user_data=(var_name_reference, default_var_value_reference),
+                                       hint='one line text')
                 elif var_type == 'Int':
                     dpg.add_input_int(on_enter=True, default_value=default_var_value,
                                       callback=self.callback_default_var_value_update,
-                                      user_data=default_var_value_reference)
+                                      user_data=(var_name_reference, default_var_value_reference))
                 elif var_type == 'Float':
                     dpg.add_input_float(on_enter=True, default_value=default_var_value,
                                         callback=self.callback_default_var_value_update,
-                                        user_data=default_var_value_reference)
+                                        user_data=(var_name_reference, default_var_value_reference))
                 elif var_type == 'MultilineString':
                     dpg.add_input_text(on_enter=True, multiline=True,
                                        default_value=default_var_value,
                                        callback=self.callback_default_var_value_update,
-                                       user_data=default_var_value_reference)
+                                       user_data=(var_name_reference, default_var_value_reference))
                 elif var_type == 'Password':
                     dpg.add_input_text(on_enter=True, password=True,
                                        default_value=default_var_value,
                                        callback=self.callback_default_var_value_update,
-                                       user_data=default_var_value_reference)
+                                       user_data=(var_name_reference, default_var_value_reference),
+                                       hint='password')
                 elif var_type == 'Bool':
                     dpg.add_checkbox(callback=self.callback_default_var_value_update,
                                      default_value=default_var_value,
-                                     user_data=default_var_value_reference)
+                                     user_data=(var_name_reference, default_var_value_reference))
 
     def callback_default_var_value_update(self, sender, app_data, user_data):
         print(f'sender: {sender}')
         print(f'app_data : {app_data}')
         print(f'user_data : {user_data}')
-        user_data[0] = app_data
+        user_data[1][0] = app_data
         print(self._parent_instance.current_node_editor_instance.var_dict)
+        # Set every Get nodes of this variable to dirty
+        for node_get in self._parent_instance.current_node_editor_instance.node_instance_dict.values():
+            if node_get.node_label == 'Get ' + user_data[0][0]:
+                node_get.is_dirty = True

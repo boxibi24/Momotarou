@@ -3,7 +3,7 @@ from ui.NodeEditor.classes.pin import InputPinType, OutputPinType
 
 
 class Node(BaseNode):
-    """Executes a series of pins in N times"""
+    """Executes a series of pins for N times"""
 
     # Define class members
     ver = '0.0.1'

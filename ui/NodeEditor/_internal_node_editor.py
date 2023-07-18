@@ -692,6 +692,9 @@ class DPGNodeEditor:
         self.logger.debug(f'     self.node_flow_link_dict    :    {self.node_flow_link_dict}')
 
     def execute_event(self, sender, app_data, user_data):
+        # Reset every vars' value to None
+        for var_info in self._vars_dict.values():
+            var_info['value'][0] = None
         t1_start = 0
         if self._use_debug_print:
             t1_start = perf_counter()
@@ -797,6 +800,11 @@ class DPGNodeEditor:
         # Blueprint nodes still need to be executed even if it's clean
         if not node.is_dirty and (node.node_type & NodeTypeFlag.Blueprint or node.node_type & NodeTypeFlag.Sequential):
             node.compute_internal_output_data()
+        # If found var set nodes, trigger dirty propagation to all of its Get nodes
+        if node.node_type & NodeTypeFlag.Blueprint and 'Set ' in node.node_label:
+            for node_get in self._node_instance_dict.values():
+                if node_get.node_label == 'Get ' + node.node_label.split(' ')[1]:
+                    node_get.is_dirty = True
         # If the node is dirty, perform computing output values from inputs
         if node.is_dirty and node.node_type & NodeTypeFlag.Pure:
             # Get all the links that's connected to this node's inputs
@@ -856,5 +864,9 @@ class DPGNodeEditor:
         else:
             self._vars_dict[var_tag]['name'][0] = var_name[0]
             self._vars_dict[var_tag]['type'][0] = var_type[0]
-# TODO: Per execution trigger, if found any set node will reset all its get nodes to dirty
-# TODO: Per execution trigger, reset all var nodes' value to None
+# TODO: input box shown on TV represents var_value
+# TODO: anytime default value change (NG), reset the var_value to None, and set the Get nodes to dirty
+# -> listen to default_var_value changes -> trigger self.dirty
+# TODO: If var_value change (Set nodes)-> trigger dirty propagation
+# -> listen to var_value changes -> trigger
+# TODO: at begin event execution, set every vars' values to None. If var is  exposed, check if its value is None then get user input
