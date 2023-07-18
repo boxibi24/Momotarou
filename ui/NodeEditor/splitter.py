@@ -1,11 +1,9 @@
-from typing import Any
-
 import dearpygui.dearpygui as dpg
 from collections import OrderedDict
 from copy import deepcopy
 from ui.NodeEditor.classes.pin import InputPinType
 from ui.NodeEditor.utils import generate_uuid, add_user_input_box
-
+from pprint import pprint
 
 class Splitter:
     splitter_label = 'Splitter'
@@ -29,6 +27,8 @@ class Splitter:
         self._exposed_var_dict = value
         self.refresh_exposed_var_window()
         self._old_exposed_var_dict = deepcopy(self._exposed_var_dict)
+        print('cached old var dict:')
+        pprint(self._old_exposed_var_dict)
 
     @property
     def var_dict(self) -> OrderedDict:
@@ -149,9 +149,9 @@ class Splitter:
                     dpg.add_table_column(no_reorder=True, no_resize=True, init_width_or_weight=400)
                     with dpg.table_row():
                         dpg.add_selectable(label=value['name'][0],
-                                          # parent=self._exposed_var_collapsing_header,
-                                          callback=self._parent_instance.detail_panel.callback_show_var_detail,
-                                          user_data=_var_tag)
+                                           # parent=self._exposed_var_collapsing_header,
+                                           callback=self._parent_instance.detail_panel.callback_show_var_detail,
+                                           user_data=_var_tag)
                         _user_input_box = add_user_input_box(var_type=value['type'][0], width=300)
                         _current_node_editor_instance.register_var_user_input_box(_var_tag, _user_input_box)
                 self._exposed_var_dict[_var_tag].update({'splitter_id': splitter_selectable_item})
