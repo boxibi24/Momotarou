@@ -701,7 +701,8 @@ class DPGNodeEditor:
             if var_info['is_exposed'][0] is False:
                 var_info['value'][0] = None
             else:
-                var_info['value'][0] = dpg_get_value(var_info['user_input_box_id'])
+                user_input_value = dpg_get_value(var_info['user_input_box_id'])
+                var_info['value'][0] = user_input_value
         t1_start = 0
         if self._use_debug_print:
             t1_start = perf_counter()
@@ -709,8 +710,6 @@ class DPGNodeEditor:
         self.logger.info(f'**** Exec event : {event_node_tag} ****')
         # Dirty mark and propagate any exposed input nodes
         for var_tag, value in self._vars_dict.items():
-            if not value['is_exposed'][0]:
-                continue
             for node in self.node_instance_dict.values():
                 if 'Get ' + value['name'][0] == node.node_label:
                     node.is_dirty = True
@@ -884,10 +883,10 @@ class DPGNodeEditor:
         self.logger.debug(f'var_dict: {self._vars_dict}')
         self.logger.debug(f'splitter_var_dict:  {self._splitter_var_dict}')
 # TODO: input box shown on TV represents var_value TODO: anytime default value change (NG), reset the var_value to
-    #  None, and set the Get nodes to dirty (DONE) -> listen to default_var_value changes -> trigger self.dirty TODO:
-    #   If var_value change (Set nodes)-> trigger dirty propagation (DONE) -> listen to var_value changes -> trigger
-    #   TODO: at begin event execution, set every vars' values to None. If var is  exposed, check if its value is
-    #    None then get user input (DONE)
+    # None, and set the Get nodes to dirty (DONE) -> listen to default_var_value changes -> trigger self.dirty
+# TODO: If var_value change (Set nodes)-> trigger dirty propagation (DONE) -> listen to var_value changes -> trigger
+# TODO: at begin event execution, set every vars' values to None. If var is  exposed, check if its value is
+    # None then get user input (DONE)
 
 # TODO: display any exposed var on Event Graph list, at the top
 # TODO: at the beginning, grab user input to the var's value, if it's empty, set the value to None
