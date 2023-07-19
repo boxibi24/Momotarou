@@ -6,7 +6,6 @@ from ui.NodeEditor.classes.link import Link
 from ui.NodeEditor.classes.pin import OutputPinType, InputPinType
 from ui.NodeEditor.classes.node import NodeTypeFlag
 from multiprocessing import Queue
-from copy import deepcopy
 
 
 class DPGNodeEditor:
@@ -272,15 +271,6 @@ class DPGNodeEditor:
                             self.logger.exception(
                                 f'Something wrong setting up the pin value of this pin {new_pin_info}')
 
-                        # # Emulate a pin value change callback explicitly for 'Prompt user for input?' pin'
-                        # if is_exposed_value_tag:
-                        #     added_node.on_pin_value_change(is_exposed_value_tag)
-                        #     continue
-                        # # Else only do a normal internal input update
-                        # else:
-                        #     added_node.update_internal_input_data()
-                        #     continue
-
                 else:
                     self.logger.error(f"Could not find an entry in imported module dict for {node['type']}")
                 self.logger.debug(f'pin_mapping: {pin_mapping}')
@@ -329,13 +319,14 @@ class DPGNodeEditor:
         if user_data_len == 3:
             label = user_data[2][1]
             _var_tag = user_data[2][0]
+
         # Grab node instance using node label passed in as event
         intermediate_node = user_data[1].Node(
             parent=self.id,
             setting_dict=self._setting_dict,
             pos=[0, 0],
             label=label,
-            internal_data={'var_value': self._vars_dict[_var_tag]['value'],
+            internal_data={'var_value': self._vars_dict[_var_tag]['value'] if _var_tag else None,
                            'default_var_value': self._vars_dict[_var_tag]['default_value']} if _var_tag else None
         )
         # Get current node_editor instance
@@ -353,14 +344,15 @@ class DPGNodeEditor:
         dpg.clear_selected_nodes(node_editor=self.id)
         # For debugging event node
         # TODO: Remove this hardcode
-        if sender == 'Menu_Button Event':
-            node = intermediate_node.create_node(callback=self.execute_event)
-        else:
-            node = intermediate_node.create_node()
+        node = intermediate_node.create_node()
         # Store event list to display it on Splitter
         if node.node_type == NodeTypeFlag.Event:
-            self._event_dict.update({node.node_tag: {'name': node.node_label, 'category': 'default'}})
+            # Strip the first string 'Event ' out
+            _event_stripped_name = ' '.join(node.node_label.split(' ')[1:])
+            self._event_dict.update(
+                {node.node_tag: {'name': _event_stripped_name, 'category': 'default'}})
             self.splitter_panel.event_dict = self._event_dict
+            self.splitter_panel.event_run_item_dict.update({_event_stripped_name: node.node_tag})
         # Store the node instance along with its tag
         self.node_instance_dict[node.node_tag] = node
         # add pins entries to private _node_dict
@@ -708,19 +700,9 @@ class DPGNodeEditor:
                 var_info['value'][0] = user_input_value
         # Reset all nodes' is_executed flags to False and set them to dirty
         for node in self.node_instance_dict.values():
-            # # If node is Blueprint, also set it to dirty, to make the trigger events consistent
-            # if node.node_type & NodeTypeFlag.Blueprint or node.node_type & NodeTypeFlag.Sequential:
-            #     node.is_dirty = True
-            #     # Refresh all the output values
-            #     node.refresh_output_pin_value()
             if not node.is_dirty:
                 node.is_dirty = True
             node.is_executed = False
-        # # Dirty mark and propagate any get var nodes
-        # for var_tag, value in self._vars_dict.items():
-        #     for node in self.node_instance_dict.values():
-        #         if 'Get ' + value['name'][0] == node.node_label:
-        #             node.is_dirty = True
 
     def execute_event(self, sender, app_data, user_data):
         # Perform initial cleanup

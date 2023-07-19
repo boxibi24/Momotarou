@@ -79,7 +79,7 @@ class NodeEditor:
                 # 'Input Node': 'input_node',
                 'Process Node': 'process_node',
                 'Output Node': 'output_node',
-                'Event Node': 'event_node',
+                # 'Event Node': 'event_node',
                 'Exec Node': 'exec_node',
                 'Math Node': 'math_node',
                 'Flow Control': 'flow_control_node',
@@ -270,21 +270,22 @@ class NodeEditor:
             _var_tag = app_data
             dpg.add_selectable(label='Get ' + _var_name,
                                tag='__get_var',
-                               callback=self.callback_get_internal_node_module,
-                               user_data=_var_tag)
+                               callback=self.callback_current_editor_add_node,
+                               user_data=(_var_tag, _var_name))
             dpg.add_separator()
             # Set variable selectable
             dpg.add_selectable(label='Set ' + _var_name,
                                tag='__set_var',
-                               callback=self.callback_get_internal_node_module,
-                               user_data=_var_tag)
+                               callback=self.callback_current_editor_add_node,
+                               user_data=(_var_tag, _var_name))
 
-    def callback_get_internal_node_module(self, sender, app_data, user_data):
+    def callback_current_editor_add_node(self, sender, app_data, user_data):
         """
         Callback function to add variable node on the child Node Editor
         """
         sender_tag = dpg.get_item_alias(sender)
-        _var_tag = user_data
+        _var_tag = user_data[0]
+        _var_name = user_data[1]
         if sender_tag == '__get_var':
             # Get the imported internal modules
             try:
@@ -294,7 +295,6 @@ class NodeEditor:
                 return -1
             # Get the module & import path to construct user data for callback_add_node
             _var_type = self.current_node_editor_instance.var_dict[_var_tag]['type'][0]
-            _var_name = self.current_node_editor_instance.var_dict[_var_tag]['name'][0]
             try:
                 _var_module_tuple = _internal_module_dict['Get ' + _var_type]
             except KeyError:
@@ -316,7 +316,6 @@ class NodeEditor:
                 return -1
             # Get the module & import path to construct user data for callback_add_node
             _var_type = self.current_node_editor_instance.var_dict[_var_tag]['type'][0]
-            _var_name = self.current_node_editor_instance.var_dict[_var_tag]['name'][0]
             try:
                 _var_module_tuple = _internal_module_dict['Set ' + _var_type]
             except KeyError:
@@ -328,3 +327,21 @@ class NodeEditor:
                                                                            _var_module_tuple[1],
                                                                            (_var_tag,
                                                                             'Set ' + _var_name)))
+        elif '__event' in sender_tag:
+            # Get the imported internal modules
+            try:
+                _internal_module_dict = self._menu_construct_dict['_internal']
+            except KeyError:
+                self.logger.exception('Could not query _internal modules:')
+                return -1
+            try:
+                _var_module_tuple = _internal_module_dict['Event']
+            except KeyError:
+                self.logger.exception(f'Could not find internal module: Event')
+                return -1
+            # Run child Node Editor's callback_add_node
+            self.current_node_editor_instance.callback_add_node(sender, app_data,
+                                                                user_data=(_var_module_tuple[0],
+                                                                           _var_module_tuple[1],
+                                                                           (_var_tag,
+                                                                            'Event ' + _var_name)))

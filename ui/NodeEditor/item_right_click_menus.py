@@ -4,6 +4,76 @@ from ui.NodeEditor.input_handler import delete_selected_node
 from copy import deepcopy
 
 
+def node_right_click_menu():
+    with dpg.window(
+        popup=True,
+        autosize=True,
+        no_move=True,
+        no_open_over_existing_popup=True,
+        no_saved_settings=True,
+        max_size=[200, 200],
+        min_size=[10, 10]
+    ):
+        dpg.add_selectable(label='Delete')
+        dpg.add_selectable(label='Cut')
+        dpg.add_selectable(label='Copy')
+        dpg.add_selectable(label='Duplicate')
+
+
+def event_right_click_menu(sender, app_data, user_data):
+    with dpg.window(
+        popup=True,
+        autosize=True,
+        no_move=True,
+        no_open_over_existing_popup=True,
+        no_saved_settings=True,
+        max_size=[200, 200],
+        min_size=[10, 10]
+    ):
+        dpg.add_selectable(label='Run', callback=callback_run_event, user_data=user_data)
+        dpg.add_selectable(label='Delete', callback=callback_ask_event_delete, user_data=user_data)
+
+
+def callback_run_event(sender, app_data, user_data):
+    _event_node_tag = user_data[1][user_data[0]]
+    _master_node_editor_instance = user_data[2]
+    _current_node_editor_instance = _master_node_editor_instance.current_node_editor_instance
+    _current_node_editor_instance.execute_event('', '', user_data=_event_node_tag)
+
+
+def callback_ask_event_delete(sender, app_data, user_data):
+    """
+    Callback to re-confirm delete event
+    """
+    _mid_widget_pos = [int(dpg.get_viewport_width() / 2.5), int(dpg.get_viewport_height() / 2.5)]
+    with dpg.window(modal=True, label='Delete Event',
+                    pos=_mid_widget_pos) as _modal_window:
+        dpg.add_text("Delete event will also delete event node instance!\nThis operation cannot be "
+                     "undone!")
+        with dpg.group(horizontal=True):
+            dpg.add_button(label="OK", width=75, callback=callback_variable_delete,
+                           user_data=(user_data, _modal_window))
+            dpg.add_button(label="Cancel", width=75, callback=lambda: dpg.delete_item(_modal_window))
+
+
+def callback_delete_event(sender, app_data, user_data):
+    pass
+
+
+def exposed_var_right_click_menu():
+    with dpg.window(
+        popup=True,
+        autosize=True,
+        no_move=True,
+        no_open_over_existing_popup=True,
+        no_saved_settings=True,
+        max_size=[200, 200],
+        min_size=[10, 10]
+    ):
+        dpg.add_selectable(label='Move Up')
+        dpg.add_selectable(label='Move Down')
+
+
 def variable_right_click_menu(sender, app_data, user_data):
     with dpg.window(
         popup=True,
@@ -21,65 +91,18 @@ def variable_right_click_menu(sender, app_data, user_data):
                            user_data=user_data)
 
 
-def node_right_click_menu():
-    with dpg.window(
-        popup=True,
-        autosize=True,
-        no_move=True,
-        no_open_over_existing_popup=True,
-        no_saved_settings=True,
-        max_size=[200, 200],
-        min_size=[10, 10]
-    ):
-        dpg.add_selectable(label='Delete')
-        dpg.add_selectable(label='Cut')
-        dpg.add_selectable(label='Copy')
-        dpg.add_selectable(label='Duplicate')
-
-
-def event_right_click_menu():
-    with dpg.window(
-        popup=True,
-        autosize=True,
-        no_move=True,
-        no_open_over_existing_popup=True,
-        no_saved_settings=True,
-        max_size=[200, 200],
-        min_size=[10, 10]
-    ):
-        dpg.add_selectable(label='Run')
-        dpg.add_separator()
-        dpg.add_selectable(label='Delete')
-        dpg.add_separator()
-        dpg.add_selectable(label='Move Up')
-        dpg.add_selectable(label='Move Down')
-
-
-def exposed_var_right_click_menu():
-    with dpg.window(
-        popup=True,
-        autosize=True,
-        no_move=True,
-        no_open_over_existing_popup=True,
-        no_saved_settings=True,
-        max_size=[200, 200],
-        min_size=[10, 10]
-    ):
-        dpg.add_selectable(label='Move Up')
-        dpg.add_selectable(label='Move Down')
-
-
 def callback_ask_variable_delete(sender, app_data, user_data):
     """
     Callback to re-confirm delete variable
     """
-    _mid_widget_pos = [int(dpg.get_viewport_width()/2.5), int(dpg.get_viewport_height()/2.5)]
+    _mid_widget_pos = [int(dpg.get_viewport_width() / 2.5), int(dpg.get_viewport_height() / 2.5)]
     with dpg.window(modal=True, label='Delete Variable',
                     pos=_mid_widget_pos) as _modal_window:
         dpg.add_text("Delete variable will delete all node instances of this variable!\nThis operation cannot be "
                      "undone!")
         with dpg.group(horizontal=True):
-            dpg.add_button(label="OK", width=75, callback=callback_variable_delete, user_data=(user_data, _modal_window))
+            dpg.add_button(label="OK", width=75, callback=callback_variable_delete,
+                           user_data=(user_data, _modal_window))
             dpg.add_button(label="Cancel", width=75, callback=lambda: dpg.delete_item(_modal_window))
 
 

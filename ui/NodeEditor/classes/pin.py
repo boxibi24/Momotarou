@@ -359,12 +359,6 @@ class PinBase:
                 ):
                     dpg.add_text(default_value=self.label,
                                  indent=self._input_window_width)
-                    if self.__class__.__name__ == 'PinEvent':
-                        dpg.add_button(tag=generate_uuid(),
-                                       label='Press me!',
-                                       indent=self._input_window_width,
-                                       callback=self._callback,
-                                       user_data=self._user_data)
             elif self.pin_type == OutputPinType.WildCard:  # Wildcard input Pin
                 with dpg.node_attribute(
                     tag=self._pin_tag,

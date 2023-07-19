@@ -3,7 +3,7 @@ from collections import OrderedDict
 from copy import deepcopy
 from ui.NodeEditor.classes.pin import InputPinType
 from ui.NodeEditor.utils import generate_uuid, add_user_input_box
-from ui.NodeEditor.item_right_click_menus import variable_right_click_menu
+from ui.NodeEditor.item_right_click_menus import variable_right_click_menu, event_right_click_menu
 
 
 class Splitter:
@@ -78,6 +78,7 @@ class Splitter:
             self._exposed_var_dict = OrderedDict([])
         else:
             self._exposed_var_dict = exposed_var_dict
+        self.event_run_item_dict = {}
         # Splitter
         with dpg.child_window(
             width=self._width,
@@ -87,36 +88,74 @@ class Splitter:
 
         ) as self._splitter_id:
             # TODO: select other items will deselect nodes
-            with dpg.child_window(autosize_x=True, height=500):
-                # with dpg.child_window(border=False):
-                # Exposed var list
-                self._exposed_var_collapsing_header = dpg.add_collapsing_header(label='Exposed Variables',
-                                                                                default_open=True)
-                dpg.add_separator()
-                with dpg.table(header_row=False, borders_innerV=True, height=400, reorderable=False, resizable=True):
-                    dpg.add_table_column(no_reorder=True, no_resize=True, init_width_or_weight=550)
-                    dpg.add_table_column(no_reorder=True, no_resize=True, init_width_or_weight=100)
-                    with dpg.table_row():
-                        # Event graph list
-                        self._event_graph_collapsing_header = dpg.add_collapsing_header(label='Event Graph',
-                                                                                        default_open=True)
-                        with dpg.group():
-                            dpg.add_button(label='Run', width=45)
-                            dpg.add_button(label="Add", width=45)
-                            dpg.add_button(label="Delete", width=45)
-                            dpg.add_button(callback=None, arrow=True, direction=dpg.mvDir_Up)
-                            dpg.add_button(callback=None, arrow=True, direction=dpg.mvDir_Down)
-            with dpg.child_window(autosize_x=True):
-                with dpg.table(header_row=False, borders_innerV=True,
-                               reorderable=False, resizable=True):
-                    dpg.add_table_column(init_width_or_weight=550)
-                    dpg.add_table_column(init_width_or_weight=100)
-                    with dpg.table_row():
-                        self._default_var_header = dpg.add_collapsing_header(label='Variables', default_open=True)
-                        dpg.add_button(label='Add', callback=self.add_var, width=45,
-                                       user_data='var')
+            # Exposed var list
+            self._exposed_var_collapsing_header = dpg.add_collapsing_header(label='Exposed Variables',
+                                                                            default_open=True)
+            # Event graph list
+            self._event_graph_collapsing_header = dpg.add_collapsing_header(label='Event Graph',
+                                                                            default_open=True)
+            with dpg.item_handler_registry():
+                dpg.add_item_clicked_handler(button=dpg.mvMouseButton_Right,
+                                             callback=self.event_graph_header_right_click_menu,
+                                             user_data=('', 'Button'))
+            dpg.bind_item_handler_registry(self._event_graph_collapsing_header, dpg.last_container())
+
+            self._default_var_header = dpg.add_collapsing_header(label='Variables', tag='__var_header',
+                                                                 default_open=True)
+            with dpg.item_handler_registry():
+                dpg.add_item_clicked_handler(button=dpg.mvMouseButton_Right,
+                                             callback=self.variable_header_right_click_menu,
+                                             user_data='var')
+            dpg.bind_item_handler_registry(self._default_var_header, dpg.last_container())
 
             self._parent_instance.logger.debug('**** Initialized Splitter ****')
+
+    def event_graph_header_right_click_menu(self, sender, app_data, user_data):
+        parent = self._event_graph_collapsing_header
+        _current_node_editor_instance = self._parent_instance.current_node_editor_instance
+        # Try to generate a default name that does not match with any existing ones
+        children_list: list = dpg.get_item_children(parent)[1]
+        not_match_any_flag = False
+        default_name = user_data[1]
+        new_event_tag = '__event' + generate_uuid()
+        if children_list:
+            i = 1
+            while not not_match_any_flag:
+                temp_name = user_data[1] + str(i)
+                for child_item in children_list:
+                    if temp_name == dpg.get_item_label(child_item):
+                        break
+                    elif child_item == children_list[-1] and temp_name != dpg.get_item_label(child_item):
+                        not_match_any_flag = True
+                        default_name = temp_name
+                i += 1
+        new_user_data_tuple = (user_data[0], default_name)
+        with dpg.window(
+            popup=True,
+            autosize=True,
+            no_move=True,
+            no_open_over_existing_popup=True,
+            no_saved_settings=True,
+            max_size=[200, 200],
+            min_size=[10, 10]
+        ):
+            _selectable_id = dpg.add_selectable(label='Add',
+                                                tag=new_event_tag,
+                                                callback=self._parent_instance.callback_current_editor_add_node,
+                                                user_data=new_user_data_tuple
+                                                )
+
+    def variable_header_right_click_menu(self, sender, app_data, user_data):
+        with dpg.window(
+            popup=True,
+            autosize=True,
+            no_move=True,
+            no_open_over_existing_popup=True,
+            no_saved_settings=True,
+            max_size=[200, 200],
+            min_size=[10, 10]
+        ):
+            dpg.add_selectable(label='Add', callback=self.add_var, user_data=user_data)
 
     def refresh_event_graph_window(self):
         """
@@ -133,6 +172,12 @@ class Splitter:
         for key, value in self._event_dict.items():
             splitter_selectable_item = dpg.add_selectable(label=value['name'],
                                                           parent=self._event_graph_collapsing_header)
+            with dpg.item_handler_registry() as item_handler_id:
+                dpg.add_item_clicked_handler(button=dpg.mvMouseButton_Right,
+                                             callback=event_right_click_menu,
+                                             user_data=(value['name'], self.event_run_item_dict, self._parent_instance))
+            dpg.bind_item_handler_registry(splitter_selectable_item, dpg.last_container())
+            _current_node_editor_instance.item_registry_dict.update({key: item_handler_id})
             self._event_dict[key].update({'splitter_id': splitter_selectable_item})
 
         _current_node_editor_instance.logger.debug('**** Refreshed event graph window ****')
@@ -218,7 +263,7 @@ class Splitter:
                             default_name = temp_name
                     i += 1
 
-        with dpg.table(header_row=False, no_pad_outerX=True, parent=parent) as var_splitter_id:
+        with dpg.table(label=default_name, header_row=False, no_pad_outerX=True, parent=parent) as var_splitter_id:
             dpg.add_table_column(init_width_or_weight=400)
             dpg.add_table_column(init_width_or_weight=300)
             with dpg.table_row():
