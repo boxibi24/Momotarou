@@ -1,7 +1,7 @@
 import dearpygui.dearpygui as dpg
 from copy import deepcopy
 from ui.NodeEditor.utils import add_user_input_box, dpg_set_value
-
+from ui.NodeEditor.classes.node import NodeTypeFlag
 
 class DetailPanel:
 
@@ -63,8 +63,10 @@ class DetailPanel:
                 dpg.add_text(default_value=f'Internal data: {node.internal_data}')
                 dpg.add_text(default_value=f'Succeeding links: {node.succeeding_data_link_list}')
                 dpg.add_separator()
-                dpg.add_text(default_value=f'Is Dirty: {node.is_dirty}')
-                # dpg.add_text(default_value=f'Is Exposed: {node.is_exposed}')
+                # Do not show event nodes flags since it does not change
+                if not node.node_type & NodeTypeFlag.Event:
+                    dpg.add_text(default_value=f'Is Dirty: {node.is_dirty}')
+                    dpg.add_text(default_value=f'Is Executed: {node.is_executed}')
 
         _current_node_editor_instance.logger.debug('**** Details Panel refreshed to show node detail ****')
 
@@ -139,14 +141,17 @@ class DetailPanel:
         _current_node_editor_instance = self._parent_instance.current_node_editor_instance
         user_data[1][0] = app_data
         _var_tag = user_data[0]
-        # Get current Node Graph var dict
-        _current_var_dict = self._parent_instance.current_node_editor_instance.var_dict
-        _splitter_panel = self._parent_instance.current_node_editor_instance.splitter_panel
-        # Set current var dict to splitter to trigger its refresh on exposed var collapsing header
-        _splitter_panel.exposed_var_dict = deepcopy(_current_var_dict)
 
         if not app_data:  # Turning off is_exposed flag will need some janitor
             _current_node_editor_instance.var_dict[_var_tag].pop('user_input_box_id')
+
+        # Get current Node Graph var dict
+        _current_var_dict = self._parent_instance.current_node_editor_instance.var_dict
+        # Set current var dict to splitter to trigger its refresh on exposed var collapsing header
+        _splitter_panel = self._parent_instance.current_node_editor_instance.splitter_panel
+        _splitter_panel.exposed_var_dict = deepcopy(_current_var_dict)
+
+        # Logging
         if app_data:
             _current_node_editor_instance.logger.info(
                 f'This variable of tag {_var_tag} will now get its initial value from user input!')
@@ -195,7 +200,8 @@ class DetailPanel:
         # Refresh splitter items
         _splitter_panel = self._parent_instance.current_node_editor_instance.splitter_panel
         _splitter_panel.var_dict = _current_node_editor_instance.splitter_var_dict
-        _splitter_panel.exposed_var_dict = _current_node_editor_instance.var_dict
+        # Exposed var dict needs deep-copying since its add a splitter_id entry to the input dict
+        _splitter_panel.exposed_var_dict = deepcopy(_current_node_editor_instance.var_dict)
 
         _current_node_editor_instance.logger.info(f'Changed var name : {_old_var_name} to {_new_var_name}')
         return 0

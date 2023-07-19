@@ -8,6 +8,7 @@ from ui.NodeEditor.classes.node import NodeTypeFlag
 from multiprocessing import Queue
 from copy import deepcopy
 
+
 class DPGNodeEditor:
 
     @property
@@ -703,21 +704,24 @@ class DPGNodeEditor:
             else:
                 user_input_value = dpg_get_value(var_info['user_input_box_id'])
                 var_info['value'][0] = user_input_value
+        # Reset all nodes' is_executed flags to False
+        for node in self.node_instance_dict.values():
+            # If node is Blueprint, also set it to dirty, to make the trigger events consistent
+            if node.node_type & NodeTypeFlag.Blueprint or node.node_type & NodeTypeFlag.Sequential:
+                node.is_dirty = True
+                # Refresh all the output values
+                node.refresh_output_pin_value()
+            node.is_executed = False
+        # Dirty mark and propagate any get var nodes
+        for var_tag, value in self._vars_dict.items():
+            for node in self.node_instance_dict.values():
+                if 'Get ' + value['name'][0] == node.node_label:
+                    node.is_dirty = True
         t1_start = 0
         if self._use_debug_print:
             t1_start = perf_counter()
         event_node_tag = user_data
         self.logger.info(f'**** Exec event : {event_node_tag} ****')
-        # Dirty mark and propagate any exposed input nodes
-        for var_tag, value in self._vars_dict.items():
-            for node in self.node_instance_dict.values():
-                if 'Get ' + value['name'][0] == node.node_label:
-                    node.is_dirty = True
-
-        # for node_instance in self.node_instance_dict.values():
-        #     if node_instance.is_exposed:
-        #         # set the node to dirty to trigger dirty propagation
-        #         node_instance.is_dirty = True
 
         # Get first node instance that is connected to this user_data node
         current_node_tag = self.export_event_dict.get(event_node_tag, None)
@@ -818,7 +822,7 @@ class DPGNodeEditor:
             for node_get in self._node_instance_dict.values():
                 if node_get.node_label == 'Get ' + node.node_label.split(' ')[1]:
                     node_get.is_dirty = True
-        # If the node is dirty, perform computing output values from inputs
+        # If the nodes (Blueprint is also Pure) is dirty, perform computing output values from inputs
         if node.is_dirty and node.node_type & NodeTypeFlag.Pure:
             # Get all the links that's connected to this node's inputs
             input_links = self.node_data_link_dict.get(node.node_tag, None)
@@ -829,10 +833,40 @@ class DPGNodeEditor:
                         self.logger.error(
                             f'Could not find node instance that matches this tag : {input_link[0].parent}')
                         continue
-                    # If the pre-node also is dirty and not an exec node (to avoid premature-execution),
-                    # recursively compute its output values as well
-                    if pre_node_instance.is_dirty and pre_node_instance.node_type != NodeTypeFlag.Blueprint:
+
+                    # Recursively compute every dirty Pure nodes
+                    if pre_node_instance.is_dirty and pre_node_instance.node_type == NodeTypeFlag.Pure:
                         self.compute_node(pre_node_instance)
+
+                    # Recursively compute dirty Blueprint nodes even if it's executed
+                    elif pre_node_instance.is_dirty and \
+                        (pre_node_instance.node_type & NodeTypeFlag.Blueprint or
+                         pre_node_instance.node_type & NodeTypeFlag.Sequential) and \
+                        pre_node_instance.is_executed:
+                        self.compute_node(pre_node_instance)
+
+                    # Skip computing for dirty Blueprint un-executed nodes (avoid premature execution)
+                    elif pre_node_instance.is_dirty and \
+                        (pre_node_instance.node_type & NodeTypeFlag.Blueprint or
+                         pre_node_instance.node_type & NodeTypeFlag.Sequential) and \
+                        not pre_node_instance.is_executed:
+                        pass
+
+                    # Clean and executed Blueprint nodes does not need to do anything, ofcourse
+                    elif not pre_node_instance.is_dirty and \
+                        (pre_node_instance.node_type & NodeTypeFlag.Blueprint or
+                         pre_node_instance.node_type & NodeTypeFlag.Sequential) and \
+                        pre_node_instance.is_executed:
+                        pass
+
+                    # Clean but not executed Blueprint nodes will skip computing (avoid premature execution next
+                    # time the event triggers)
+                    elif not pre_node_instance.is_dirty and \
+                        (pre_node_instance.node_type & NodeTypeFlag.Blueprint or
+                         pre_node_instance.node_type & NodeTypeFlag.Sequential) and \
+                        not pre_node_instance.is_executed:
+                        pass
+
             # Debug timer starts
             t1_start = 0
             if self._use_debug_print:
@@ -882,15 +916,13 @@ class DPGNodeEditor:
         self.logger.debug('**** Added new var entries ****')
         self.logger.debug(f'var_dict: {self._vars_dict}')
         self.logger.debug(f'splitter_var_dict:  {self._splitter_var_dict}')
-# TODO: input box shown on TV represents var_value TODO: anytime default value change (NG), reset the var_value to
-    # None, and set the Get nodes to dirty (DONE) -> listen to default_var_value changes -> trigger self.dirty
-# TODO: If var_value change (Set nodes)-> trigger dirty propagation (DONE) -> listen to var_value changes -> trigger
-# TODO: at begin event execution, set every vars' values to None. If var is  exposed, check if its value is
-    # None then get user input (DONE)
 
-# TODO: display any exposed var on Event Graph list, at the top
-# TODO: at the beginning, grab user input to the var's value, if it's empty, set the value to None
-# TODO: add checkbox is_required?, If yes, when grabbing for input, the input field  cannot be None
+    # TODO: input box shown on TV represents var_value TODO: anytime default value change (NG), reset the var_value to None, and set the Get nodes to dirty (DONE) -> listen to default_var_value changes -> trigger self.dirty
+    # TODO: During flow chain, if meet set var nodes, sets all get nodes to dirty
+    # TODO: at begin event execution, set every vars' values to None if not exposed, apply user input value if exposed. Dirty mark them
+
+    # TODO: display any exposed var on Event Graph list, at the top
+    # TODO: add checkbox is_required?, If yes, when grabbing for input, the input field  cannot be None
 
     def register_var_user_input_box(self, var_tag, user_box_id):
         """
@@ -899,5 +931,3 @@ class DPGNodeEditor:
         self._vars_dict[var_tag]['user_input_box_id'] = user_box_id
         self.logger.debug(f'**** Register {var_tag} to take input from dpg item : {user_box_id} ****')
         self.logger.debug(f'Current var dict of {var_tag}: {self._vars_dict[var_tag]}')
-
-

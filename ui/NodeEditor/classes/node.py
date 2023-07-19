@@ -64,165 +64,6 @@ class BaseNode:
     node_type = NodeTypeFlag.Dummy
     pin_dict = OrderedDict({})
 
-    def __init__(self,
-                 parent=None,
-                 setting_dict=None,
-                 callback=None,
-                 pos=None,
-                 import_path='',
-                 node_tag=None,
-                 succeeding_data_link_list=None,
-                 label=None,
-                 internal_data=None
-                 ):
-        self._tag_node_name = None
-        self._node_setting_dict = None
-        self._callback = callback
-        if pos is None:
-            self._pos = [0, 0]
-        else:
-            self._pos = pos
-        # Override node_label if param label is not None
-        if label is not None:
-            self.node_label = label
-        self._parent = parent
-        self._setting_dict = setting_dict
-        self._setup_dict = {'ver': self.ver}
-        if node_tag:
-            self._node_tag = node_tag
-        self._node_tag = generate_uuid()
-        self._pin_list = []
-        self._import_path = import_path
-        if internal_data is None:
-            self._internal_data = {}
-        else:
-            self._internal_data = internal_data
-        # self._is_prompt_for_input_tag = ''
-        if self.node_type & NodeTypeFlag.Event:
-            self._is_dirty = False
-        else:
-            self._is_dirty = True
-        if succeeding_data_link_list:
-            self._succeeding_data_link_list = succeeding_data_link_list
-        else:
-            self._succeeding_data_link_list = []
-
-    def construct_pin(self, pin_type, label='', callback=None):
-        """
-        Construct pin
-        :param pin_type: type of the pin
-        :param label: name of the pin (uuid is internally assigned)
-        :param callback: callback function on pin's value changed
-        """
-        if pin_type.__class__ == InputPinType:
-            attribute_type = dpg.mvNode_Attr_Input
-            pin_class = get_pin_class(pin_type)
-            # Exec pins get different meta_type
-            if pin_type == InputPinType.Exec:
-                meta_type = 'FlowIn'
-            else:
-                meta_type = 'DataIn'
-            pin = pin_class(parent=self.node_tag, attribute_type=attribute_type, pin_type=pin_type,
-                            label=label,
-                            input_window_width=self.setting_dict['input_window_width'],
-                            callback=callback)
-            self.pin_list.append(OrderedDict({
-                'id': pin.pin_tag,
-                'pin_instance': pin,
-                'label': label,
-                'meta_type': meta_type,
-                'pin_type': pin.pin_type
-            }))
-            # Special bool for is_exposed enabling
-            # if label == 'Prompt user for input?' and pin_type == InputPinType.Bool:
-            #     self._is_prompt_for_input_tag = pin.value_tag
-            # Store value also for data input pins
-            if pin_type != InputPinType.Exec:
-                self.pin_list[-1].update({'value': dpg_get_value(pin.value_tag)})
-            # Update internal data
-            if pin_type != InputPinType.Exec:
-                self._internal_data.update({pin.label: pin.default_data})
-        else:
-            attribute_type = dpg.mvNode_Attr_Output
-            pin_class = get_pin_class(pin_type)
-            # Exec pins get different meta_type
-            if pin_type == InputPinType.Exec:
-                meta_type = 'FlowOut'
-            else:
-                meta_type = 'DataOut'
-            pin = pin_class(parent=self.node_tag, attribute_type=attribute_type, pin_type=pin_type,
-                            label=label,
-                            input_window_width=self.setting_dict['input_window_width'])
-            self.pin_list.append(OrderedDict({
-                'id': pin.pin_tag,
-                'pin_instance': pin,
-                'label': label,
-                'meta_type': meta_type,
-                'pin_type': pin.pin_type
-            }))
-            # Output pins will need to store a default value for Tools viewer in case node is not computed for value
-            # therefore prompt KeyErrorException
-            if pin_type != OutputPinType.Exec:
-                self.pin_list[-1].update({'default_value': dpg_get_value(pin.value_tag)})
-            # Update internal data
-            if pin_type != InputPinType.Exec:
-                self._internal_data.update({pin.label: pin.default_data})
-
-    def initialize_node(self, parent, label, pos=None):
-        """
-        Construct elements in current node instance
-        :param parent: parent of the node, typically the Node Editor
-        :param label: label of the node
-        :param pos: spawn position
-        """
-        if pos is None:
-            _pos = [0, 0]
-        else:
-            _pos = pos
-        with dpg.node(
-            tag=self.node_tag,
-            parent=parent,
-            label=label,
-            pos=_pos
-        ) as self.node_id:
-            if self.pin_dict:
-                # First check node type to add common pins
-                if self.node_type & NodeTypeFlag.Pure:
-                    # TODO: change styling to Green background for example (pure functions in UE)
-                    pass
-                # For Event pin, need to explicitly define PinEvent with special callback
-                if self.node_type & NodeTypeFlag.Event:
-                    out_exec_pin = PinEvent(self.node_tag, dpg.mvNode_Attr_Output, OutputPinType.Exec, label='Exec out',
-                                            input_window_width=self.setting_dict['input_window_width'],
-                                            callback=self.callback, user_data=self.node_tag)
-                    self.pin_list.append(OrderedDict({
-                        'id': out_exec_pin.pin_tag,
-                        'pin_instance': out_exec_pin,
-                        'label': 'Exec Out',
-                        'meta_type': 'FlowOut',
-                        'pin_type': out_exec_pin.pin_type
-                    }))
-
-                # Nodes with exec pins
-                if self.node_type & NodeTypeFlag.Exec:
-                    self.construct_pin(InputPinType.Exec, 'Exec In')
-                    self.construct_pin(OutputPinType.Exec, 'Exec Out')
-                # Flow control nodes
-                if self.node_type & NodeTypeFlag.Sequential:
-                    pass
-                # Loop through list to add pins
-                for label, pin_type in self.pin_dict.items():
-                    self.construct_pin(pin_type, label, self.on_pin_value_change)
-            elif self.node_type is not NodeTypeFlag.Dummy:
-                assert "Non-Dummy nodes cannot contain zero pins!"
-            else:
-                with dpg.node_attribute(
-                    tag=generate_uuid(),
-                    attribute_type=dpg.mvNode_Attr_Static
-                ):
-                    dpg.add_text(label="dummy",
-                                 tag=generate_uuid())
-
     @property
     def node_tag(self) -> str:
         return self._node_tag
@@ -290,6 +131,14 @@ class BaseNode:
             target_node.is_dirty = True
 
     @property
+    def is_executed(self) -> bool:
+        return self._is_executed
+
+    @is_executed.setter
+    def is_executed(self, value: bool):
+        self._is_executed = value
+
+    @property
     def internal_data(self) -> dict:
         return self._internal_data
 
@@ -301,12 +150,170 @@ class BaseNode:
     def succeeding_data_link_list(self, value: list):
         self._succeeding_data_link_list = value
 
-    # @property
-    # def is_exposed(self) -> bool:
-    #     if self._is_prompt_for_input_tag:
-    #         return dpg_get_value(self._is_prompt_for_input_tag)
-    #     else:
-    #         return False
+    def __init__(self,
+                 parent=None,
+                 setting_dict=None,
+                 callback=None,
+                 pos=None,
+                 import_path='',
+                 node_tag=None,
+                 succeeding_data_link_list=None,
+                 label=None,
+                 internal_data=None
+                 ):
+        self._tag_node_name = None
+        self._node_setting_dict = None
+        self._callback = callback
+        if pos is None:
+            self._pos = [0, 0]
+        else:
+            self._pos = pos
+        # Override node_label if param label is not None
+        if label is not None:
+            self.node_label = label
+        self._parent = parent
+        self._setting_dict = setting_dict
+        self._setup_dict = {'ver': self.ver}
+        if node_tag:
+            self._node_tag = node_tag
+        self._node_tag = generate_uuid()
+        self._pin_list = []
+        self._import_path = import_path
+        self._default_output_value_dict = {}
+        if internal_data is None:
+            self._internal_data = {}
+        else:
+            self._internal_data = internal_data
+        # self._is_prompt_for_input_tag = ''
+        if succeeding_data_link_list:
+            self._succeeding_data_link_list = succeeding_data_link_list
+        else:
+            self._succeeding_data_link_list = []
+
+        # ____FLAGS____
+        if self.node_type & NodeTypeFlag.Event:
+            self._is_dirty = False
+        else:
+            self._is_dirty = True
+        self._is_executed = False
+
+    def construct_pin(self, pin_type, label='', callback=None):
+        """
+        Construct pin
+        :param pin_type: type of the pin
+        :param label: name of the pin (uuid is internally assigned)
+        :param callback: callback function on pin's value changed
+        """
+        if pin_type.__class__ == InputPinType:
+            attribute_type = dpg.mvNode_Attr_Input
+            pin_class = get_pin_class(pin_type)
+            # Exec pins get different meta_type
+            if pin_type == InputPinType.Exec:
+                meta_type = 'FlowIn'
+            else:
+                meta_type = 'DataIn'
+            pin = pin_class(parent=self.node_tag, attribute_type=attribute_type, pin_type=pin_type,
+                            label=label,
+                            input_window_width=self.setting_dict['input_window_width'],
+                            callback=callback)
+            self.pin_list.append(OrderedDict({
+                'id': pin.pin_tag,
+                'pin_instance': pin,
+                'label': label,
+                'meta_type': meta_type,
+                'pin_type': pin.pin_type
+            }))
+            # Special bool for is_exposed enabling
+            # if label == 'Prompt user for input?' and pin_type == InputPinType.Bool:
+            #     self._is_prompt_for_input_tag = pin.value_tag
+            # Store value also for data input pins
+            if pin_type != InputPinType.Exec:
+                self.pin_list[-1].update({'value': dpg_get_value(pin.value_tag)})
+            # Update internal data
+            if pin_type != InputPinType.Exec:
+                self._internal_data.update({pin.label: pin.default_data})
+        else:
+            attribute_type = dpg.mvNode_Attr_Output
+            pin_class = get_pin_class(pin_type)
+            # Exec pins get different meta_type
+            if pin_type == InputPinType.Exec:
+                meta_type = 'FlowOut'
+            else:
+                meta_type = 'DataOut'
+            pin = pin_class(parent=self.node_tag, attribute_type=attribute_type, pin_type=pin_type,
+                            label=label,
+                            input_window_width=self.setting_dict['input_window_width'])
+            self.pin_list.append(OrderedDict({
+                'id': pin.pin_tag,
+                'pin_instance': pin,
+                'label': label,
+                'meta_type': meta_type,
+                'pin_type': pin.pin_type
+            }))
+            if meta_type == 'DataOut':
+                self._default_output_value_dict.update({label: dpg_get_value(pin.value_tag)})
+            # Output pins will need to store a default value for Tools viewer in case node is not computed for value
+            # therefore prompt KeyErrorException
+            if pin_type != OutputPinType.Exec:
+                self.pin_list[-1].update({'default_value': dpg_get_value(pin.value_tag)})
+            # Update internal data
+            if pin_type != InputPinType.Exec:
+                self._internal_data.update({pin.label: pin.default_data})
+
+    def initialize_node(self, parent, label, pos=None):
+        """
+        Construct elements in current node instance
+        :param parent: parent of the node, typically the Node Editor
+        :param label: label of the node
+        :param pos: spawn position
+        """
+        if pos is None:
+            _pos = [0, 0]
+        else:
+            _pos = pos
+        with dpg.node(
+            tag=self.node_tag,
+            parent=parent,
+            label=label,
+            pos=_pos
+        ) as self.node_id:
+            if self.pin_dict:
+                # First check node type to add common pins
+                if self.node_type & NodeTypeFlag.Pure:
+                    # TODO: change styling to Green background for example (pure functions in UE)
+                    pass
+                # For Event pin, need to explicitly define PinEvent with special callback
+                if self.node_type & NodeTypeFlag.Event:
+                    out_exec_pin = PinEvent(self.node_tag, dpg.mvNode_Attr_Output, OutputPinType.Exec, label='Exec out',
+                                            input_window_width=self.setting_dict['input_window_width'],
+                                            callback=self.callback, user_data=self.node_tag)
+                    self.pin_list.append(OrderedDict({
+                        'id': out_exec_pin.pin_tag,
+                        'pin_instance': out_exec_pin,
+                        'label': 'Exec Out',
+                        'meta_type': 'FlowOut',
+                        'pin_type': out_exec_pin.pin_type
+                    }))
+
+                # Nodes with exec pins
+                if self.node_type & NodeTypeFlag.Exec:
+                    self.construct_pin(InputPinType.Exec, 'Exec In')
+                    self.construct_pin(OutputPinType.Exec, 'Exec Out')
+                # Flow control nodes
+                if self.node_type & NodeTypeFlag.Sequential:
+                    pass
+                # Loop through list to add pins
+                for label, pin_type in self.pin_dict.items():
+                    self.construct_pin(pin_type, label, self.on_pin_value_change)
+            elif self.node_type is not NodeTypeFlag.Dummy:
+                assert "Non-Dummy nodes cannot contain zero pins!"
+            else:
+                with dpg.node_attribute(
+                    tag=generate_uuid(),
+                    attribute_type=dpg.mvNode_Attr_Static
+                ):
+                    dpg.add_text(label="dummy",
+                                 tag=generate_uuid())
 
     def create_node(self, **kwargs):
         assert not hasattr(super(), 'CreateNode')
@@ -340,6 +347,11 @@ class BaseNode:
             source_value = dpg_get_value(link.source_pin_instance.value_tag)
             dpg_set_value(link.target_pin_instance.value_tag, source_value)
             return source_value
+
+    def refresh_output_pin_value(self):
+        for pin_label, default_value in self._default_output_value_dict.items():
+            self._internal_data[pin_label] = default_value
+        self.update_output_pin_value()
 
     def update_custom_pin_value(self,
                                 link):
@@ -382,6 +394,8 @@ class BaseNode:
         self.update_output_pin_value()
         # After computing for all outputs, mark this node as clean
         self._is_dirty = False
+        # This node is executed!
+        self._is_executed = True
 
     def update_output_pin_value(self):
         for pin_info in self.pin_list:
