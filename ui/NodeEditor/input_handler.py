@@ -100,6 +100,9 @@ def mouse_right_click_handler(node_editor):
 
 
 def is_cursor_inside_node_graph(ng_bb) -> bool:
+    """
+    Checks if the cursor is inside the boundary of a node graph
+    """
     mouse_cursor_pos = dpg.get_mouse_pos(local=False)
     if (mouse_cursor_pos[0] - ng_bb[0][0] > 0) and (mouse_cursor_pos[0] - ng_bb[1][0] < 0):
         if (mouse_cursor_pos[1] - ng_bb[0][1] > 0) and (mouse_cursor_pos[1] - ng_bb[1][1] < 0):
@@ -108,15 +111,6 @@ def is_cursor_inside_node_graph(ng_bb) -> bool:
             is_inside = False
     else:
         is_inside = False
-
-    if is_inside:
-        print('cursor is inside!')
-        print(f'Mouse cursor pos: {mouse_cursor_pos}')
-        print(f'ng bb: {ng_bb}')
-    else:
-        print('cursor is outside')
-        print(f'Mouse cursor pos: {mouse_cursor_pos}')
-        print(f'ng bb: {ng_bb}')
     return is_inside
 
 
@@ -137,11 +131,14 @@ def cache_last_selected_node_pos(node_editor):
         node_editor.current_node_editor_instance.last_pos = dpg.get_item_pos(selected_node[0])
 
 
-def delete_selected_node(node_editor):
-    # Get item ID from the first selected node
-    item_id = dpg.get_selected_nodes(node_editor.current_node_editor_instance.id)[0]
+def delete_selected_node(node_editor, node_id=None):
+    if node_id is None:
+        # Get item ID from the first selected node
+        _item_id = dpg.get_selected_nodes(node_editor.current_node_editor_instance.id)[0]
+    else:   # If specified node id, use it instead
+        _item_id = node_id
     # Get the node label and ID from item ID
-    node_tag = dpg.get_item_alias(item_id)
+    node_tag = dpg.get_item_alias(_item_id)
     node_instance = node_editor.current_node_editor_instance.node_instance_dict.get(node_tag, None)
 
     # If node is of Event Node, also delete them from the splitter
@@ -208,7 +205,7 @@ def delete_selected_node(node_editor):
         node_editor.current_node_editor_instance.data_link_list)
     node_editor.current_node_editor_instance.node_flow_link_dict = sort_flow_link_dict(
         node_editor.current_node_editor_instance.flow_link_list)
-    node_editor.current_node_editor_instance.logger.info('**** Deleted Item ****')
+    node_editor.current_node_editor_instance.logger.info(f'**** Deleted node {node_tag} ****')
     node_editor.current_node_editor_instance.logger.debug(
         f'    node_editor.data_link_list       :    {node_editor.current_node_editor_instance.data_link_list}')
     node_editor.current_node_editor_instance.logger.debug(

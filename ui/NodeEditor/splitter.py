@@ -3,7 +3,8 @@ from collections import OrderedDict
 from copy import deepcopy
 from ui.NodeEditor.classes.pin import InputPinType
 from ui.NodeEditor.utils import generate_uuid, add_user_input_box
-from pprint import pprint
+from ui.NodeEditor.item_right_click_menus import variable_right_click_menu
+
 
 class Splitter:
     splitter_label = 'Splitter'
@@ -27,8 +28,6 @@ class Splitter:
         self._exposed_var_dict = value
         self.refresh_exposed_var_window()
         self._old_exposed_var_dict = deepcopy(self._exposed_var_dict)
-        print('cached old var dict:')
-        pprint(self._old_exposed_var_dict)
 
     @property
     def var_dict(self) -> OrderedDict:
@@ -42,6 +41,10 @@ class Splitter:
     @property
     def splitter_id(self) -> int:
         return self._splitter_id
+
+    @property
+    def combo_dict(self) -> dict:
+        return self._combo_dict
 
     def __init__(self,
                  width=400,
@@ -212,9 +215,9 @@ class Splitter:
             dpg.add_table_column(init_width_or_weight=400)
             dpg.add_table_column(init_width_or_weight=300)
             with dpg.table_row():
-                dpg.add_selectable(label=default_name,
-                                   callback=self._parent_instance.detail_panel.callback_show_var_detail,
-                                   user_data=new_var_tag)
+                _selectable_id = dpg.add_selectable(label=default_name,
+                                                    callback=self._parent_instance.detail_panel.callback_show_var_detail,
+                                                    user_data=new_var_tag)
                 with dpg.drag_payload(parent=dpg.last_item(),
                                       drag_data=new_var_tag,
                                       payload_type='var'):
@@ -228,6 +231,13 @@ class Splitter:
                 dpg.add_combo(var_type_list, width=95, popup_align_left=True,
                               callback=self.combo_update_callback, user_data=new_var_tag,
                               default_value=default_type)
+            # Add right-click handler to selectable
+            with dpg.item_handler_registry() as item_handler_id:
+                dpg.add_item_clicked_handler(button=dpg.mvMouseButton_Right,
+                                             callback=variable_right_click_menu,
+                                             user_data=(new_var_tag, self._parent_instance))
+            dpg.bind_item_handler_registry(_selectable_id, dpg.last_container())
+            _current_node_editor_instance.item_registry_dict.update({var_tag: item_handler_id})
         # Prep data
         new_var_info = {
             new_var_tag: {
@@ -235,7 +245,6 @@ class Splitter:
                 'type': [default_type],
                 'splitter_id': var_splitter_id
             }}
-        # Combo dict is initialized first so all of its list get referenced later
         if self._combo_dict.get(new_var_tag, None) is None:
             self._combo_dict.update({
                 new_var_tag:
@@ -284,5 +293,3 @@ class Splitter:
         # Also emulate a details callback to refresh show var detail
         self._parent_instance.detail_panel.callback_show_var_detail('', '', user_data=_var_tag)
         _current_node_editor_instance.logger.info(f'Updated new type for var of tag {_var_tag}: {new_var_type}')
-
-

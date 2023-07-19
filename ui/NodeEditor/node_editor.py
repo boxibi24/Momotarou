@@ -135,11 +135,11 @@ class NodeEditor:
             label=self.node_editor_label,
             border=False
         ):
-            with dpg.table(header_row=True, resizable=True, reorderable=True, borders_outerH=False,
+            with dpg.table(header_row=True, resizable=True, reorderable=False, borders_outerH=False,
                            borders_outerV=False, borders_innerV=False, borders_innerH=False):
                 dpg.add_table_column(label='My Project', width_fixed=True, init_width_or_weight=300)
                 dpg.add_table_column(label='Event Graph')
-                dpg.add_table_column(label='Details (click UI item again to refresh data)', width_fixed=True,
+                dpg.add_table_column(label='Details', width_fixed=True,
                                      init_width_or_weight=300)
                 with dpg.table_row():
                     self.splitter_panel = Splitter(parent_instance=self)
@@ -202,6 +202,8 @@ class NodeEditor:
         self._node_editor_dict.update({new_tab: new_node_editor})
 
     def callback_tab_bar_change(self, sender, app_data):
+        _old_node_editor_instance = self.current_node_editor_instance
+        _old_tab_id = self.current_tab
         # Refresh the dict first in case user closes the tab
         self.refresh_node_editor_dict()
         try:
@@ -217,15 +219,29 @@ class NodeEditor:
         self.splitter_panel.var_dict = self.current_node_editor_instance.splitter_var_dict
         self.splitter_panel.exposed_var_dict = self.current_node_editor_instance.var_dict
 
+        # If tab not deleted, delete the orphaned registry from old node graph
+        # since all selectable-headers will be refreshed
+        if self._node_editor_dict.get(_old_tab_id, None) is not None:
+            for registry_id in _old_node_editor_instance.item_registry_dict.values():
+                dpg.delete_item(registry_id)
+            _old_node_editor_instance.item_registry_dict.clear()
+
     def refresh_node_editor_dict(self):
-        key_list = list(self._node_editor_dict.keys())
-        for key in key_list:
-            if not dpg.is_item_visible(key):
-                self._node_editor_dict.pop(key)
-                deleted_tab_name = dpg.get_item_label(key)
-                dpg.delete_item(key)
+        tuple_list = list(self._node_editor_dict.items())
+        for tab_id, node_graph_inst in tuple_list:
+            if not dpg.is_item_visible(tab_id):
+                self._node_editor_dict.pop(tab_id)
+                deleted_tab_name = dpg.get_item_label(tab_id)
+                # Delete all registry that stored in the node graph
+                for registry_id in node_graph_inst.item_registry_dict.values():
+                    dpg.delete_item(registry_id)
+                # Delete the node graph in dpg
+                dpg.delete_item(node_graph_inst.id)
+                # Delete the node graph inst
+                del node_graph_inst
+                # Finally delete the tab
+                dpg.delete_item(tab_id)
                 self.logger.info(f'****Deleted tab {deleted_tab_name}****')
-                # This does not del the node editor instance still
 
     def var_drop_callback(self, sender, app_data):
         """

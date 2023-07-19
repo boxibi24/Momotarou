@@ -150,6 +150,10 @@ class BaseNode:
     def succeeding_data_link_list(self, value: list):
         self._succeeding_data_link_list = value
 
+    @property
+    def id(self) -> int:
+        return self._node_id
+
     def __init__(self,
                  parent=None,
                  setting_dict=None,
@@ -164,6 +168,7 @@ class BaseNode:
         self._tag_node_name = None
         self._node_setting_dict = None
         self._callback = callback
+        self._node_id = -1
         if pos is None:
             self._pos = [0, 0]
         else:
@@ -276,7 +281,7 @@ class BaseNode:
             parent=parent,
             label=label,
             pos=_pos
-        ) as self.node_id:
+        ) as self._node_id:
             if self.pin_dict:
                 # First check node type to add common pins
                 if self.node_type & NodeTypeFlag.Pure:

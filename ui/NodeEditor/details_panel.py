@@ -3,6 +3,7 @@ from copy import deepcopy
 from ui.NodeEditor.utils import add_user_input_box, dpg_set_value
 from ui.NodeEditor.classes.node import NodeTypeFlag
 
+
 class DetailPanel:
 
     def __init__(self,
@@ -177,10 +178,10 @@ class DetailPanel:
         for node_get in _current_node_editor_instance.node_instance_dict.values():
             if node_get.node_label == 'Get ' + _old_var_name:
                 node_get.node_label = 'Get ' + _new_var_name
-                dpg.configure_item(node_get.node_id, label=node_get.node_label)
+                dpg.configure_item(node_get.id, label=node_get.node_label)
             if node_get.node_label == 'Set ' + _old_var_name:
                 node_get.node_label = 'Set ' + _new_var_name
-                dpg.configure_item(node_get.node_id, label=node_get.node_label)
+                dpg.configure_item(node_get.id, label=node_get.node_label)
 
         # Update new var name to all databases that store it
         # 1. master node_dict:
@@ -201,7 +202,7 @@ class DetailPanel:
         # Refresh splitter items
         _splitter_panel = self._parent_instance.current_node_editor_instance.splitter_panel
         _splitter_panel.var_dict = _current_node_editor_instance.splitter_var_dict
-        # Exposed var dict needs deep-copying since its add a splitter_id entry to the input dict
+        # Exposed var dict needs deep-copying since it adds a splitter_id entry to the input dict
         _splitter_panel.exposed_var_dict = deepcopy(_current_node_editor_instance.var_dict)
 
         _current_node_editor_instance.logger.info(f'Changed var name : {_old_var_name} to {_new_var_name}')

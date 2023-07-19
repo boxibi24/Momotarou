@@ -104,6 +104,8 @@ class DPGNodeEditor:
         self._event_dict = OrderedDict([])
         # dict of vars and its value stored in a list (make use of referencing_
         self._vars_dict = OrderedDict([])
+        # list of all item registries declared that will get deleted after the node graph termination
+        self.item_registry_dict = {}
 
         # ------ LOGGER ----------
         self.logger = create_queueHandler_logger(__name__ + '_' + dpg.get_item_label(parent_tab),
@@ -696,7 +698,7 @@ class DPGNodeEditor:
         self.logger.debug(f'     self.node_data_link_dict    :    {self.node_data_link_dict}')
         self.logger.debug(f'     self.node_flow_link_dict    :    {self.node_flow_link_dict}')
 
-    def execute_event(self, sender, app_data, user_data):
+    def preprocess_execute_event(self):
         # Reset every vars' value to None if it's not exposed, else get from user input box
         for var_info in self._vars_dict.values():
             if var_info['is_exposed'][0] is False:
@@ -704,19 +706,25 @@ class DPGNodeEditor:
             else:
                 user_input_value = dpg_get_value(var_info['user_input_box_id'])
                 var_info['value'][0] = user_input_value
-        # Reset all nodes' is_executed flags to False
+        # Reset all nodes' is_executed flags to False and set them to dirty
         for node in self.node_instance_dict.values():
-            # If node is Blueprint, also set it to dirty, to make the trigger events consistent
-            if node.node_type & NodeTypeFlag.Blueprint or node.node_type & NodeTypeFlag.Sequential:
+            # # If node is Blueprint, also set it to dirty, to make the trigger events consistent
+            # if node.node_type & NodeTypeFlag.Blueprint or node.node_type & NodeTypeFlag.Sequential:
+            #     node.is_dirty = True
+            #     # Refresh all the output values
+            #     node.refresh_output_pin_value()
+            if not node.is_dirty:
                 node.is_dirty = True
-                # Refresh all the output values
-                node.refresh_output_pin_value()
             node.is_executed = False
-        # Dirty mark and propagate any get var nodes
-        for var_tag, value in self._vars_dict.items():
-            for node in self.node_instance_dict.values():
-                if 'Get ' + value['name'][0] == node.node_label:
-                    node.is_dirty = True
+        # # Dirty mark and propagate any get var nodes
+        # for var_tag, value in self._vars_dict.items():
+        #     for node in self.node_instance_dict.values():
+        #         if 'Get ' + value['name'][0] == node.node_label:
+        #             node.is_dirty = True
+
+    def execute_event(self, sender, app_data, user_data):
+        # Perform initial cleanup
+        self.preprocess_execute_event()
         t1_start = 0
         if self._use_debug_print:
             t1_start = perf_counter()
