@@ -219,7 +219,8 @@ class Splitter:
                                       drag_data=new_var_tag,
                                       payload_type='var'):
                     dpg.add_text(default_name)
-                var_type_list = [member.name for member in InputPinType]
+                # Var type will be one of the InputPinType except for  'Exec' input
+                var_type_list = [member.name for member in InputPinType if member.name != 'Exec']
                 if self._combo_dict.get(new_var_tag, None) is None:
                     default_type = var_type_list[0]
                 else:
@@ -278,5 +279,10 @@ class Splitter:
         elif new_var_type == 'Bool':
             default_var_value = False
         _current_node_editor_instance.var_dict[_var_tag]['default_value'][0] = default_var_value
-
+        # Refresh the exposed variable window
+        self.exposed_var_dict = deepcopy(_current_node_editor_instance.var_dict)
+        # Also emulate a details callback to refresh show var detail
+        self._parent_instance.detail_panel.callback_show_var_detail('', '', user_data=_var_tag)
         _current_node_editor_instance.logger.info(f'Updated new type for var of tag {_var_tag}: {new_var_type}')
+
+

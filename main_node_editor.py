@@ -109,7 +109,7 @@ def main():
     # if os.path.isfile(ini_file_path):
     dpg.configure_app(init_file='dpg.ini')
 
-    # demo.show_demo()
+    demo.show_demo()
     dpg.create_viewport(
         title="RUT Node Editor",
         width=editor_width,
@@ -213,6 +213,17 @@ def main():
     logger.info('**** Start Main Event Loop ****')
     logger.debug("Running main synchronously")
     while dpg.is_dearpygui_running():
+        node_editor.node_editor_bb[0] = (dpg.get_item_pos(node_editor.current_tab)[0] + 8,
+                                         dpg.get_item_pos(node_editor.current_tab)[1] + 30)
+        node_editor.node_editor_bb[1] = (dpg.get_item_pos('__details_panel')[0] - 2,
+                                         dpg.get_viewport_height() - 47)
+        # viewport_height = dpg.get_viewport_height()
+        # print(f' viewport client height : {viewport_height}')
+        # print(f'Mouse pos: {dpg.get_mouse_pos(local=False)}')
+        # details_height = dpg.get_item_pos('__details_panel')
+        # print(f'details pos : {details_height}')
+        # print(node_editor.node_editor_bb)
+
         dpg.render_dearpygui_frame()
     logger.info('**** Terminate process ****')
     # Stop logging queue listener

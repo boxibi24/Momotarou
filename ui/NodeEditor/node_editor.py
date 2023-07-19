@@ -1,3 +1,5 @@
+from typing import List, Tuple
+
 from ui.NodeEditor.utils import generate_uuid, create_queueHandler_logger
 from multiprocessing import Queue
 from ui.NodeEditor.input_handler import *
@@ -28,6 +30,14 @@ class NodeEditor:
     def requested_exec_node_tag(self, value: str):
         self._requested_exec_node_tag = value
 
+    @property
+    def node_editor_bb(self) -> list[tuple]:
+        return self._node_editor_bb
+
+    @node_editor_bb.setter
+    def node_editor_bb(self, value: list[tuple]):
+        self._node_editor_bb = value
+
     def __init__(
         self,
         setting_dict=None,
@@ -52,6 +62,8 @@ class NodeEditor:
         self._node_editor_dict = OrderedDict([])
         # dict to keep track of the imported modules
         self._imported_module_dict = {}
+        # Tuple to store current node editor boundaries position
+        self._node_editor_bb = [(), ()]
 
         # ------- LOGGING ______
         self.logging_queue = logging_queue
@@ -127,19 +139,21 @@ class NodeEditor:
                            borders_outerV=False, borders_innerV=False, borders_innerH=False):
                 dpg.add_table_column(label='My Project', width_fixed=True, init_width_or_weight=300)
                 dpg.add_table_column(label='Event Graph')
-                dpg.add_table_column(label='Details (click UI item again to refresh data)', width_fixed=True, init_width_or_weight=300)
+                dpg.add_table_column(label='Details (click UI item again to refresh data)', width_fixed=True,
+                                     init_width_or_weight=300)
                 with dpg.table_row():
                     self.splitter_panel = Splitter(parent_instance=self)
                     with dpg.tab_bar(reorderable=True, callback=self.callback_tab_bar_change) as self._tab_bar_id:
-                        new_tab = dpg.add_tab(label='Default', parent=self._tab_bar_id,
-                                              closable=True, payload_type='var', drop_callback=self.var_drop_callback)
-                        new_node_editor = DPGNodeEditor(parent_tab=new_tab,
+                        self.current_tab = dpg.add_tab(label='Default', parent=self._tab_bar_id,
+                                                       closable=True, payload_type='var',
+                                                       drop_callback=self.var_drop_callback)
+                        new_node_editor = DPGNodeEditor(parent_tab=self.current_tab,
                                                         splitter_panel=self.splitter_panel,
                                                         setting_dict=self._setting_dict,
                                                         imported_module_dict=self._imported_module_dict,
                                                         use_debug_print=self._use_debug_print,
                                                         logging_queue=logging_queue)
-                        self._node_editor_dict.update({new_tab: new_node_editor})
+                        self._node_editor_dict.update({self.current_tab: new_node_editor})
                         self.current_node_editor_instance = new_node_editor
                         dpg.add_tab_button(label='+', callback=self._add_node_graph_tab, user_data=self._tab_bar_id,
                                            no_reorder=True, trailing=True)
@@ -151,8 +165,13 @@ class NodeEditor:
                                                    setting_dict=self._setting_dict,
                                                    use_debug_print=self._use_debug_print,
                                                    logging_queue=self.logging_queue)
+
             # Add handler registry
             self._add_handler_registry()
+
+    def _callback_show_right_click_menu(self):
+        if not dpg.get_selected_nodes(self.current_node_editor_instance.id):
+            self.right_click_menu.show = True
 
     def _add_handler_registry(self):
         """
@@ -187,12 +206,13 @@ class NodeEditor:
         self.refresh_node_editor_dict()
         try:
             self.current_node_editor_instance = self._node_editor_dict[app_data]
+            self.current_tab = app_data
         except KeyError:
             self.logger.exception('Could not query current node editor instance:')
             return -1
         # Also do a refresh of detail_panel
         self.detail_panel.refresh_ui()
-        # Also do a refresh of splitter
+        # Also do a refresh of splitter, assigning new dict will trigger its UI refresh methods
         self.splitter_panel.event_dict = self.current_node_editor_instance.event_dict
         self.splitter_panel.var_dict = self.current_node_editor_instance.splitter_var_dict
         self.splitter_panel.exposed_var_dict = self.current_node_editor_instance.var_dict

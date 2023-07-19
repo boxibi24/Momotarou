@@ -94,8 +94,30 @@ def mouse_right_click_handler(node_editor):
         pass
     else:  # Normal click
         # Show node selection list
-        if not dpg.get_selected_nodes(node_editor.current_node_editor_instance.id):
+        if not dpg.get_selected_nodes(node_editor.current_node_editor_instance.id) and \
+            is_cursor_inside_node_graph(node_editor.node_editor_bb):
             node_editor.right_click_menu.show = True
+
+
+def is_cursor_inside_node_graph(ng_bb) -> bool:
+    mouse_cursor_pos = dpg.get_mouse_pos(local=False)
+    if (mouse_cursor_pos[0] - ng_bb[0][0] > 0) and (mouse_cursor_pos[0] - ng_bb[1][0] < 0):
+        if (mouse_cursor_pos[1] - ng_bb[0][1] > 0) and (mouse_cursor_pos[1] - ng_bb[1][1] < 0):
+            is_inside = True
+        else:
+            is_inside = False
+    else:
+        is_inside = False
+
+    if is_inside:
+        print('cursor is inside!')
+        print(f'Mouse cursor pos: {mouse_cursor_pos}')
+        print(f'ng bb: {ng_bb}')
+    else:
+        print('cursor is outside')
+        print(f'Mouse cursor pos: {mouse_cursor_pos}')
+        print(f'ng bb: {ng_bb}')
+    return is_inside
 
 
 def key_press_handler(node_editor):
@@ -175,16 +197,23 @@ def delete_selected_node(node_editor):
                 node_editor.current_node_editor_instance.node_dict['nodes'].remove(node_info)
                 break
             except:
-                node_editor.current_node_editor_instance.logger.exception(f"Something wrong removing node info: {node_info}")
+                node_editor.current_node_editor_instance.logger.exception(
+                    f"Something wrong removing node info: {node_info}")
                 break
 
     # Delete the node
     dpg.delete_item(node_tag)
     # Sort the connection list
-    node_editor.current_node_editor_instance.node_data_link_dict = sort_data_link_dict(node_editor.current_node_editor_instance.data_link_list)
-    node_editor.current_node_editor_instance.node_flow_link_dict = sort_flow_link_dict(node_editor.current_node_editor_instance.flow_link_list)
+    node_editor.current_node_editor_instance.node_data_link_dict = sort_data_link_dict(
+        node_editor.current_node_editor_instance.data_link_list)
+    node_editor.current_node_editor_instance.node_flow_link_dict = sort_flow_link_dict(
+        node_editor.current_node_editor_instance.flow_link_list)
     node_editor.current_node_editor_instance.logger.info('**** Deleted Item ****')
-    node_editor.current_node_editor_instance.logger.debug(f'    node_editor.data_link_list       :    {node_editor.current_node_editor_instance.data_link_list}')
-    node_editor.current_node_editor_instance.logger.debug(f'    node_editor.flow_link_list       :    {node_editor.current_node_editor_instance.flow_link_list}')
-    node_editor.current_node_editor_instance.logger.debug(f'    sef.node_data_link_dict  :    {node_editor.current_node_editor_instance.node_data_link_dict}')
-    node_editor.current_node_editor_instance.logger.debug(f'    node_editor.node_flow_link_dict  :    {node_editor.current_node_editor_instance.node_flow_link_dict}')
+    node_editor.current_node_editor_instance.logger.debug(
+        f'    node_editor.data_link_list       :    {node_editor.current_node_editor_instance.data_link_list}')
+    node_editor.current_node_editor_instance.logger.debug(
+        f'    node_editor.flow_link_list       :    {node_editor.current_node_editor_instance.flow_link_list}')
+    node_editor.current_node_editor_instance.logger.debug(
+        f'    sef.node_data_link_dict  :    {node_editor.current_node_editor_instance.node_data_link_dict}')
+    node_editor.current_node_editor_instance.logger.debug(
+        f'    node_editor.node_flow_link_dict  :    {node_editor.current_node_editor_instance.node_flow_link_dict}')

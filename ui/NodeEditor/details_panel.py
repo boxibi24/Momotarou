@@ -100,7 +100,7 @@ class DetailPanel:
                 dpg.add_text('Name: ')
                 dpg.add_input_text(default_value=var_name,
                                    callback=self.callback_var_name_update, on_enter=True,
-                                   user_data=var_name_reference)
+                                   user_data=(var_tag, var_name_reference))
                 # dpg.add_separator()
             with dpg.group(horizontal=True):
                 add_user_input_box(var_type, callback=self.callback_default_var_value_update,
@@ -165,7 +165,8 @@ class DetailPanel:
         """
         _new_var_name = appdata
         _current_node_editor_instance = self._parent_instance.current_node_editor_instance
-        _old_var_name = user_data[0]
+        _var_tag = user_data[0]
+        _old_var_name = user_data[1][0]
         # Check if new name existed, then skip and set text input back to its previous value
         for var_info in _current_node_editor_instance.splitter_var_dict.values():
             if var_info['name'][0] == _new_var_name:
@@ -183,7 +184,7 @@ class DetailPanel:
 
         # Update new var name to all databases that store it
         # 1. master node_dict:
-        user_data[0] = _new_var_name
+        user_data[1][0] = _new_var_name
         node_info_list = _current_node_editor_instance.node_dict.get('nodes', None)
         if node_info_list is not None:
             for node_info in node_info_list:
@@ -196,7 +197,7 @@ class DetailPanel:
                 break
         # Refresh all UI elements to reflect the new name change
         # First refresh self
-        self.refresh_ui()
+        self.callback_show_var_detail('', '', user_data=_var_tag)
         # Refresh splitter items
         _splitter_panel = self._parent_instance.current_node_editor_instance.splitter_panel
         _splitter_panel.var_dict = _current_node_editor_instance.splitter_var_dict
