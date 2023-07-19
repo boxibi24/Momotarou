@@ -87,26 +87,33 @@ class Splitter:
 
         ) as self._splitter_id:
             # TODO: select other items will deselect nodes
-            with dpg.child_window(autosize_x=True, height=300):
-                with dpg.group(horizontal=True):
-                    dpg.add_button(label="Move event down", callback=None, arrow=True, direction=dpg.mvDir_Up)
-                    dpg.add_button(label="Button", callback=None, arrow=True, direction=dpg.mvDir_Down)
-                    dpg.add_button(label="Delete")
+            with dpg.child_window(autosize_x=True, height=500):
+                # with dpg.child_window(border=False):
+                # Exposed var list
+                self._exposed_var_collapsing_header = dpg.add_collapsing_header(label='Exposed Variables',
+                                                                                default_open=True)
                 dpg.add_separator()
-                with dpg.child_window(border=False):
-                    # Exposed var list
-                    self._exposed_var_collapsing_header = dpg.add_collapsing_header(label='Exposed Variables',
-                                                                                    default_open=True)
-                    # Event graph list
-                    self._event_graph_collapsing_header = dpg.add_collapsing_header(label='Event Graph',
-                                                                                    default_open=True)
+                with dpg.table(header_row=False, borders_innerV=True, height=400, reorderable=False, resizable=True):
+                    dpg.add_table_column(no_reorder=True, no_resize=True, init_width_or_weight=550)
+                    dpg.add_table_column(no_reorder=True, no_resize=True, init_width_or_weight=100)
+                    with dpg.table_row():
+                        # Event graph list
+                        self._event_graph_collapsing_header = dpg.add_collapsing_header(label='Event Graph',
+                                                                                        default_open=True)
+                        with dpg.group():
+                            dpg.add_button(label='Run', width=45)
+                            dpg.add_button(label="Add", width=45)
+                            dpg.add_button(label="Delete", width=45)
+                            dpg.add_button(callback=None, arrow=True, direction=dpg.mvDir_Up)
+                            dpg.add_button(callback=None, arrow=True, direction=dpg.mvDir_Down)
             with dpg.child_window(autosize_x=True):
-                with dpg.table(header_row=False, no_pad_outerX=True, no_pad_innerX=True):
-                    dpg.add_table_column(init_width_or_weight=400)
+                with dpg.table(header_row=False, borders_innerV=True,
+                               reorderable=False, resizable=True):
+                    dpg.add_table_column(init_width_or_weight=550)
                     dpg.add_table_column(init_width_or_weight=100)
                     with dpg.table_row():
                         self._default_var_header = dpg.add_collapsing_header(label='Variables', default_open=True)
-                        dpg.add_button(label='Add', indent=25, callback=self.add_var,
+                        dpg.add_button(label='Add', callback=self.add_var, width=45,
                                        user_data='var')
 
             self._parent_instance.logger.debug('**** Initialized Splitter ****')
@@ -146,7 +153,7 @@ class Splitter:
             _var_tag = key
             _is_var_exposed = value['is_exposed']
             if _is_var_exposed[0]:
-                with dpg.table(label='test123', parent=self._exposed_var_collapsing_header,
+                with dpg.table(parent=self._exposed_var_collapsing_header,
                                header_row=False, no_pad_outerX=True) as splitter_selectable_item:
                     dpg.add_table_column(no_reorder=True, no_resize=True, init_width_or_weight=100)
                     dpg.add_table_column(no_reorder=True, no_resize=True, init_width_or_weight=400)
@@ -211,7 +218,7 @@ class Splitter:
                             default_name = temp_name
                     i += 1
 
-        with dpg.table(label=default_name, header_row=False, no_pad_outerX=True, parent=parent) as var_splitter_id:
+        with dpg.table(header_row=False, no_pad_outerX=True, parent=parent) as var_splitter_id:
             dpg.add_table_column(init_width_or_weight=400)
             dpg.add_table_column(init_width_or_weight=300)
             with dpg.table_row():
@@ -237,7 +244,7 @@ class Splitter:
                                              callback=variable_right_click_menu,
                                              user_data=(new_var_tag, self._parent_instance))
             dpg.bind_item_handler_registry(_selectable_id, dpg.last_container())
-            _current_node_editor_instance.item_registry_dict.update({var_tag: item_handler_id})
+            _current_node_editor_instance.item_registry_dict.update({new_var_tag: item_handler_id})
         # Prep data
         new_var_info = {
             new_var_tag: {
