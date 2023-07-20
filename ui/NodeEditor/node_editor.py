@@ -15,7 +15,6 @@ from glob import glob
 from importlib import import_module
 
 
-
 class NodeEditor:
     _ver = '0.0.1'
     node_editor_label = 'Node Editor'
@@ -144,7 +143,7 @@ class NodeEditor:
                     self.splitter_panel = Splitter(parent_instance=self)
                     with dpg.tab_bar(reorderable=True, callback=self.callback_tab_bar_change) as self._tab_bar_id:
                         self.current_tab = dpg.add_tab(label='Default', parent=self._tab_bar_id,
-                                                       closable=True, payload_type='var',
+                                                       closable=True, payload_type='__var',
                                                        drop_callback=self.var_drop_callback)
                         new_node_editor = DPGNodeEditor(parent_tab=self.current_tab,
                                                         splitter_panel=self.splitter_panel,

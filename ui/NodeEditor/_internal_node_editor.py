@@ -779,6 +779,22 @@ class DPGNodeEditor:
                     if pin_info['pin_instance'].is_connected:
                         next_node = pin_info['pin_instance'].connected_link_list[0].target_node_instance
                     break
+        # If current node is a Set variable value type, then mark all of its get nodes to dirty
+        if 'Set ' in current_node.node_label:
+            _var_name = ' '.join(current_node.node_label.split(' ')[1:])
+            # Find if current node is a Set Var node
+            _is_var_declared = False
+            for _var_info in self._vars_dict.values():
+                if _var_name == _var_info['name'][0]:
+                    _is_var_declared = True
+                    break
+            # If found declared var, set all its Get nodes to dirty
+            if _is_var_declared:
+                self.logger.debug(f'Set {_var_name} triggered all Get {_var_name} nodes dirty propagation!')
+                for node in self.node_instance_dict.values():
+                    if 'Get ' + _var_name == node.node_label:
+                        node.is_dirty = True
+
         # Store anchors point if current node is sequential nodes
         if current_node.node_type == NodeTypeFlag.Sequential:
             if current_node.node_label == 'Sequence':

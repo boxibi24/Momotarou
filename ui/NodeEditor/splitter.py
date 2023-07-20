@@ -175,7 +175,13 @@ class Splitter:
             splitter_selectable_item = dpg.add_selectable(label=_event_name,
                                                           parent=self._event_graph_collapsing_header,
                                                           callback=_detail_panel_inst.callback_show_event_detail,
-                                                          user_data=_event_tag)
+                                                          user_data=_event_tag,
+                                                          payload_type='__event',
+                                                          drop_callback=self.drop_callback_reorder_event)
+            with dpg.drag_payload(parent=dpg.last_item(),
+                                  drag_data=_event_tag,
+                                  payload_type='__event'):
+                dpg.add_text('Event ' + _event_name)
             with dpg.item_handler_registry() as item_handler_id:
                 dpg.add_item_clicked_handler(button=dpg.mvMouseButton_Right,
                                              callback=event_right_click_menu,
@@ -185,6 +191,22 @@ class Splitter:
             self._event_dict[_event_tag].update({'splitter_id': splitter_selectable_item})
 
         _current_node_editor_instance.logger.debug('**** Refreshed event graph window ****')
+
+    def drop_callback_reorder_event(self, sender, app_data):
+        print(f'sender : {dpg.get_item_label(sender)}')
+        print(f'app data: {app_data}')
+        _current_node_editor_instance = self._parent_instance.current_node_editor_instance
+        source_event_tag = app_data
+        destination_event_tag = None
+        for event_tag, value in self._event_dict.items():
+            if value['splitter_id'] == sender:
+                destination_event_tag = event_tag
+                break
+        if destination_event_tag is None:
+            _current_node_editor_instance.logger.error(f'Could not find '
+                                                       f'Event {dpg.get_item_label(sender)} from event dict!')
+            return 3
+        # OrderedDict([])
 
     def refresh_exposed_var_window(self):
         """
@@ -276,7 +298,7 @@ class Splitter:
                                                     user_data=new_var_tag)
                 with dpg.drag_payload(parent=dpg.last_item(),
                                       drag_data=new_var_tag,
-                                      payload_type='var'):
+                                      payload_type='__var'):
                     dpg.add_text(default_name)
                 # Var type will be one of the InputPinType except for  'Exec' input
                 var_type_list = [member.name for member in InputPinType if member.name != 'Exec']
