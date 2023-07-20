@@ -15,7 +15,6 @@ from glob import glob
 from importlib import import_module
 
 
-# TODO: Node Editor Stuck when looping nodes
 
 class NodeEditor:
     _ver = '0.0.1'

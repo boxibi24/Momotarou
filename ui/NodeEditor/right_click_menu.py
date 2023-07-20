@@ -69,7 +69,6 @@ class RightClickMenu:
             no_bring_to_front_on_focus=True,
             max_size=[200, 200],
         ) as self._window_id:
-            # TODO: find better way to filter selectable
             with dpg.table(freeze_rows=1, header_row=False, scrollY=True):
                 dpg.add_table_column()
                 with dpg.table_row():

@@ -5,7 +5,8 @@ from importlib import import_module
 from multiprocessing import Queue, current_process
 import psutil
 
-#TODO re-apply new NG logics to this, including: var node loading, caching, dirty trigger for var on exec
+
+# TODO re-apply new NG logics to this, including: var node loading, caching, dirty trigger for var on exec
 class ToolsViewer:
     """Main class to handle exported data from Node Editor and display them to DPG widgets
     """
@@ -484,7 +485,8 @@ class ToolsViewer:
                         if preceding_node_info['meta_type'] == 1:
                             self.backward_construct_node(preceding_node_info, preceding_node_index)
                     else:
-                        self.logger.error(f'Could not find preceding node although this pin {data_link[1]} is connected')
+                        self.logger.error(
+                            f'Could not find preceding node although this pin {data_link[1]} is connected')
                         continue
                     break
             if found_link_flag is False:

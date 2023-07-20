@@ -47,12 +47,12 @@ class DPGNodeEditor:
         return self._node_dict
 
     @property
-    def export_event_dict(self) -> dict:
-        return self._export_event_dict
+    def tobe_exported_event_dict(self) -> dict:
+        return self._tobe_exported_event_dict
 
-    @export_event_dict.setter
-    def export_event_dict(self, value: dict):
-        self._export_event_dict = value
+    @tobe_exported_event_dict.setter
+    def tobe_exported_event_dict(self, value: dict):
+        self._tobe_exported_event_dict = value
 
     @property
     def event_dict(self) -> OrderedDict:
@@ -98,7 +98,7 @@ class DPGNodeEditor:
         self._node_data_link_dict = OrderedDict([])
         self._node_flow_link_dict = OrderedDict([])
         # dict of event nodes as keys and their first connected node as value
-        self._export_event_dict = {}
+        self._tobe_exported_event_dict = {}
         # dict of events nodes for splitter entries
         self._event_dict = OrderedDict([])
         # dict of vars and its value stored in a list (make use of referencing_
@@ -138,7 +138,7 @@ class DPGNodeEditor:
             target_pin_tag = link.target_pin_instance.pin_tag
             data_link_list.append([source_pin_tag, target_pin_tag])
         # Refresh the events list
-        setting_dict['events'] = self.export_event_dict
+        setting_dict['events'] = self.tobe_exported_event_dict
         setting_dict.update({'flows': flow_link_list, 'data_links': data_link_list})
         # Update the is exposed status of the nodes and the pins value
         try:
@@ -343,16 +343,14 @@ class DPGNodeEditor:
         # Clear node selection after adding a node to avoid last_pos being overriden
         dpg.clear_selected_nodes(node_editor=self.id)
         # For debugging event node
-        # TODO: Remove this hardcode
         node = intermediate_node.create_node()
         # Store event list to display it on Splitter
         if node.node_type == NodeTypeFlag.Event:
             # Strip the first string 'Event ' out
             _event_stripped_name = ' '.join(node.node_label.split(' ')[1:])
             self._event_dict.update(
-                {node.node_tag: {'name': _event_stripped_name, 'category': 'default'}})
+                {node.node_tag: {'name': [_event_stripped_name], 'type': ['Button']}})
             self.splitter_panel.event_dict = self._event_dict
-            self.splitter_panel.event_run_item_dict.update({_event_stripped_name: node.node_tag})
         # Store the node instance along with its tag
         self.node_instance_dict[node.node_tag] = node
         # add pins entries to private _node_dict
@@ -467,7 +465,7 @@ class DPGNodeEditor:
                             target_pin_instance.connected_link_list.append(link)
                             # Update event dict to store target node tag if it's connected to an event node
                             if source_node_instance.node_type == NodeTypeFlag.Event:
-                                self.export_event_dict.update({source_node_tag: target_node_tag})
+                                self.tobe_exported_event_dict.update({source_node_tag: target_node_tag})
                         else:
                             self.logger.error("Cannot add a null link")
                 # Check if duplicate linkage, can happen if user swap link direction
@@ -499,7 +497,7 @@ class DPGNodeEditor:
                                 target_pin_instance.connected_link_list.append(link)
                                 # Update event dict to store target node tag if it's connected to an event node
                                 if source_node_instance.node_type == NodeTypeFlag.Event:
-                                    self.export_event_dict.update({source_node_tag: target_node_tag})
+                                    self.tobe_exported_event_dict.update({source_node_tag: target_node_tag})
                             else:
                                 self.logger.error("Cannot add a null link")
             else:  # Direct data links to data_link_list
@@ -615,7 +613,7 @@ class DPGNodeEditor:
             self.logger.debug(f'    self.node_dict             :     {self.node_dict}')
             self.logger.debug(f'    self.node_data_link_dict   :     {self.node_data_link_dict}')
             self.logger.debug(f'    self.node_flow_link_dict   :     {self.node_flow_link_dict}')
-            self.logger.debug(f'    self.event_dict            :     {self.export_event_dict}')
+            self.logger.debug(f'    self.event_dict            :     {self.tobe_exported_event_dict}')
 
     def callback_delink(self, sender, app_data):
         # Remove instance from link list hence trigger its destructor
@@ -679,7 +677,7 @@ class DPGNodeEditor:
                     link.target_pin_instance.connected_link_list.clear()
                     # Also remove this entry from event dict
                     if link.source_node_instance.node_type == NodeTypeFlag.Event:
-                        self.export_event_dict.pop(link.source_node_instance.node_tag)
+                        self.tobe_exported_event_dict.pop(link.source_node_instance.node_tag)
                     return 0
 
         self.logger.info('**** Link broke ****')
@@ -714,7 +712,7 @@ class DPGNodeEditor:
         self.logger.info(f'**** Exec event : {event_node_tag} ****')
 
         # Get first node instance that is connected to this user_data node
-        current_node_tag = self.export_event_dict.get(event_node_tag, None)
+        current_node_tag = self.tobe_exported_event_dict.get(event_node_tag, None)
         if not current_node_tag:
             self.logger.error('Cannot find the event, this could be due to the event node not connecting to anything!')
             return 1
@@ -907,12 +905,18 @@ class DPGNodeEditor:
         self.logger.debug(f'var_dict: {self._vars_dict}')
         self.logger.debug(f'splitter_var_dict:  {self._splitter_var_dict}')
 
-    # TODO: input box shown on TV represents var_value TODO: anytime default value change (NG), reset the var_value to None, and set the Get nodes to dirty (DONE) -> listen to default_var_value changes -> trigger self.dirty
-    # TODO: During flow chain, if meet set var nodes, sets all get nodes to dirty
-    # TODO: at begin event execution, set every vars' values to None if not exposed, apply user input value if exposed. Dirty mark them
+    # Done: input box shown on TV represents var_value
+    #
+    # Done: anytime default value change (NG), reset the var_value
+    # to None, and set the Get nodes to dirty (DONE) -> listen to default_var_value changes -> trigger self.dirty
 
-    # TODO: display any exposed var on Event Graph list, at the top
-    # TODO: add checkbox is_required?, If yes, when grabbing for input, the input field  cannot be None
+    # Done: During flow chain, if meet set var nodes, sets all get nodes to dirty
+    #
+    # Done: at begin event execution,
+    # set every vars' values to None if not exposed, apply user input value if exposed. Dirty mark them
+
+    # Done: display any exposed var on Event Graph list, at the top
+    # Done: add checkbox is_required?, If yes, when grabbing for input, the input field  cannot be None
 
     def register_var_user_input_box(self, var_tag, user_box_id):
         """

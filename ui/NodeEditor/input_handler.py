@@ -143,9 +143,9 @@ def delete_selected_node(node_editor, node_id=None):
 
     # If node is of Event Node, also delete them from the splitter
     if node_instance.node_type == NodeTypeFlag.Event:
-        temp_dict = node_editor.current_node_editor_instance.splitter_panel.event_dict
-        temp_dict.pop(node_instance.node_tag)
-        node_editor.current_node_editor_instance.splitter_panel.event_dict = temp_dict
+        node_editor.current_node_editor_instance.splitter_panel.event_dict.pop(node_instance.node_tag)
+        node_editor.current_node_editor_instance.splitter_panel.event_dict = node_editor.current_node_editor_instance.splitter_panel.event_dict
+        # pop tobe_exported_event_dict entry is handled in the delink function
     # Remove item from node list
     try:
         node_editor.current_node_editor_instance.node_instance_dict.pop(node_tag)

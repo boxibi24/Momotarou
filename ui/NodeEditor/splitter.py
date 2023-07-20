@@ -78,7 +78,6 @@ class Splitter:
             self._exposed_var_dict = OrderedDict([])
         else:
             self._exposed_var_dict = exposed_var_dict
-        self.event_run_item_dict = {}
         # Splitter
         with dpg.child_window(
             width=self._width,
@@ -162,6 +161,7 @@ class Splitter:
         Refresh the Event Graph collapsing header on Splitter
         """
         _current_node_editor_instance = self._parent_instance.current_node_editor_instance
+        _detail_panel_inst = self._parent_instance.detail_panel
         # First clear out existing items in splitter:
         for value in self._old_event_dict.values():
             splitter_id = value.get('splitter_id', None)
@@ -170,15 +170,19 @@ class Splitter:
             dpg.delete_item(splitter_id)
         # Then add back the events item to the splitter
         for key, value in self._event_dict.items():
-            splitter_selectable_item = dpg.add_selectable(label=value['name'],
-                                                          parent=self._event_graph_collapsing_header)
+            _event_tag = key
+            _event_name = value['name'][0]
+            splitter_selectable_item = dpg.add_selectable(label=_event_name,
+                                                          parent=self._event_graph_collapsing_header,
+                                                          callback=_detail_panel_inst.callback_show_event_detail,
+                                                          user_data=_event_tag)
             with dpg.item_handler_registry() as item_handler_id:
                 dpg.add_item_clicked_handler(button=dpg.mvMouseButton_Right,
                                              callback=event_right_click_menu,
-                                             user_data=(value['name'], self.event_run_item_dict, self._parent_instance))
+                                             user_data=(_event_tag, self._parent_instance))
             dpg.bind_item_handler_registry(splitter_selectable_item, dpg.last_container())
-            _current_node_editor_instance.item_registry_dict.update({key: item_handler_id})
-            self._event_dict[key].update({'splitter_id': splitter_selectable_item})
+            _current_node_editor_instance.item_registry_dict.update({_event_tag: item_handler_id})
+            self._event_dict[_event_tag].update({'splitter_id': splitter_selectable_item})
 
         _current_node_editor_instance.logger.debug('**** Refreshed event graph window ****')
 
