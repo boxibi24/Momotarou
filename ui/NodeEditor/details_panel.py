@@ -191,8 +191,6 @@ class DetailPanel:
             for node_info in node_info_list:
                 if 'Set ' + _old_var_name == node_info['label'] or 'Get ' + _old_var_name == node_info['label']:
                     node_info['label'] = node_info['label'].split(' ')[0] + ' ' + _new_var_name
-        else:
-            _current_node_editor_instance.logger.criticle(f'Could not query master node_dict to update new variable name')
         # 2. Node Graph's splitter_var_dict & Node Graph's var_dict & Splitter's combo_dict all reference the same name
         for var_info in _current_node_editor_instance.splitter_var_dict.values():
             if var_info['name'][0] == _old_var_name:

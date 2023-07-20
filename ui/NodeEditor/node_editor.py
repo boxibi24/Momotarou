@@ -1,5 +1,3 @@
-from typing import List, Tuple
-
 from ui.NodeEditor.utils import generate_uuid, create_queueHandler_logger
 from multiprocessing import Queue
 from ui.NodeEditor.input_handler import *
@@ -13,6 +11,7 @@ import os
 import platform
 from glob import glob
 from importlib import import_module
+from copy import deepcopy
 
 
 class NodeEditor:
@@ -190,7 +189,7 @@ class NodeEditor:
         new_tab_name = simpledialog.askstring(title='Rename tab', prompt='Name your new tab: ')
         root.destroy()
         new_tab = dpg.add_tab(label=new_tab_name, parent=user_data,
-                              closable=True, payload_type='var', drop_callback=self.var_drop_callback)
+                              closable=True, payload_type='__var', drop_callback=self.var_drop_callback)
         new_node_editor = DPGNodeEditor(parent_tab=new_tab,
                                         splitter_panel=self.splitter_panel,
                                         setting_dict=self._setting_dict,
@@ -215,7 +214,7 @@ class NodeEditor:
         # Also do a refresh of splitter, assigning new dict will trigger its UI refresh methods
         self.splitter_panel.event_dict = self.current_node_editor_instance.event_dict
         self.splitter_panel.var_dict = self.current_node_editor_instance.splitter_var_dict
-        self.splitter_panel.exposed_var_dict = self.current_node_editor_instance.var_dict
+        self.splitter_panel.exposed_var_dict = deepcopy(self.current_node_editor_instance.var_dict)
 
         # If tab not deleted, delete the orphaned registry from old node graph
         # since all selectable-headers will be refreshed

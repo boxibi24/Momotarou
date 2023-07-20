@@ -4,6 +4,7 @@ from copy import deepcopy
 from ui.NodeEditor.classes.pin import InputPinType
 from ui.NodeEditor.utils import generate_uuid, add_user_input_box
 from ui.NodeEditor.item_right_click_menus import variable_right_click_menu, event_right_click_menu
+from pprint import pprint
 
 
 class Splitter:
@@ -193,20 +194,54 @@ class Splitter:
         _current_node_editor_instance.logger.debug('**** Refreshed event graph window ****')
 
     def drop_callback_reorder_event(self, sender, app_data):
-        print(f'sender : {dpg.get_item_label(sender)}')
-        print(f'app data: {app_data}')
         _current_node_editor_instance = self._parent_instance.current_node_editor_instance
-        source_event_tag = app_data
-        destination_event_tag = None
+        _source_event_tag = app_data
+        _destination_event_tag = None
         for event_tag, value in self._event_dict.items():
             if value['splitter_id'] == sender:
-                destination_event_tag = event_tag
+                _destination_event_tag = event_tag
                 break
-        if destination_event_tag is None:
+        if _destination_event_tag is None:
             _current_node_editor_instance.logger.error(f'Could not find '
                                                        f'Event {dpg.get_item_label(sender)} from event dict!')
             return 3
-        # OrderedDict([])
+        source_event_index = -1
+        destination_event_index = -1
+        for _index, event_tag in enumerate(self._event_dict.keys()):
+            if _source_event_tag == event_tag:
+                source_event_index = _index
+            if _destination_event_tag == event_tag:
+                destination_event_index = _index
+
+        if source_event_index == -1 or destination_event_index == -1:
+            _current_node_editor_instance.logger.error(f'Could not find the indices of the events in event dict')
+            return 3
+
+        # Make a copy of event dict keys
+        temp_dict = OrderedDict(enumerate(self._event_dict.keys()))
+        pprint(temp_dict)
+
+        _push_up_order = False
+        _index_gap = 0
+        if source_event_index - destination_event_index < 0:  # push down the order
+            _index_gap = destination_event_index - source_event_index
+            _push_up_order = False
+        else:
+            _index_gap = source_event_index - destination_event_index
+            _push_up_order = True
+
+        if _push_up_order:
+            for i in range(destination_event_index + 1, len(temp_dict)):
+                if i - destination_event_index == _index_gap:
+                    continue
+                _current_node_editor_instance.event_dict.move_to_end(key=temp_dict[i])
+        else:
+            for i in range(source_event_index, len(temp_dict)):
+                if 0 < i - source_event_index <= _index_gap:
+                    continue
+                _current_node_editor_instance.event_dict.move_to_end(key=temp_dict[i])
+        self.event_dict = _current_node_editor_instance.event_dict
+        _current_node_editor_instance.logger.debug(f'**** New event dict order updated ****')
 
     def refresh_exposed_var_window(self):
         """
@@ -222,6 +257,7 @@ class Splitter:
         # Then add back the events item to the splitter
         for key, value in self._exposed_var_dict.items():
             _var_tag = key
+            _var_name = value['name'][0]
             _is_var_exposed = value['is_exposed']
             if _is_var_exposed[0]:
                 with dpg.table(parent=self._exposed_var_collapsing_header,
@@ -229,15 +265,75 @@ class Splitter:
                     dpg.add_table_column(no_reorder=True, no_resize=True, init_width_or_weight=100)
                     dpg.add_table_column(no_reorder=True, no_resize=True, init_width_or_weight=400)
                     with dpg.table_row():
-                        dpg.add_selectable(label=value['name'][0],
+                        _selectable_id = dpg.add_selectable(label=_var_name,
                                            # parent=self._exposed_var_collapsing_header,
                                            callback=self._parent_instance.detail_panel.callback_show_var_detail,
-                                           user_data=_var_tag)
+                                           user_data=_var_tag,
+                                           payload_type='__exposed_var',
+                                           drop_callback=self.drop_callback_reorder_var)
+                        with dpg.drag_payload(parent=dpg.last_item(),
+                                              drag_data=_var_tag,
+                                              payload_type='__exposed_var'):
+                            dpg.add_text(_var_name)
                         _user_input_box = add_user_input_box(var_type=value['type'][0], width=300)
                         _current_node_editor_instance.register_var_user_input_box(_var_tag, _user_input_box)
-                self._exposed_var_dict[_var_tag].update({'splitter_id': splitter_selectable_item})
+                self._exposed_var_dict[_var_tag].update({'splitter_id': splitter_selectable_item,
+                                                         'selectable_id': _selectable_id})
 
         _current_node_editor_instance.logger.debug('**** Refreshed exposed var window ****')
+
+    def drop_callback_reorder_var(self, sender, app_data):
+        _current_node_editor_instance = self._parent_instance.current_node_editor_instance
+        _source_var_tag = app_data
+        _destination_var_tag = None
+        pprint(self._exposed_var_dict)
+        for var_tag, value in self._exposed_var_dict.items():
+            if value['is_exposed'][0]:
+                if value['selectable_id'] == sender:
+                    _destination_var_tag = var_tag
+                    break
+        if _destination_var_tag is None:
+            _current_node_editor_instance.logger.error(f'Could not find '
+                                                       f'variable {dpg.get_item_label(sender)} from splitter'
+                                                       f' var dict!')
+            return 3
+        _source_var_index = -1
+        _destination_var_index = -1
+        for _index, var_tag in enumerate(self._exposed_var_dict.keys()):
+            if _source_var_tag == var_tag:
+                _source_var_index = _index
+            if _destination_var_tag == var_tag:
+                _destination_var_index = _index
+
+        if _source_var_index == -1 or _destination_var_index == -1:
+            _current_node_editor_instance.logger.error(f'Could not find the indices of the vars in splitter var dict')
+            return 3
+
+        # Make a copy of var dict keys
+        temp_dict = OrderedDict(enumerate(self._exposed_var_dict.keys()))
+        pprint(temp_dict)
+
+        _push_up_order = False
+        _index_gap = 0
+        if _source_var_index - _destination_var_index < 0:  # push down the order
+            _index_gap = _destination_var_index - _source_var_index
+            _push_up_order = False
+        else:
+            _index_gap = _source_var_index - _destination_var_index
+            _push_up_order = True
+
+        if _push_up_order:
+            for i in range(_destination_var_index + 1, len(temp_dict)):
+                if i - _destination_var_index == _index_gap:
+                    continue
+                _current_node_editor_instance.var_dict.move_to_end(key=temp_dict[i])
+        else:
+            for i in range(_source_var_index, len(temp_dict)):
+                if 0 < i - _source_var_index <= _index_gap:
+                    continue
+                _current_node_editor_instance.var_dict.move_to_end(key=temp_dict[i])
+        self.exposed_var_dict = deepcopy(_current_node_editor_instance.var_dict)
+        _current_node_editor_instance.logger.debug(f'**** New event dict order updated ****')
 
     def refresh_variable_window(self):
         """
