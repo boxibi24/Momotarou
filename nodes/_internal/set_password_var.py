@@ -7,11 +7,11 @@ class Node(BaseNode):
 
     ver = '0.0.1'
     # node_label needs to match with the OutputPinType. Later on, this param will be overridden by var_name
-    node_label = 'Set Int'
+    node_label = 'Set Password'
     node_type = NodeTypeFlag.Blueprint
     pin_dict = {
-        'Int in': InputPinType.Int,
-        'Int out': OutputPinType.Int
+        'String in': InputPinType.Password,
+        'String out': OutputPinType.Password
     }
 
     @staticmethod
@@ -21,5 +21,5 @@ class Node(BaseNode):
             # KeyError could not find var_value in internal_data_dict
             return 8
         else:
-            internal_data_dict['var_value'][0] = internal_data_dict['Int in']
-            internal_data_dict['Int out'] = internal_data_dict['Int in']
+            internal_data_dict['var_value'][0] = internal_data_dict['Password in']
+            internal_data_dict['Password out'] = internal_data_dict['Password in']

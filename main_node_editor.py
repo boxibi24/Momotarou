@@ -109,7 +109,7 @@ def main():
     # if os.path.isfile(ini_file_path):
     dpg.configure_app(init_file='dpg.ini')
 
-    demo.show_demo()
+    # demo.show_demo()
     dpg.create_viewport(
         title="RUT Node Editor",
         width=editor_width,

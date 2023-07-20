@@ -73,16 +73,14 @@ class NodeEditor:
         if node_menu_dict is None:
             self._node_menu_dict = OrderedDict({
                 '_internal': '_internal',
-                # 'Input Node': 'input_node',
                 'Process Node': 'process_node',
                 'Output Node': 'output_node',
-                # 'Event Node': 'event_node',
                 'Exec Node': 'exec_node',
                 'Math Node': 'math_node',
                 'Flow Control': 'flow_control_node',
                 'Perforce Node': 'perforce_node'
             })
-            self._menu_construct_dict = OrderedDict([])
+            self.menu_construct_dict = OrderedDict([])
             # Add right-click-menu items defined
             for tree_node_info in self._node_menu_dict.items():
                 # Store paths of written nodes
@@ -114,14 +112,14 @@ class NodeEditor:
                     if module:
                         self._imported_module_dict.update({import_path: module})
                         node_category = tree_node_info[0]
-                        if self._menu_construct_dict.get(node_category, None) is None:
+                        if self.menu_construct_dict.get(node_category, None) is None:
                             node_module_item = OrderedDict([])
                             node_module_item.update({module.Node.node_label: (import_path, module)})
-                            self._menu_construct_dict.update({node_category:
+                            self.menu_construct_dict.update({node_category:
                                                                   node_module_item
-                                                              })
+                                                             })
                         else:
-                            self._menu_construct_dict[node_category].update(
+                            self.menu_construct_dict[node_category].update(
                                 {module.Node.node_label: (import_path, module)})
                     else:
                         self.logger.critical(f"Could not import module {import_path}")
@@ -158,7 +156,7 @@ class NodeEditor:
             # Initialize right click menu
             self.right_click_menu = RightClickMenu(parent_inst=self,
                                                    imported_module_dict=self._imported_module_dict,
-                                                   menu_construct_dict=self._menu_construct_dict,
+                                                   menu_construct_dict=self.menu_construct_dict,
                                                    setting_dict=self._setting_dict,
                                                    use_debug_print=self._use_debug_print,
                                                    logging_queue=self.logging_queue)
@@ -286,7 +284,7 @@ class NodeEditor:
         if sender_tag == '__get_var':
             # Get the imported internal modules
             try:
-                _internal_module_dict = self._menu_construct_dict['_internal']
+                _internal_module_dict = self.menu_construct_dict['_internal']
             except KeyError:
                 self.logger.exception('Could not query _internal modules:')
                 return -1
@@ -307,7 +305,7 @@ class NodeEditor:
         elif sender_tag == '__set_var':
             # Get the imported internal modules
             try:
-                _internal_module_dict = self._menu_construct_dict['_internal']
+                _internal_module_dict = self.menu_construct_dict['_internal']
             except KeyError:
                 self.logger.exception('Could not query _internal modules:')
                 return -1
@@ -327,7 +325,7 @@ class NodeEditor:
         elif '__event' in sender_tag:
             # Get the imported internal modules
             try:
-                _internal_module_dict = self._menu_construct_dict['_internal']
+                _internal_module_dict = self.menu_construct_dict['_internal']
             except KeyError:
                 self.logger.exception('Could not query _internal modules:')
                 return -1

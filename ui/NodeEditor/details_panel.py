@@ -106,7 +106,7 @@ class DetailPanel:
             with dpg.group(horizontal=True):
                 add_user_input_box(var_type, callback=self.callback_default_var_value_update,
                                    default_value=default_var_value,
-                                   user_data=(var_name_reference, default_var_value_reference),
+                                   user_data=(var_tag, var_name_reference, default_var_value_reference),
                                    text='Default value: ',
                                    add_separator=False)
             with dpg.group(horizontal=True):
@@ -131,11 +131,16 @@ class DetailPanel:
 
     def callback_default_var_value_update(self, sender, app_data, user_data):
         _current_node_editor_instance = self._parent_instance.current_node_editor_instance
-        user_data[1][0] = app_data
+        _var_tag = user_data[0]
+        user_data[2][0] = app_data
         # Set every Get nodes of this variable to dirty
         for node_get in self._parent_instance.current_node_editor_instance.node_instance_dict.values():
-            if node_get.node_label == 'Get ' + user_data[0][0]:
+            if node_get.node_label == 'Get ' + user_data[1][0]:
                 node_get.is_dirty = True
+
+        # Refresh self
+        self.callback_show_var_detail('', '', user_data=_var_tag)
+
         _current_node_editor_instance.logger.info(f'{user_data[0][0]} new default value updated: {app_data}')
 
     def callback_var_is_exposed_update(self, sender, app_data, user_data):
@@ -152,6 +157,8 @@ class DetailPanel:
         _splitter_panel = self._parent_instance.current_node_editor_instance.splitter_panel
         _splitter_panel.exposed_var_dict = deepcopy(_current_var_dict)
 
+        # Refresh self
+        self.callback_show_var_detail('', '', user_data=_var_tag)
         # Logging
         if app_data:
             _current_node_editor_instance.logger.info(

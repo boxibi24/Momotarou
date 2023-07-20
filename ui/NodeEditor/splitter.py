@@ -5,6 +5,7 @@ from ui.NodeEditor.classes.pin import InputPinType
 from ui.NodeEditor.utils import generate_uuid, add_user_input_box
 from ui.NodeEditor.item_right_click_menus import variable_right_click_menu, event_right_click_menu
 from pprint import pprint
+from ui.NodeEditor.input_handler import delete_selected_node
 
 
 class Splitter:
@@ -266,11 +267,11 @@ class Splitter:
                     dpg.add_table_column(no_reorder=True, no_resize=True, init_width_or_weight=400)
                     with dpg.table_row():
                         _selectable_id = dpg.add_selectable(label=_var_name,
-                                           # parent=self._exposed_var_collapsing_header,
-                                           callback=self._parent_instance.detail_panel.callback_show_var_detail,
-                                           user_data=_var_tag,
-                                           payload_type='__exposed_var',
-                                           drop_callback=self.drop_callback_reorder_var)
+                                                            # parent=self._exposed_var_collapsing_header,
+                                                            callback=self._parent_instance.detail_panel.callback_show_var_detail,
+                                                            user_data=_var_tag,
+                                                            payload_type='__exposed_var',
+                                                            drop_callback=self.drop_callback_reorder_var)
                         with dpg.drag_payload(parent=dpg.last_item(),
                                               drag_data=_var_tag,
                                               payload_type='__exposed_var'):
@@ -397,7 +398,7 @@ class Splitter:
                                       payload_type='__var'):
                     dpg.add_text(default_name)
                 # Var type will be one of the InputPinType except for  'Exec' input
-                var_type_list = [member.name for member in InputPinType if member.name != 'Exec']
+                var_type_list = [member.name for member in InputPinType if member.name not in ['Exec', 'WildCard']]
                 if self._combo_dict.get(new_var_tag, None) is None:
                     default_type = var_type_list[0]
                 else:
@@ -447,23 +448,100 @@ class Splitter:
     def combo_update_callback(self, sender, app_data, user_data):
         _current_node_editor_instance = self._parent_instance.current_node_editor_instance
         _var_tag = user_data
-        new_var_type = app_data
-        self._combo_dict[_var_tag][1][0] = new_var_type
+        _var_name = _current_node_editor_instance.var_dict[_var_tag]['name'][0]
+        _new_var_type = app_data
+        _found_var_node_instance = False
+        # Find first Get/Set node instances in current node graph, if found re-confirm with user for node replacement
+        for node in _current_node_editor_instance.node_instance_dict.values():
+            if node.node_label == 'Set ' + _var_name or node.node_label == 'Get ' + _var_name:
+                _found_var_node_instance = True
+                break
+
+        if _found_var_node_instance:
+            _mid_widget_pos = [int(dpg.get_viewport_width() / 2.5), int(dpg.get_viewport_height() / 2.5)]
+            with dpg.window(modal=True, label='Delete Event',
+                            pos=_mid_widget_pos) as _modal_window:
+                dpg.add_text("Changing variable type will delink and replace all node instances of this var !\n"
+                             "This operation cannot be undone!")
+                with dpg.group(horizontal=True):
+                    dpg.add_button(label="OK", width=75, callback=self.callback_replace_node_of_new_type,
+                                   user_data=((_var_tag, _new_var_type), _modal_window))
+                    dpg.add_button(label="Cancel", width=75, callback=lambda: dpg.delete_item(_modal_window))
+        else:
+            self.var_type_update(_var_tag, _new_var_type)
+
+    def var_type_update(self, var_tag, new_type):
+        _var_tag = var_tag
+        _new_var_type = new_type
+        _current_node_editor_instance = self._parent_instance.current_node_editor_instance
+        _var_name = _current_node_editor_instance.var_dict[_var_tag]['name'][0]
+
+        self._combo_dict[_var_tag][1][0] = _new_var_type
         # Need to refresh the child Node Graph's var value & default value also
-        self._parent_instance.current_node_editor_instance.var_dict[_var_tag]['value'][0] = None
+        _current_node_editor_instance.var_dict[_var_tag]['value'][0] = None
         default_var_value = None
         # set default var value based on value type
-        if new_var_type in ['String', 'MultilineString', 'Password']:
+        if _new_var_type in ['String', 'MultilineString', 'Password']:
             default_var_value = ''
-        elif new_var_type == 'Int':
+        elif _new_var_type == 'Int':
             default_var_value = 0
-        elif new_var_type == 'Float':
+        elif _new_var_type == 'Float':
             default_var_value = 0.0
-        elif new_var_type == 'Bool':
+        elif _new_var_type == 'Bool':
             default_var_value = False
         _current_node_editor_instance.var_dict[_var_tag]['default_value'][0] = default_var_value
         # Refresh the exposed variable window
         self.exposed_var_dict = deepcopy(_current_node_editor_instance.var_dict)
         # Also emulate a details callback to refresh show var detail
         self._parent_instance.detail_panel.callback_show_var_detail('', '', user_data=_var_tag)
-        _current_node_editor_instance.logger.info(f'Updated new type for var of tag {_var_tag}: {new_var_type}')
+
+        _current_node_editor_instance.logger.info(f'Updated new type for var of name {_var_name}: {_new_var_type}')
+
+    def callback_replace_node_of_new_type(self, sender, app_data, user_data):
+        # Delete the modal window first
+        dpg.delete_item(user_data[1])
+        _current_node_editor_instance = self._parent_instance.current_node_editor_instance
+        _var_tag = user_data[0][0]
+        _var_type = user_data[0][1]
+        _var_name = _current_node_editor_instance.var_dict[_var_tag]['name'][0]
+
+        try:
+            _internal_module_dict = self._parent_instance.menu_construct_dict['_internal']
+        except KeyError:
+            self._parent_instance.logger.exception('Could not query _internal modules:')
+            return -1
+        # Get the module & import path to construct user data for callback_add_node
+        try:
+            _set_var_module_tuple = _internal_module_dict['Set ' + _var_type]
+            _get_var_module_tuple = _internal_module_dict['Get ' + _var_type]
+        except KeyError:
+            self._parent_instance.logger.exception(f'Could not find internal module matched with this variable type: {_var_type}')
+            return -1
+        # Store a node list first to avoid interfering with the original node_instance_dict
+        _node_list = []
+        for node in _current_node_editor_instance.node_instance_dict.values():
+            _node_list.append(node)
+        for node in _node_list:
+            if node.node_label == 'Set ' + _var_name:
+                _node_pos = dpg.get_item_pos(node.id)
+                # Delete the node
+                delete_selected_node(self._parent_instance, node_id=node.id)
+                _current_node_editor_instance.callback_add_node(sender, app_data,
+                                                                user_data=(_set_var_module_tuple[0],
+                                                                           _set_var_module_tuple[1],
+                                                                           (_var_tag,
+                                                                            'Set ' + _var_name)),
+                                                                pos=_node_pos)
+            elif node.node_label == 'Get ' + _var_name:
+                _node_pos = dpg.get_item_pos(node.id)
+                # Delete the node
+                delete_selected_node(self._parent_instance, node_id=node.id)
+                _current_node_editor_instance.callback_add_node(sender, app_data,
+                                                                user_data=(_get_var_module_tuple[0],
+                                                                           _get_var_module_tuple[1],
+                                                                           (_var_tag,
+                                                                            'Get ' + _var_name)),
+                                                                pos=_node_pos)
+
+        # Finally reflect new type changes to the databases
+        self.var_type_update(_var_tag, _var_type)
