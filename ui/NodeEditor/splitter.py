@@ -453,7 +453,6 @@ class Splitter:
             self._var_dict[new_var_tag]['splitter_id'] = var_splitter_id
         # Also update child node graph var dict
         if not refresh:
-            print(default_is_exposed_flag)
             self._parent_instance.current_node_editor_instance.add_var(new_var_info,
                                                                        default_value, default_is_exposed_flag)
 

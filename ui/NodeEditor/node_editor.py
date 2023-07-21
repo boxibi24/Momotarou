@@ -5,7 +5,6 @@ from ui.NodeEditor.right_click_menu import RightClickMenu
 from ui.NodeEditor.splitter import Splitter
 from ui.NodeEditor.details_panel import DetailPanel
 from ui.NodeEditor._internal_node_editor import DPGNodeEditor
-from tkinter import Tk, simpledialog
 from collections import OrderedDict
 import os
 import platform
@@ -150,7 +149,8 @@ class NodeEditor:
                                                         logging_queue=logging_queue)
                         self._node_editor_dict.update({self.current_tab: new_node_editor})
                         self.current_node_editor_instance = new_node_editor
-                        dpg.add_tab_button(label='+', callback=self._add_node_graph_tab, user_data=self._tab_bar_id,
+                        dpg.add_tab_button(label='+', callback=self._add_node_graph_tab_ask_name,
+                                           user_data=self._tab_bar_id,
                                            no_reorder=True, trailing=True)
                     self.detail_panel = DetailPanel(parent_instance=self)
             # Initialize right click menu
@@ -181,12 +181,23 @@ class NodeEditor:
         for handler in dpg.get_item_children("__node_editor_mouse_handler", 1):
             dpg.set_item_callback(handler, event_handler)
 
-    def _add_node_graph_tab(self, sender, app_data, user_data):
-        root = Tk()
-        root.withdraw()
-        new_tab_name = simpledialog.askstring(title='Rename tab', prompt='Name your new tab: ')
-        root.destroy()
-        new_tab = dpg.add_tab(label=new_tab_name, parent=user_data,
+    def _add_node_graph_tab_ask_name(self, sender, app_data, user_data):
+        parent = user_data
+        _mid_widget_pos = [int(dpg.get_viewport_width() / 2.5), int(dpg.get_viewport_height() / 2.5)]
+        with dpg.window(modal=True, label='New tab',
+                        pos=_mid_widget_pos, min_size=[10,10]) as _modal_window:
+            with dpg.group(horizontal=True):
+                dpg.add_text("Name your new tab: ")
+                dpg.add_input_text(width=200, callback=self._callback_on_name_new_tab,
+                                   on_enter=True, user_data=(_modal_window, parent),
+                                   hint='Input and press "Enter" to apply')
+
+    def _callback_on_name_new_tab(self, sender, app_data, user_data):
+        # delete the modal window
+        dpg.delete_item(user_data[0])
+        new_tab_name = app_data
+        parent = user_data[1]
+        new_tab = dpg.add_tab(label=new_tab_name, parent=parent,
                               closable=True, payload_type='__var', drop_callback=self.var_drop_callback)
         new_node_editor = DPGNodeEditor(parent_tab=new_tab,
                                         splitter_panel=self.splitter_panel,
@@ -346,3 +357,13 @@ class NodeEditor:
                                                                                          'Event ' + _item_name)))
 
         return added_node
+
+    def callback_project_open(self, sender, app_data):
+        print('Hello')
+        pass
+
+    def callback_project_save(self, sender, app_data):
+        pass
+
+    def callback_project_import(self, sender, app_data):
+        pass

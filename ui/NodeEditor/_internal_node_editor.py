@@ -895,14 +895,12 @@ class DPGNodeEditor:
                     'type': var_type,
                     'value': [None],
                     'default_value': [_default_var_value],
-                    'is_exposed': [default_is_exposed_flag]
+                    # For unknown reasons, default_is_exposed_flag is None when you add new vars
+                    'is_exposed': [default_is_exposed_flag if default_is_exposed_flag is not None else False]
                 }})
         else:       # Refresh UI
             self._vars_dict[var_tag]['name'][0] = var_name[0]
             self._vars_dict[var_tag]['type'][0] = var_type[0]
-
-        print('added var:')
-        pprint(self._vars_dict)
 
         self.logger.debug('**** Added new var entries ****')
         self.logger.debug(f'var_dict: {self._vars_dict}')

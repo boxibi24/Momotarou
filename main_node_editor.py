@@ -8,7 +8,8 @@ from logging.handlers import QueueHandler, QueueListener
 from multiprocessing import Queue
 import dearpygui.demo as demo
 import datetime
-from ui.NodeEditor.utils import callback_ng_file_open_menu, callback_ng_file_import_menu, callback_ng_file_save_menu
+from ui.NodeEditor.utils import callback_ng_file_open_menu, callback_ng_file_import_menu, callback_ng_file_save_menu, \
+    callback_project_import_menu, callback_project_save_menu, callback_project_open_menu
 
 
 def save_init():
@@ -41,7 +42,13 @@ def get_arg():
 
 
 def callback_file_dialog(sender, app_data, user_data):
-    if sender == 'NG_file_save':
+    if sender == 'project_save':
+        user_data.callback_project_save(sender, app_data)
+    elif sender == 'project_open':
+        user_data.callback_project_open(sender, app_data)
+    elif sender == 'project_import':
+        user_data.callback_project_import(sender, app_data)
+    elif sender == 'NG_file_save':
         user_data.current_node_editor_instance.callback_file_save(sender, app_data)
     elif sender == 'NG_file_open':
         user_data.current_node_editor_instance.callback_file_open(sender, app_data)
@@ -138,12 +145,61 @@ def main():
         node_editor = NodeEditor(setting_dict=setting_dict, use_debug_print=is_debug_mode,
                                  logging_queue=logger_queue)
         # Menu bar setup
+        # Open project dialog
+        with dpg.file_dialog(
+            directory_selector=False,
+            show=False,
+            modal=True,
+            height=int(dpg.get_viewport_height() / 2),
+            width=int(dpg.get_viewport_width() / 2),
+            callback=callback_file_dialog,
+            id='project_open',
+            label='Open new Project',
+            user_data=node_editor
+        ):
+            dpg.add_file_extension('.json')
+            dpg.add_file_extension('', color=(150, 255, 150, 255))
+
+        # Save project dialog
+        datetime_now = datetime.datetime.now()
+        with dpg.file_dialog(
+            directory_selector=False,
+            show=False,
+            modal=True,
+            height=int(dpg.get_viewport_height() / 2),
+            width=int(dpg.get_viewport_width() / 2),
+            default_filename=datetime_now.strftime('%Y%m%d'),
+            callback=callback_file_dialog,
+            id='project_save',
+            label='Save Project as ...',
+            user_data=node_editor
+        ):
+            dpg.add_file_extension('.json')
+            dpg.add_file_extension('', color=(150, 255, 150, 255))
+
+        # Import Project Dialog
+
+        with dpg.file_dialog(
+            directory_selector=False,
+            show=False,
+            modal=True,
+            height=int(dpg.get_viewport_height() / 2),
+            width=int(dpg.get_viewport_width() / 2),
+            callback=callback_file_dialog,
+            id='project_import',
+            label='Import Project',
+            user_data=node_editor
+        ):
+            dpg.add_file_extension('.json')
+            dpg.add_file_extension('', color=(150, 255, 150, 255))
+
         # Open file dialog
         with dpg.file_dialog(
             directory_selector=False,
             show=False,
             modal=True,
-            height=int(dpg.get_viewport_width() / 2),
+            height=int(dpg.get_viewport_height() / 2),
+            width=int(dpg.get_viewport_width() / 2),
             callback=callback_file_dialog,
             id='NG_file_open',
             label='Open new Node Graph',
@@ -158,7 +214,8 @@ def main():
             directory_selector=False,
             show=False,
             modal=True,
-            height=int(dpg.get_viewport_width() / 2),
+            height=int(dpg.get_viewport_height() / 2),
+            width=int(dpg.get_viewport_width() / 2),
             default_filename=datetime_now.strftime('%Y%m%d'),
             callback=callback_file_dialog,
             id='NG_file_save',
@@ -174,7 +231,8 @@ def main():
             directory_selector=False,
             show=False,
             modal=True,
-            height=int(dpg.get_viewport_width() / 2),
+            height=int(dpg.get_viewport_height() / 2),
+            width=int(dpg.get_viewport_width() / 2),
             callback=callback_file_dialog,
             id='NG_file_import',
             label='Import to current Node Graph',
@@ -185,6 +243,21 @@ def main():
         with dpg.menu_bar(label='Main Menu', tag='__menu_bar'):
             # Export/Import file
             with dpg.menu(label='File'):
+                dpg.add_menu_item(
+                    tag='Menu_Project_Open',
+                    label='Open new Project',
+                    callback=callback_project_open_menu
+                )
+                dpg.add_menu_item(
+                    tag='Menu_Project_Save',
+                    label='Save Project as ...',
+                    callback=callback_project_save_menu
+                )
+                dpg.add_menu_item(
+                    tag='Menu_Project_Import',
+                    label='Import Project',
+                    callback=callback_project_import_menu
+                )
                 dpg.add_menu_item(
                     tag='Menu_File_Open',
                     label='Open new Node Graph',

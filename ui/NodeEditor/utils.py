@@ -36,6 +36,18 @@ def dpg_get_value(tag: str):
     return value
 
 
+def callback_project_open_menu():
+    dpg.show_item('project_open')
+
+
+def callback_project_save_menu():
+    dpg.show_item('project_save')
+
+
+def callback_project_import_menu():
+    dpg.show_item('project_import')
+
+
 def callback_ng_file_open_menu():
     dpg.show_item('NG_file_open')
 
