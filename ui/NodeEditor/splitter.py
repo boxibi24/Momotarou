@@ -4,7 +4,6 @@ from copy import deepcopy
 from ui.NodeEditor.classes.pin import InputPinType
 from ui.NodeEditor.utils import generate_uuid, add_user_input_box
 from ui.NodeEditor.item_right_click_menus import variable_right_click_menu, event_right_click_menu
-from pprint import pprint
 from ui.NodeEditor.input_handler import delete_selected_node
 
 
@@ -39,6 +38,7 @@ class Splitter:
     def var_dict(self, value: dict):
         self._var_dict = value
         self.refresh_variable_window()
+        self._old_var_dict = deepcopy(self._var_dict)
 
     @property
     def splitter_id(self) -> int:
@@ -111,18 +111,21 @@ class Splitter:
 
             self._parent_instance.logger.debug('**** Initialized Splitter ****')
 
-    def event_graph_header_right_click_menu(self, sender, app_data, user_data):
+    def event_graph_header_right_click_menu(self, sender, app_data, user_data, instant_add=False):
         parent = self._event_graph_collapsing_header
         _current_node_editor_instance = self._parent_instance.current_node_editor_instance
         # Try to generate a default name that does not match with any existing ones
         children_list: list = dpg.get_item_children(parent)[1]
         not_match_any_flag = False
         default_name = user_data[1]
+        _null_str = user_data[0]
         new_event_tag = '__event' + generate_uuid()
         if children_list:
-            i = 1
+            temp_name = default_name
+            i = 0
             while not not_match_any_flag:
-                temp_name = user_data[1] + str(i)
+                if i != 0:
+                    temp_name = default_name + '_' + str(i)
                 for child_item in children_list:
                     if temp_name == dpg.get_item_label(child_item):
                         break
@@ -130,21 +133,28 @@ class Splitter:
                         not_match_any_flag = True
                         default_name = temp_name
                 i += 1
-        new_user_data_tuple = (user_data[0], default_name)
-        with dpg.window(
-            popup=True,
-            autosize=True,
-            no_move=True,
-            no_open_over_existing_popup=True,
-            no_saved_settings=True,
-            max_size=[200, 200],
-            min_size=[10, 10]
-        ):
-            _selectable_id = dpg.add_selectable(label='Add',
-                                                tag=new_event_tag,
-                                                callback=self._parent_instance.callback_current_editor_add_node,
-                                                user_data=new_user_data_tuple
-                                                )
+        new_user_data_tuple = (_null_str, default_name)
+        if instant_add:
+            added_node = self._parent_instance.callback_current_editor_add_node(sender=new_event_tag,
+                                                                                app_data=True,
+                                                                                user_data=new_user_data_tuple,
+                                                                                sender_tag=new_event_tag)
+            return added_node
+        else:
+            with dpg.window(
+                popup=True,
+                autosize=True,
+                no_move=True,
+                no_open_over_existing_popup=True,
+                no_saved_settings=True,
+                max_size=[200, 200],
+                min_size=[10, 10]
+            ):
+                _selectable_id = dpg.add_selectable(label='Add',
+                                                    tag=new_event_tag,
+                                                    callback=self._parent_instance.callback_current_editor_add_node,
+                                                    user_data=new_user_data_tuple
+                                                    )
 
     def variable_header_right_click_menu(self, sender, app_data, user_data):
         with dpg.window(
@@ -220,7 +230,6 @@ class Splitter:
 
         # Make a copy of event dict keys
         temp_dict = OrderedDict(enumerate(self._event_dict.keys()))
-        pprint(temp_dict)
 
         _push_up_order = False
         _index_gap = 0
@@ -287,7 +296,6 @@ class Splitter:
         _current_node_editor_instance = self._parent_instance.current_node_editor_instance
         _source_var_tag = app_data
         _destination_var_tag = None
-        pprint(self._exposed_var_dict)
         for var_tag, value in self._exposed_var_dict.items():
             if value['is_exposed'][0]:
                 if value['selectable_id'] == sender:
@@ -312,7 +320,6 @@ class Splitter:
 
         # Make a copy of var dict keys
         temp_dict = OrderedDict(enumerate(self._exposed_var_dict.keys()))
-        pprint(temp_dict)
 
         _push_up_order = False
         _index_gap = 0
@@ -356,7 +363,8 @@ class Splitter:
 
         _current_node_editor_instance.logger.debug('**** Refreshed variable window ****')
 
-    def add_var(self, sender, app_data, user_data, refresh: bool, var_tag=''):
+    def add_var(self, sender, app_data, user_data, refresh=None, var_tag='',
+                default_value=None, var_type=None, default_is_exposed_flag=False):
         """
         Add new variable
         """
@@ -370,14 +378,14 @@ class Splitter:
             new_var_tag = generate_uuid()
         else:
             new_var_tag = var_tag
-        if not children_list:
+        if children_list:
+            temp_name = default_name
             if refresh is None:
-                default_name += '1'
-        else:
-            if refresh is None:
-                i = 1
+                i = 0
                 while not not_match_any_flag:
-                    temp_name = user_data + str(i)
+                    # Skip first iteration
+                    if i != 0:
+                        temp_name = default_name + '_' + str(i)
                     for child_item in children_list:
                         if temp_name == dpg.get_item_label(child_item):
                             break
@@ -403,9 +411,9 @@ class Splitter:
                     default_type = var_type_list[0]
                 else:
                     default_type = self._combo_dict[new_var_tag][1][0]
-                dpg.add_combo(var_type_list, width=95, popup_align_left=True,
-                              callback=self.combo_update_callback, user_data=new_var_tag,
-                              default_value=default_type)
+                _combo_id = dpg.add_combo(var_type_list, width=95, popup_align_left=True,
+                                          callback=self.combo_update_callback, user_data=new_var_tag,
+                                          default_value=default_type)
             # Add right-click handler to selectable
             with dpg.item_handler_registry() as item_handler_id:
                 dpg.add_item_clicked_handler(button=dpg.mvMouseButton_Right,
@@ -413,6 +421,12 @@ class Splitter:
                                              user_data=(new_var_tag, self._parent_instance))
             dpg.bind_item_handler_registry(_selectable_id, dpg.last_container())
             _current_node_editor_instance.item_registry_dict.update({new_var_tag: item_handler_id})
+
+        # If param var_type exist (import new tool), however, override the default type
+        if var_type is not None:
+            default_type = var_type
+            # Update the combo list UI
+            dpg.configure_item(_combo_id, default_value=var_type)
         # Prep data
         new_var_info = {
             new_var_tag: {
@@ -438,9 +452,11 @@ class Splitter:
             self._var_dict[new_var_tag]['splitter_id'] = var_splitter_id
         # Also update child node graph var dict
         if not refresh:
-            self._parent_instance.current_node_editor_instance.add_var(new_var_info)
+            self._parent_instance.current_node_editor_instance.add_var(new_var_info,
+                                                                       default_value, default_is_exposed_flag)
 
-        self._old_var_dict = self._var_dict
+        # Update old var dict cache
+        self._old_var_dict = deepcopy(self._var_dict)
 
         _current_node_editor_instance.logger.debug('***** Added new var on Splitter ****')
         _current_node_editor_instance.logger.debug(f'Splitter Combo dict: {self._combo_dict}')
@@ -459,7 +475,7 @@ class Splitter:
 
         if _found_var_node_instance:
             _mid_widget_pos = [int(dpg.get_viewport_width() / 2.5), int(dpg.get_viewport_height() / 2.5)]
-            with dpg.window(modal=True, label='Delete Event',
+            with dpg.window(modal=True, label='Change variable type',
                             pos=_mid_widget_pos) as _modal_window:
                 dpg.add_text("Changing variable type will delink and replace all node instances of this var !\n"
                              "This operation cannot be undone!")
@@ -515,7 +531,8 @@ class Splitter:
             _set_var_module_tuple = _internal_module_dict['Set ' + _var_type]
             _get_var_module_tuple = _internal_module_dict['Get ' + _var_type]
         except KeyError:
-            self._parent_instance.logger.exception(f'Could not find internal module matched with this variable type: {_var_type}')
+            self._parent_instance.logger.exception(
+                f'Could not find internal module matched with this variable type: {_var_type}')
             return -1
         # Store a node list first to avoid interfering with the original node_instance_dict
         _node_list = []

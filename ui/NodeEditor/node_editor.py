@@ -116,7 +116,7 @@ class NodeEditor:
                             node_module_item = OrderedDict([])
                             node_module_item.update({module.Node.node_label: (import_path, module)})
                             self.menu_construct_dict.update({node_category:
-                                                                  node_module_item
+                                                                 node_module_item
                                                              })
                         else:
                             self.menu_construct_dict[node_category].update(
@@ -274,14 +274,18 @@ class NodeEditor:
                                callback=self.callback_current_editor_add_node,
                                user_data=(_var_tag, _var_name))
 
-    def callback_current_editor_add_node(self, sender, app_data, user_data):
+    def callback_current_editor_add_node(self, sender, app_data, user_data, sender_tag=None):
         """
         Callback function to add variable node on the child Node Editor
         """
-        sender_tag = dpg.get_item_alias(sender)
-        _var_tag = user_data[0]
-        _var_name = user_data[1]
-        if sender_tag == '__get_var':
+        if sender_tag is None:
+            _sender_tag = dpg.get_item_alias(sender)
+        else:
+            _sender_tag = sender_tag
+        _item_tag = user_data[0]
+        _item_name = user_data[1]
+        added_node = None
+        if _sender_tag == '__get_var':
             # Get the imported internal modules
             try:
                 _internal_module_dict = self.menu_construct_dict['_internal']
@@ -289,20 +293,20 @@ class NodeEditor:
                 self.logger.exception('Could not query _internal modules:')
                 return -1
             # Get the module & import path to construct user data for callback_add_node
-            _var_type = self.current_node_editor_instance.var_dict[_var_tag]['type'][0]
+            _var_type = self.current_node_editor_instance.var_dict[_item_tag]['type'][0]
             try:
                 _var_module_tuple = _internal_module_dict['Get ' + _var_type]
             except KeyError:
                 self.logger.exception(f'Could not find internal module matched with this variable type: {_var_type}')
                 return -1
             # Run child Node Editor's callback_add_node
-            self.current_node_editor_instance.callback_add_node(sender, app_data,
-                                                                user_data=(_var_module_tuple[0],
-                                                                           _var_module_tuple[1],
-                                                                           (_var_tag,
-                                                                            'Get ' + _var_name)))
+            added_node = self.current_node_editor_instance.callback_add_node(sender, app_data,
+                                                                             user_data=(_var_module_tuple[0],
+                                                                                        _var_module_tuple[1],
+                                                                                        (_item_tag,
+                                                                                         'Get ' + _item_name)))
 
-        elif sender_tag == '__set_var':
+        elif _sender_tag == '__set_var':
             # Get the imported internal modules
             try:
                 _internal_module_dict = self.menu_construct_dict['_internal']
@@ -310,19 +314,19 @@ class NodeEditor:
                 self.logger.exception('Could not query _internal modules:')
                 return -1
             # Get the module & import path to construct user data for callback_add_node
-            _var_type = self.current_node_editor_instance.var_dict[_var_tag]['type'][0]
+            _var_type = self.current_node_editor_instance.var_dict[_item_tag]['type'][0]
             try:
                 _var_module_tuple = _internal_module_dict['Set ' + _var_type]
             except KeyError:
                 self.logger.exception(f'Could not find internal module matched with this variable type: {_var_type}')
                 return -1
             # Run child Node Editor's callback_add_node
-            self.current_node_editor_instance.callback_add_node(sender, app_data,
-                                                                user_data=(_var_module_tuple[0],
-                                                                           _var_module_tuple[1],
-                                                                           (_var_tag,
-                                                                            'Set ' + _var_name)))
-        elif '__event' in sender_tag:
+            added_node = self.current_node_editor_instance.callback_add_node(sender, app_data,
+                                                                             user_data=(_var_module_tuple[0],
+                                                                                        _var_module_tuple[1],
+                                                                                        (_item_tag,
+                                                                                         'Set ' + _item_name)))
+        elif '__event' in _sender_tag:
             # Get the imported internal modules
             try:
                 _internal_module_dict = self.menu_construct_dict['_internal']
@@ -335,8 +339,10 @@ class NodeEditor:
                 self.logger.exception(f'Could not find internal module: Event')
                 return -1
             # Run child Node Editor's callback_add_node
-            self.current_node_editor_instance.callback_add_node(sender, app_data,
-                                                                user_data=(_var_module_tuple[0],
-                                                                           _var_module_tuple[1],
-                                                                           (_var_tag,
-                                                                            'Event ' + _var_name)))
+            added_node = self.current_node_editor_instance.callback_add_node(sender, app_data,
+                                                                             user_data=(_var_module_tuple[0],
+                                                                                        _var_module_tuple[1],
+                                                                                        (_item_tag,
+                                                                                         'Event ' + _item_name)))
+
+        return added_node

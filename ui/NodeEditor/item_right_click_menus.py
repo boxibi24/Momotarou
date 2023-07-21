@@ -114,15 +114,29 @@ def callback_ask_variable_delete(sender, app_data, user_data):
     """
     Callback to re-confirm delete variable
     """
-    _mid_widget_pos = [int(dpg.get_viewport_width() / 2.5), int(dpg.get_viewport_height() / 2.5)]
-    with dpg.window(modal=True, label='Delete Variable',
-                    pos=_mid_widget_pos) as _modal_window:
-        dpg.add_text("Delete variable will delete all node instances of this variable!\nThis operation cannot be "
-                     "undone!")
-        with dpg.group(horizontal=True):
-            dpg.add_button(label="OK", width=75, callback=callback_variable_delete,
-                           user_data=(user_data, _modal_window))
-            dpg.add_button(label="Cancel", width=75, callback=lambda: dpg.delete_item(_modal_window))
+    _master_node_editor_instance = user_data[1]
+    _current_node_editor_instance = _master_node_editor_instance.current_node_editor_instance
+    _found_var_node_instance = False
+    _var_tag = user_data[0]
+    _var_name = _current_node_editor_instance.var_dict[_var_tag]['name'][0]
+    # Find first Get/Set node instances in current node graph, if found re-confirm with user for node replacement
+    for node in _current_node_editor_instance.node_instance_dict.values():
+        if node.node_label == 'Set ' + _var_name or node.node_label == 'Get ' + _var_name:
+            _found_var_node_instance = True
+            break
+
+    if _found_var_node_instance:
+        _mid_widget_pos = [int(dpg.get_viewport_width() / 2.5), int(dpg.get_viewport_height() / 2.5)]
+        with dpg.window(modal=True, label='Delete Variable',
+                        pos=_mid_widget_pos) as _modal_window:
+            dpg.add_text("Delete variable will delete all node instances of this variable!\nThis operation cannot be "
+                         "undone!")
+            with dpg.group(horizontal=True):
+                dpg.add_button(label="OK", width=75, callback=callback_variable_delete,
+                               user_data=(user_data, _modal_window))
+                dpg.add_button(label="Cancel", width=75, callback=lambda: dpg.delete_item(_modal_window))
+    else:
+        delete_var_dict_entry(_master_node_editor_instance, _var_tag)
 
 
 def callback_variable_delete(sender, app_data, user_data):
@@ -140,6 +154,15 @@ def callback_variable_delete(sender, app_data, user_data):
     for node in _node_list:
         if _var_name in node.node_label:
             delete_selected_node(_master_node_editor_instance, node.id)
+
+    delete_var_dict_entry(_master_node_editor_instance, _var_tag)
+
+
+def delete_var_dict_entry(master_inst, var_tag):
+    _master_node_editor_instance = master_inst
+    _current_node_editor_instance = _master_node_editor_instance.current_node_editor_instance
+    _splitter_panel = _current_node_editor_instance.splitter_panel
+    _var_tag = var_tag
     # Delete var from the var dicts
     _current_node_editor_instance.var_dict.pop(_var_tag)
     _current_node_editor_instance.splitter_var_dict.pop(_var_tag)

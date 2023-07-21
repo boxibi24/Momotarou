@@ -141,7 +141,7 @@ class DetailPanel:
         # Refresh self
         self.callback_show_var_detail('', '', user_data=_var_tag)
 
-        _current_node_editor_instance.logger.info(f'{user_data[0][0]} new default value updated: {app_data}')
+        _current_node_editor_instance.logger.info(f'{user_data[1][0]} new default value updated: {app_data}')
 
     def callback_var_is_exposed_update(self, sender, app_data, user_data):
         _current_node_editor_instance = self._parent_instance.current_node_editor_instance

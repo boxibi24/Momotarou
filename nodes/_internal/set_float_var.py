@@ -21,5 +21,5 @@ class Node(BaseNode):
             # KeyError could not find var_value in internal_data_dict
             return 8
         else:
-            internal_data_dict['var_value'][0] = internal_data_dict['String in']
-            internal_data_dict['Float out'] = internal_data_dict['String in']
+            internal_data_dict['var_value'][0] = internal_data_dict['Float in']
+            internal_data_dict['Float out'] = internal_data_dict['Float in']

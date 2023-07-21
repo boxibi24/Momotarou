@@ -1,6 +1,7 @@
 import json
 from time import perf_counter
 import dill
+from copy import deepcopy
 from ui.NodeEditor.utils import *
 from ui.NodeEditor.classes.link import Link
 from ui.NodeEditor.classes.pin import OutputPinType, InputPinType
@@ -124,6 +125,7 @@ class DPGNodeEditor:
         # 1: Flow link list
         # 2: Data link list
         # 3: Node dict
+        # 4: Var dict
         setting_dict = OrderedDict()
         # Deconstruct flow link instances into list of [source_pin_tag, target_pin_tag]
         flow_link_list = []
@@ -139,25 +141,42 @@ class DPGNodeEditor:
             data_link_list.append([source_pin_tag, target_pin_tag])
         # Refresh the events list
         setting_dict['events'] = self.tobe_exported_event_dict
+        # Update links
         setting_dict.update({'flows': flow_link_list, 'data_links': data_link_list})
+        # Resetting all the vars value to None
+        for var_info in self._vars_dict.values():
+            var_info['value'][0] = None
+        # Update var dict
+        setting_dict.update({'vars': self._vars_dict})
         # Update the is exposed status of the nodes and the pins value
         try:
-            for node_info in self.node_dict['nodes']:
-                node_instance = node_info['node_instance']
-                for pin_info in node_info['pins']:
-                    pin_value = pin_info.get('value', None)
-                    if pin_value is None:
-                        continue
-                    # If source
-                    pin_info.update({'value': dpg_get_value(pin_info['pin_instance'].value_tag)})
-                # Clears out complex structs inside nodes' internal_data since pickle can't handle serializing them
-                for key in node_instance.internal_data.keys():
-                    if node_instance.internal_data[key].__class__ in [str, int, float, type(None)]:
-                        continue
-                    node_instance.internal_data[key] = None
+            if self.node_dict.get('nodes', None) is not None:
+                for node_info in self.node_dict['nodes']:
+                    node_instance = node_info['node_instance']
+                    for pin_info in node_info['pins']:
+                        pin_value = pin_info.get('value', None)
+                        if pin_value is None:
+                            continue
+                        # If source
+                        pin_info.update({'value': dpg_get_value(pin_info['pin_instance'].value_tag)})
+                    # Clears out complex structs inside nodes' internal_data since pickle can't handle serializing them
+                    for key in node_instance.internal_data.keys():
+                        if node_instance.internal_data[key].__class__ in [str, int, float, type(None), list]:
+                            continue
+                        node_instance.internal_data[key] = None
         except KeyError:
             self.logger.exception('Cannot export an empty node graph')
             return 1
+
+        # Reorder the node_dict to reflect the current ordering of events
+        # Incrementally match event nodes with _event_dict and move_to_end till the event_dict exhausts
+        for _event_tag in self._event_dict.keys():
+            _index = 0
+            for node_info in self.node_dict['nodes']:
+                if node_info['id'] == _event_tag:
+                    self.node_dict['nodes'].append(self.node_dict['nodes'].pop(_index))
+                    break
+                _index += 1
 
         # Deep copying existing node dict, so we don't mistakenly modify it
         copy_node_dict = None
@@ -167,7 +186,6 @@ class DPGNodeEditor:
             copy_node_dict = dill.loads(dill.dumps(self.node_dict))
         except TypeError:
             self.logger.exception("Could not perform deep copy of node dict")
-            # pprint(self.node_dict)
         except Exception:
             self.logger.exception("Something wrong copying node dict")
         if copy_node_dict:
@@ -209,7 +227,17 @@ class DPGNodeEditor:
                 self.logger.error("Could not load Json file")
                 raise Exception("Could not load Json for import!")
             self.logger.debug(f"Imported setting dict: {setting_dict}")
-            # Initialize Node
+            # -----------Initialize Variables -----------
+            for var_info in setting_dict['vars'].values():
+                self.splitter_panel.add_var('', '', var_info['name'][0],
+                                            default_value=var_info['default_value'][0],
+                                            var_type=var_info['type'][0],
+                                            default_is_exposed_flag=var_info['is_exposed'][0])
+
+            # Refresh exposed var window since it does not update by itself
+            self.splitter_panel.exposed_var_dict = deepcopy(self._vars_dict)
+
+            # -----------Initialize Node-------------
             for node in setting_dict['nodes']:
                 node_type = node.get('type', None)
                 if not node_type:
@@ -222,10 +250,18 @@ class DPGNodeEditor:
                 self.logger.debug(f' Module to be imported: {module}')
                 if module:
                     # Creating new nodes using imported info
-                    added_node = self.callback_add_node(sender='Menu_' + node['label'],
-                                                        app_data=False,
-                                                        user_data=[import_path, module],
-                                                        pos=[node['position']['x'], node['position']['y']])
+                    if node['meta_type'] == 8:  # Event nodes have custom labels, use splitter event add instead
+                        added_node = self.splitter_panel.event_graph_header_right_click_menu('', '',
+                                                                                             user_data=('',
+                                                                                                        ' '.join(node[
+                                                                                                                     'label'].split(
+                                                                                                            ' ')[1:])),
+                                                                                             instant_add=True)
+                    else:
+                        added_node = self.callback_add_node(sender='Menu_' + node['label'],
+                                                            app_data=False,
+                                                            user_data=(import_path, module),
+                                                            pos=[node['position']['x'], node['position']['y']])
                     # Perform mapping new pins IDs to old ones to replicate exported connections
                     imported_pins = node.get('pins', None)
                     if imported_pins:
@@ -337,7 +373,7 @@ class DPGNodeEditor:
             intermediate_node.pos = self.last_pos
         # Clear node selection after adding a node to avoid last_pos being overriden
         dpg.clear_selected_nodes(node_editor=self.id)
-        # For debugging event node
+        # Create node
         node = intermediate_node.create_node()
         # Store event list to display it on Splitter
         if node.node_type == NodeTypeFlag.Event:
@@ -829,31 +865,37 @@ class DPGNodeEditor:
         else:
             return 0
 
-    def add_var(self, var_info: dict):
+    def add_var(self, var_info: dict, default_value=None, default_is_exposed_flag=False):
         # Save one for the splitter's var_dict
         self._splitter_var_dict.update(var_info)
         var_tag: str = list(var_info.keys())[0]
         var_name: list = var_info[var_tag]['name']
         var_type: list = var_info[var_tag]['type']
-        default_var_value = None
-        # set default var value based on value type
-        if var_type[0] in ['String', 'MultilineString', 'Password']:
-            default_var_value = ''
-        elif var_type[0] == 'Int':
-            default_var_value = 0
-        elif var_type[0] == 'Float':
-            default_var_value = 0.0
-        elif var_type[0] == 'Bool':
-            default_var_value = False
-
+        _default_var_value = None
+        if default_value is None:
+            # set default var value based on value type
+            if var_type[0] in ['String', 'MultilineString', 'Password']:
+                _default_var_value = ''
+            elif var_type[0] == 'Int':
+                _default_var_value = 0
+            elif var_type[0] == 'Float':
+                _default_var_value = 0.0
+            elif var_type[0] == 'Bool':
+                _default_var_value = False
+        else:
+            _default_var_value = default_value
+        if _default_var_value is None and \
+            var_type[0] in ['String', 'MultilineString', 'Password', 'Int', 'Float', 'Bool']:
+            self.logger.critical(f'Could not retrieve default value for {var_name}')
+            return 3
         if self._vars_dict.get(var_tag, None) is None:
             self._vars_dict.update({
                 var_tag: {
                     'name': var_name,
                     'type': var_type,
                     'value': [None],
-                    'default_value': [default_var_value],
-                    'is_exposed': [False]
+                    'default_value': [_default_var_value],
+                    'is_exposed': [default_is_exposed_flag]
                 }})
         else:
             self._vars_dict[var_tag]['name'][0] = var_name[0]
@@ -862,6 +904,7 @@ class DPGNodeEditor:
         self.logger.debug('**** Added new var entries ****')
         self.logger.debug(f'var_dict: {self._vars_dict}')
         self.logger.debug(f'splitter_var_dict:  {self._splitter_var_dict}')
+        return 0
 
     # Done: input box shown on TV represents var_value
     #
