@@ -144,7 +144,6 @@ class DPGNodeEditor:
         try:
             for node_info in self.node_dict['nodes']:
                 node_instance = node_info['node_instance']
-                node_info.update({'is_exposed': node_instance.is_exposed})
                 for pin_info in node_info['pins']:
                     pin_value = pin_info.get('value', None)
                     if pin_value is None:
@@ -258,10 +257,6 @@ class DPGNodeEditor:
                         for imported_pin_info in node['pins']:
                             if imported_pin_info['label'] == new_pin_info['label']:
                                 imported_value = imported_pin_info.get('value', None)
-                        # # Also store the tag of 'Prompt user for input?' value if found
-                        # is_exposed_value_tag = None
-                        # if new_pin_info['label'] == 'Prompt user for input?':
-                        #     is_exposed_value_tag = new_pin_info['pin_instance'].value_tag
                         if imported_value is None:
                             continue
                         # Set the imported value to this new pin's value
@@ -363,7 +358,6 @@ class DPGNodeEditor:
             'pins': node.pin_list,
             'meta_type': node.node_type,
             'type': user_data[0] + '.' + node.__class__.__name__,
-            # 'is_exposed': node.is_exposed,
             'position':
                 {
                     'x': self.last_pos[0],
@@ -526,25 +520,6 @@ class DPGNodeEditor:
                         target_pin_instance.is_connected = True
                         source_pin_instance.connected_link_list.append(link)
                         target_pin_instance.connected_link_list.append(link)
-                        # if target_pin_instance.label != 'Prompt user for input?':
-                        #     # if exist bool input for prompting users values
-                        #     bool_pin_instance = None
-                        #     for pin_info in target_node_instance.pin_list:
-                        #         if pin_info['label'] == 'Prompt user for input?':
-                        #             bool_pin_instance = pin_info['pin_instance']
-                        #             break
-                        #     # Disable any existing link to it
-                        #     to_delete_link = None
-                        #     if bool_pin_instance:
-                        #         for link in self.data_link_list:
-                        #             if link.target_pin_instance == bool_pin_instance:
-                        #                 to_delete_link = link
-                        #     if to_delete_link:
-                        #         self.callback_delink('linkHandler', app_data=to_delete_link.link_id)
-                        #     # Set its value to false and hide it
-                        #     if bool_pin_instance:
-                        #         dpg_set_value(bool_pin_instance.value_tag, False)
-                        #         dpg.configure_item(bool_pin_instance.pin_tag, show=False)
                     else:
                         self.logger.error("Cannot add a null link")
                 # Check if duplicate linkage, can happen if user swap link direction
@@ -577,25 +552,6 @@ class DPGNodeEditor:
                             target_pin_instance.is_connected = True
                             source_pin_instance.connected_link_list.append(link)
                             target_pin_instance.connected_link_list.append(link)
-                            # if target_pin_instance.label != 'Prompt user for input?':
-                            #     # if exist bool input for prompting users values
-                            #     bool_pin_instance = None
-                            #     for pin_info in target_node_instance.pin_list:
-                            #         if pin_info['label'] == 'Prompt user for input?':
-                            #             bool_pin_instance = pin_info['pin_instance']
-                            #             break
-                            #     # Disable any existing link to it
-                            #     to_delete_link = None
-                            #     if bool_pin_instance:
-                            #         for link in self.data_link_list:
-                            #             if link.target_pin_instance == bool_pin_instance:
-                            #                 to_delete_link = link
-                            #     if to_delete_link:
-                            #         self.callback_delink('linkHandler', app_data=to_delete_link.link_id)
-                            #     # Set its value to false and hide it
-                            #     if bool_pin_instance:
-                            #         dpg_set_value(bool_pin_instance.value_tag, False)
-                            #         dpg.configure_item(bool_pin_instance.pin_tag, show=False)
                         else:
                             self.logger.error("Cannot add a null link")
         self.node_data_link_dict = sort_data_link_dict(self.data_link_list)
@@ -643,20 +599,6 @@ class DPGNodeEditor:
                     if not found_flag:
                         link.source_pin_instance.is_connected = False
                         link.source_pin_instance.connected_link_list.clear()
-                    # # Check if the target node does not have other inputs link then enable its bool status for
-                    # # prompting user input
-                    # target_node_tag = link.target_node_tag
-                    # if not self.node_data_link_dict.get(target_node_tag, None):
-                    #     # Get the node's bool prompt user input pin instance
-                    #     bool_pin_instance = None
-                    #     for pin_info in link.target_node_instance.pin_list:
-                    #         if pin_info['label'] == 'Prompt user for input?':
-                    #             bool_pin_instance = pin_info['pin_instance']
-                    #             break
-                    #     if bool_pin_instance:
-                    #         dpg.configure_item(bool_pin_instance.value_tag, show=True)
-                    #         dpg.configure_item(bool_pin_instance.pin_tag, show=True)
-                    # return 0
 
         for link in self.flow_link_list:
             if link.link_id == app_data:

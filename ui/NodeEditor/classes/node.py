@@ -228,10 +228,6 @@ class BaseNode:
                 'meta_type': meta_type,
                 'pin_type': pin.pin_type
             }))
-            # Special bool for is_exposed enabling
-            # if label == 'Prompt user for input?' and pin_type == InputPinType.Bool:
-            #     self._is_prompt_for_input_tag = pin.value_tag
-            # Store value also for data input pins
             if pin_type != InputPinType.Exec:
                 self.pin_list[-1].update({'value': dpg_get_value(pin.value_tag)})
             # Update internal data
@@ -411,18 +407,6 @@ class BaseNode:
                         break
 
     def on_pin_value_change(self, sender):
-        # if sender == self._is_prompt_for_input_tag:
-        #     is_disable_inputs = dpg_get_value(sender)
-        #     if is_disable_inputs:
-        #         for pin_info in self.pin_list:
-        #             if pin_info['meta_type'] == 'DataIn' and \
-        #                 pin_info['pin_instance'].value_tag != self._is_prompt_for_input_tag:
-        #                 dpg.configure_item(pin_info['pin_instance'].value_tag, show=False)
-        #     else:
-        #         for pin_info in self.pin_list:
-        #             if pin_info['meta_type'] == 'DataIn' and \
-        #                 pin_info['pin_instance'].value_tag != self._is_prompt_for_input_tag:
-        #                 dpg.configure_item(pin_info['pin_instance'].value_tag, show=True)
         self.is_dirty = True
         self.update_internal_input_data()
 
