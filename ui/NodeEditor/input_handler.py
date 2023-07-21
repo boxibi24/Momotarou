@@ -67,16 +67,16 @@ def mouse_left_click_handler(node_editor):
     elif dpg.is_key_down(key=dpg.mvKey_Shift):  # Shift pressed
         pass
     elif dpg.is_key_down(key=dpg.mvKey_Alt):  # Alt pressed
-        print('Alt + mouse left clicked!')
         selected_links = dpg.get_selected_links(node_editor.current_node_editor_instance.id)
         if selected_links:
-            node_editor.callback_delink('', selected_links[0])
+            node_editor.current_node_editor_instance.callback_delink('', selected_links[0])
     elif dpg.is_key_down(key=dpg.mvKey_Control):  # Ctrl pressed
         pass
     else:  # Normal click
-        cache_last_selected_node_pos(node_editor)
-        # Do a refresh on Node Editor UI elements onces in case the current node graph changes
-        # node_editor.refresh_trigger_flag = True
+        selected_nodes = dpg.get_selected_nodes(node_editor.current_node_editor_instance.id)
+        cache_last_selected_node_pos(node_editor, selected_nodes)
+        if not is_cursor_inside_node_graph(node_editor.node_editor_bb) and selected_nodes:
+            dpg.clear_selected_nodes(node_editor.current_node_editor_instance.id)
 
 
 def mouse_right_click_handler(node_editor):
@@ -93,10 +93,14 @@ def mouse_right_click_handler(node_editor):
     elif dpg.is_key_down(key=dpg.mvKey_Control):  # Ctrl pressed
         pass
     else:  # Normal click
+        selected_nodes = dpg.get_selected_nodes(node_editor.current_node_editor_instance.id)
         # Show node selection list
-        if not dpg.get_selected_nodes(node_editor.current_node_editor_instance.id) and \
+        if not selected_nodes and \
             is_cursor_inside_node_graph(node_editor.node_editor_bb):
             node_editor.right_click_menu.show = True
+
+        if not is_cursor_inside_node_graph(node_editor.node_editor_bb) and selected_nodes:
+            dpg.clear_selected_nodes(node_editor.current_node_editor_instance.id)
 
 
 def is_cursor_inside_node_graph(ng_bb) -> bool:
@@ -123,12 +127,11 @@ def key_press_handler(node_editor):
                 delete_selected_node(node_editor)
 
 
-def cache_last_selected_node_pos(node_editor):
-    selected_node = dpg.get_selected_nodes(node_editor.current_node_editor_instance.id)
+def cache_last_selected_node_pos(node_editor, selected_nodes):
     # Note: I tried finding the absolute pos of cursor relatively in Node Editor but failed,
     # This is the best method I can think of
-    if selected_node:
-        node_editor.current_node_editor_instance.last_pos = dpg.get_item_pos(selected_node[0])
+    if selected_nodes:
+        node_editor.current_node_editor_instance.last_pos = dpg.get_item_pos(selected_nodes[0])
 
 
 def delete_selected_node(node_editor, node_id=None):

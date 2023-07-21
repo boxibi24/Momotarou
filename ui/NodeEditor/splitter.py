@@ -359,7 +359,8 @@ class Splitter:
             self._old_var_dict = OrderedDict([])
         # Then add back the variable item to the splitter
         for key, value in self._var_dict.items():
-            self.add_var(sender='', app_data='', user_data=value['name'][0], refresh=True, var_tag=key)
+            self.add_var(sender='', app_data='', user_data=value['name'][0],
+                         refresh=True, var_tag=key)
 
         _current_node_editor_instance.logger.debug('**** Refreshed variable window ****')
 
@@ -452,6 +453,7 @@ class Splitter:
             self._var_dict[new_var_tag]['splitter_id'] = var_splitter_id
         # Also update child node graph var dict
         if not refresh:
+            print(default_is_exposed_flag)
             self._parent_instance.current_node_editor_instance.add_var(new_var_info,
                                                                        default_value, default_is_exposed_flag)
 

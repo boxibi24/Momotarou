@@ -2,7 +2,7 @@ import dearpygui.dearpygui as dpg
 from copy import deepcopy
 from ui.NodeEditor.utils import add_user_input_box, dpg_set_value
 from ui.NodeEditor.classes.node import NodeTypeFlag
-
+from pprint import pprint
 
 class DetailPanel:
 
@@ -75,6 +75,7 @@ class DetailPanel:
         _current_node_editor_instance = self._parent_instance.current_node_editor_instance
         var_tag = user_data
         var_detail = _current_node_editor_instance.var_dict.get(var_tag, None)
+        pprint(var_detail)
         if var_detail is None:
             # KeyError could not find key {user_data} in current_node_graph 's var_dict
             return 8
