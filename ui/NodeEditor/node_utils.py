@@ -1,8 +1,8 @@
 import dearpygui.dearpygui as dpg
 from ui.NodeEditor.classes.node import NodeTypeFlag
-from ui.NodeEditor.utils import sort_data_link_dict, sort_flow_link_dict, dpg_get_value, json_write_to_file
+from ui.NodeEditor.utils import sort_data_link_dict, sort_flow_link_dict, \
+    dpg_get_value, dpg_set_value, json_write_to_file
 import traceback
-from pprint import pprint
 
 
 def delete_selected_node(node_editor, node_id=None):
@@ -165,3 +165,31 @@ def save_dict_to_json(in_dict, file_path) -> tuple:
         return 4, traceback.format_exc()
     else:
         return 1, f'exported_dict : {in_dict}'
+
+
+def update_pin_mapping_entry_with_imported_node_pin(imported_node_pins: list, new_node, pin_mapping_dict: dict):
+    # Loop through a list of to-be-imported pins
+    for imported_pin in imported_node_pins:
+        imported_pin_label = imported_pin['label']
+        for added_pin in new_node.pin_list:
+            # Get the matching pin id from the newly created pins list of the newly created node
+            if imported_pin_label == added_pin['label']:
+                pin_mapping_dict.update({imported_pin['id']: added_pin['id']})
+                break
+
+
+def reapply_imported_pin_value_to_new_node(imported_pin_list, new_node):
+    for new_pin_info in new_node.pin_list:
+        # if this new pin does not require value then skip
+        if new_pin_info.get('value', None):
+            continue
+        # Get value from imported pin info that matches label:
+        imported_value = None
+        for imported_pin_info in imported_pin_list:
+            if imported_pin_info['label'] == new_pin_info['label']:
+                imported_value = imported_pin_info.get('value', None)
+        if imported_value is None:
+            continue
+        # Set the imported value to this new pin's value
+        dpg_set_value(new_pin_info['pin_instance'].value_tag, imported_value)
+

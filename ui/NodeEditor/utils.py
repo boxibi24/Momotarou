@@ -4,6 +4,7 @@ from uuid import uuid1
 import logging
 from logging.handlers import QueueHandler
 import json
+import traceback
 
 
 def generate_uuid() -> str:
@@ -324,3 +325,14 @@ def add_user_input_box(var_type, callback=None, default_value=None,
 def json_write_to_file(file_path, value):
     with open(file_path, 'w') as fp:
         json.dump(value, fp, indent=4)
+
+
+def json_load_from_file(file_path):
+    with open(file_path, 'r') as fp:
+        try:
+            return_dict = json.load(fp)
+            return return_dict
+        except FileNotFoundError:
+            return None
+
+

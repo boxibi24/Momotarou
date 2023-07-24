@@ -193,140 +193,112 @@ class DPGNodeEditor:
         log_message.log_on_return_code(logger=self.logger, action=action,
                                        return_message=return_message)
 
-    def callback_file_import(self, sender, app_data):  # Import means to append the existing node graph
-        self.logger.info('**** Start file importing ****')
-        self.logger.debug(f"Sender : {sender}")
-        self.logger.debug(f"Appdata: {app_data}")
-        pin_mapping = {}
-        if app_data['file_name'] != '.':
-            # Read JSON
-            try:
-                with open(app_data['file_path_name']) as fp:
-                    setting_dict = json.load(fp)
-            except FileNotFoundError:
-                self.logger.exception('File does not exist!')
-            if not setting_dict:
-                self.logger.error("Could not load Json file")
-                raise Exception("Could not load Json for import!")
-            self.logger.debug(f"Imported setting dict: {setting_dict}")
-            # -----------Initialize Variables -----------
-            for var_info in setting_dict['vars'].values():
-                self.splitter_panel.add_var('', '', var_info['name'][0],
-                                            default_value=var_info['default_value'][0],
-                                            var_type=var_info['type'][0],
-                                            default_is_exposed_flag=var_info['is_exposed'][0])
-
-            # Refresh exposed var window since it does not update by itself
-            self.splitter_panel.exposed_var_dict = deepcopy(self._vars_dict)
-
-            # -----------Initialize Node-------------
-            for node in setting_dict['nodes']:
-                node_type = node.get('type', None)
-                if not node_type:
-                    self.logger.error(f"Could not find node type from this node: {node}")
-                import_path = '.'.join(node_type.split('.')[:-1])
-                self.logger.debug(f'import path : {import_path}')
-                module = self._imported_module_dict.get(import_path, None)
-                self.logger.debug(f"Node to be imported: {node}")
-                self.logger.debug(f'current module dict: {self._imported_module_dict}')
-                self.logger.debug(f' Module to be imported: {module}')
-                if module:
-                    # Creating new nodes using imported info
-                    if node['meta_type'] == 8:  # Event nodes have custom labels, use splitter event add instead
-                        added_node = self.splitter_panel.event_graph_header_right_click_menu('', '',
-                                                                                             user_data=('',
-                                                                                                        ' '.join(node[
-                                                                                                                     'label'].split(
-                                                                                                            ' ')[1:])),
-                                                                                             instant_add=True)
-                    else:
-                        added_node = self.callback_add_node(sender='Menu_' + node['label'],
-                                                            app_data=False,
-                                                            user_data=(import_path, module),
-                                                            pos=[node['position']['x'], node['position']['y']])
-                    # Perform mapping new pins IDs to old ones to replicate exported connections
-                    imported_pins = node.get('pins', None)
-                    if imported_pins:
-                        # Loop through a list of to-be-imported pins
-                        for imported_pin in imported_pins:
-                            imported_pin_label = imported_pin.get('label')
-                            if imported_pin_label:
-                                for added_pin in added_node.pin_list:
-                                    # Get the matching pin id from the newly created pins list of the newly created node
-                                    if imported_pin_label == added_pin['label']:
-                                        try:
-                                            pin_mapping.update({imported_pin['id']: added_pin['id']})
-                                        except KeyError:
-                                            self.logger.exception('Error querying value from pin dicts:')
-                                            break
-
-                            else:
-                                self.logger.error(f"Could not get label for this pin : {imported_pin}")
-                                continue
-                    else:
-                        self.logger.error(f'Failed to query pins info for this node : {node}')
-                    # Perform applying imported pin value to newly created pins
-                    for new_pin_info in added_node.pin_list:
-                        # if this new pin does not require value then skip
-                        if new_pin_info.get('value', None):
-                            continue
-                        # Get value from imported pin info that matches label:
-                        imported_value = None
-                        for imported_pin_info in node['pins']:
-                            if imported_pin_info['label'] == new_pin_info['label']:
-                                imported_value = imported_pin_info.get('value', None)
-                        if imported_value is None:
-                            continue
-                        # Set the imported value to this new pin's value
-                        try:
-                            dpg_set_value(new_pin_info['pin_instance'].value_tag, imported_value)
-                        except:
-                            self.logger.exception(
-                                f'Something wrong setting up the pin value of this pin {new_pin_info}')
-
-                else:
-                    self.logger.error(f"Could not find an entry in imported module dict for {node['type']}")
-                self.logger.debug(f'pin_mapping: {pin_mapping}')
-
-            # Initialize Flow links
-            for link in setting_dict['flows']:
-                self.callback_link(sender=self.id, app_data=[pin_mapping[link[0]], pin_mapping[link[1]]])
-            # Initialize Data Links
-            for link in setting_dict['data_links']:
-                self.callback_link(sender=self.id, app_data=[pin_mapping[link[0]], pin_mapping[link[1]]])
-
-            self.logger.info('**** File imported ****')
-            self.logger.debug(f'     sender              :   {sender}')
-            self.logger.debug(f'     app_data            :   {app_data}')
-            self.logger.debug(f'     self.data_link_list :   {self.data_link_list}')
-            self.logger.debug(f'     self.flow_link_list :   {self.flow_link_list}')
-            self.logger.debug(f'     node_connection_dict:   {self.node_data_link_dict}')
-
-    def _get_var_names_from_var_dict(self, imported_var_name):
+    def _batch_import_variable(self, var_info_dict: dict):
         """
-        Return list of var names, queries from var dict
+        Batch import variables with a var info dict
         """
-        _var_name_list = []
-        for var_info in self._vars_dict:
-            _var_name_list.append(var_info['name'])
-        return _var_name_list
+        for var_info in var_info_dict.values():
+            self.splitter_panel.add_var('', '', var_info['name'][0],
+                                        default_value=var_info['default_value'][0],
+                                        var_type=var_info['type'][0],
+                                        default_is_exposed_flag=var_info['is_exposed'][0])
 
-    def callback_file_open(self, sender, app_data):
+        # Refresh exposed var window since it does not update by itself
+        self.splitter_panel.exposed_var_dict = deepcopy(self._vars_dict)
 
-        # First clear out everything from the current node graph
+    def _get_import_module_from_node_type(self, node_type):
+
+        import_path = '.'.join(node_type.split('.')[:-1])
+        module = self._imported_module_dict.get(import_path, None)
+
+        if module is None:
+            self.logger.error(f"Could not find an entry in imported module dict for {node_type}")
+            return None, None
+
+        return import_path, module
+
+    def _add_node_with_imported_info(self, node_info):
+        """
+        Add node with imported info
+        """
+        _node_type = node_info['type']
+        _node_label = node_info['label']
+        import_path, module = self._get_import_module_from_node_type(_node_type)
+        if module is None:
+            return None
+        if _node_type == NodeTypeFlag.Event:  # Event nodes have custom labels, use splitter event add instead
+            added_node = self.splitter_panel.event_graph_header_right_click_menu('', '',
+                                                                                 user_data=('', ' '.join(
+                                                                                     _node_label.split(' ')[1:])),
+                                                                                 instant_add=True)
+        else:
+            added_node = self.callback_add_node(sender='Menu_' + _node_label,
+                                                app_data=False,
+                                                user_data=(import_path, module),
+                                                pos=[node_info['position']['x'], node_info['position']['y']])
+        return added_node
+
+    def _batch_import_node(self, node_info_list: list, pin_mapping: dict):
+        """
+        Batch import nodes from node info list
+        """
+        for node_info in node_info_list:
+            _imported_pin_list = node_info['pins']
+            # Creating new nodes using imported info
+            added_node = self._add_node_with_imported_info(node_info)
+            if added_node is None:
+                self.logger.error(f'Could not add this node {node_info}')
+                continue
+            # Perform mapping new pins IDs to old ones to replicate exported connections
+            node_utils.update_pin_mapping_entry_with_imported_node_pin(_imported_pin_list, added_node, pin_mapping)
+            # Perform applying imported pin value to newly created pins
+            node_utils.reapply_imported_pin_value_to_new_node(_imported_pin_list, added_node)
+
+    def _batch_import_link(self, link_list: list, pin_mapping_dict: dict):
+        for link in link_list:
+            self.callback_link(sender=self.id, app_data=[pin_mapping_dict[link[0]],
+                                                         pin_mapping_dict[link[1]]])
+
+    def _file_import(self, file_path):  # Import means to append the existing node graph
+        # Read JSON
+        imported_dict = json_load_from_file(file_path)
+        if imported_dict is None:
+            return 0, 'Could not load Json file!'
+        # prepare a pin_mapping dict that lets functions know which pins linked together
+        pin_mapping_dict = {}
+        # -----------Initialize Variables -----------
+        self._batch_import_variable(imported_dict['vars'])
+
+        # -----------Initialize Node-------------
+        self._batch_import_node(imported_dict['nodes'], pin_mapping_dict)
+
+        # -----------Initialize Flow links -------------
+        self._batch_import_link(imported_dict['flows'], pin_mapping_dict)
+
+        # -----------Initialize Data links -------------
+        self._batch_import_link(imported_dict['data_links'], pin_mapping_dict)
+
+        return 1, f'Current node graph : {self.node_dict}'
+
+    def callback_file_import(self, sender, app_data):
+        _file_path = app_data['file_path_name']
+        return_message = self._file_import(_file_path)
+        log_message.log_on_return_code(self.logger, action=dpg.get_item_label(sender), return_message=return_message)
+
+    def clear_all_data(self):
         self.node_dict.clear()
         self.flow_link_list.clear()
         self.data_link_list.clear()
         for node_instance in self.node_instance_dict.values():
             dpg.delete_item(node_instance.node_tag)
         self.node_instance_dict.clear()
+
         self.logger.info('**** Cleared current node graph ****')
-        self.logger.debug(f'     sender              :   {sender}')
-        self.logger.debug(f'     app_data            :   {app_data}')
-        self.logger.debug(f'     self.data_link_list :   {self.data_link_list}')
-        self.logger.debug(f'     self.flow_link_list :   {self.flow_link_list}')
-        self.logger.debug(f'     node_connection_dict:   {self.node_data_link_dict}')
-        self.logger.debug(f'     node_instance_dict  :   {self.node_instance_dict}')
+
+    def callback_file_open(self, sender, app_data):
+
+        # First clear out everything from the current node graph
+        self.clear_all_data()
         # Then perform file JSON import
         self.callback_file_import(sender, app_data)
 
