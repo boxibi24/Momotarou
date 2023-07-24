@@ -258,9 +258,15 @@ class NodeEditor:
         # If tab not deleted, delete the orphaned registry from old node graph
         # since all selectable-headers will be refreshed
         if self._node_editor_tab_dict.get(_old_tab_name, None) is not None:
-            for registry_id in _old_node_editor_instance.item_registry_dict.values():
+            for item, registry_id in _old_node_editor_instance.item_registry_dict.items():
+                # skip tab registry
+                if item == 'tab_registry':
+                    continue
                 dpg.delete_item(registry_id)
+            # Clear every register except for tab registry id
+            _tab_register_id = _old_node_editor_instance.item_registry_dict['tab_registry']
             _old_node_editor_instance.item_registry_dict.clear()
+            _old_node_editor_instance.item_registry_dict.update({'tab_registry': _tab_register_id})
 
     def refresh_node_editor_dict(self):
         tuple_list = list(self._node_editor_tab_dict.items())

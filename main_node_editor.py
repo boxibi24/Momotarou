@@ -49,7 +49,7 @@ def callback_file_dialog(sender, app_data, user_data):
     elif sender == 'project_import':
         user_data.callback_project_import(sender, app_data)
     elif sender == 'NG_file_save':
-        user_data.current_node_editor_instance.callback_file_save(sender, app_data)
+        user_data.current_node_editor_instance.callback_tool_save(sender, app_data)
     elif sender == 'NG_file_open':
         user_data.current_node_editor_instance.callback_file_open(sender, app_data)
     elif sender == 'NG_file_import':

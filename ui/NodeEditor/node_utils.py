@@ -1,6 +1,8 @@
 import dearpygui.dearpygui as dpg
 from ui.NodeEditor.classes.node import NodeTypeFlag
-from ui.NodeEditor.utils import sort_data_link_dict, sort_flow_link_dict
+from ui.NodeEditor.utils import sort_data_link_dict, sort_flow_link_dict, dpg_get_value, json_write_to_file
+import traceback
+from pprint import pprint
 
 
 def delete_selected_node(node_editor, node_id=None):
@@ -86,3 +88,80 @@ def delete_selected_node(node_editor, node_id=None):
         f'    sef.node_data_link_dict  :    {node_editor.current_node_editor_instance.node_data_link_dict}')
     node_editor.current_node_editor_instance.logger.debug(
         f'    node_editor.node_flow_link_dict  :    {node_editor.current_node_editor_instance.node_flow_link_dict}')
+
+
+def simplify_link_list(in_link_list):
+    """
+    Replaces instances in link list with their tags
+    """
+    out_link_list = []
+    for link_instance in in_link_list:
+        source_pin_tag = link_instance.source_pin_instance.pin_tag
+        target_pin_tag = link_instance.target_pin_instance.pin_tag
+        out_link_list.append([source_pin_tag, target_pin_tag])
+    return out_link_list
+
+
+def update_pin_values_in_node_dict(node_info):
+    """
+    Update current pin values to node dict
+    """
+    for pin_info in node_info['pins']:
+        pin_value = pin_info.get('value', None)
+        if pin_value is None:
+            continue
+        # If source
+        pin_info.update({'value': dpg_get_value(pin_info['pin_instance'].value_tag)})
+
+
+def update_flow_links_to_export_dict(flow_link_list: list, export_dict: dict):
+    """
+    Replace flow link lists with elements consist of the [source_pin_tag, target_pin_tag]
+    """
+    _simplified_flow_link_list = simplify_link_list(flow_link_list)
+    export_dict.update({'flows': _simplified_flow_link_list})
+
+
+def update_data_links_to_export_dict(data_link_list: list, export_dict: dict):
+    """
+    Replace flow link lists with elements consist of the [source_pin_tag, target_pin_tag]
+    """
+    _simplified_data_link_list = simplify_link_list(data_link_list)
+    export_dict.update({'data_links': _simplified_data_link_list})
+
+
+def eliminate_non_primitive_internal_node_data(node_instance):
+    """
+    Set value to None if found non-primitive type in internal node data
+    """
+    # Clears out complex structs inside nodes' internal_data since pickle can't handle serializing them
+    for key in node_instance.internal_data.keys():
+        if node_instance.internal_data[key].__class__ in [str, int, float, type(None), list]:
+            continue
+        node_instance.internal_data[key] = None
+
+
+def reset_var_values_to_none(var_dict):
+    # Resetting all the vars value to None
+    for var_info in var_dict.values():
+        var_info['value'][0] = None
+
+
+def remove_export_dict_redundancies(in_dict):
+    for node in in_dict['nodes']:
+        # Remove redundant entries : node_instance
+        node.pop('node_instance')
+        # Remove redundant entries : pin_instances
+        for pin in node['pins']:
+            pin.pop('pin_instance')
+        # Update node position
+        node['position']['x'], node['position']['y'] = dpg.get_item_pos(node['id'])
+
+
+def save_dict_to_json(in_dict, file_path) -> tuple:
+    try:
+        json_write_to_file(file_path=file_path, value=in_dict)
+    except Exception:
+        return 4, traceback.format_exc()
+    else:
+        return 1, f'exported_dict : {in_dict}'

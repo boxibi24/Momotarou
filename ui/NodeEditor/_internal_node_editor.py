@@ -6,8 +6,10 @@ from ui.NodeEditor.utils import *
 from ui.NodeEditor.classes.link import Link
 from ui.NodeEditor.classes.pin import OutputPinType, InputPinType
 from ui.NodeEditor.classes.node import NodeTypeFlag
+import ui.NodeEditor.node_utils as node_utils
 from multiprocessing import Queue
-from pprint import pprint
+import ui.NodeEditor.logger_message as log_message
+
 
 class DPGNodeEditor:
 
@@ -124,53 +126,21 @@ class DPGNodeEditor:
 
         self.logger.info('***** Child Node Editor initialized! *****')
 
-    def callback_file_save(self, sender, app_data):
-        # Aggregate the following into 1 json dict:
-        # 1: Flow link list
-        # 2: Data link list
-        # 3: Node dict
-        # 4: Var dict
-        setting_dict = OrderedDict()
-        # Deconstruct flow link instances into list of [source_pin_tag, target_pin_tag]
-        flow_link_list = []
-        for link in self.flow_link_list:
-            source_pin_tag = link.source_pin_instance.pin_tag
-            target_pin_tag = link.target_pin_instance.pin_tag
-            flow_link_list.append([source_pin_tag, target_pin_tag])
-        # Deconstruct flow link instances into list of [source_pin_tag, target_pin_tag]
-        data_link_list = []
-        for link in self.data_link_list:
-            source_pin_tag = link.source_pin_instance.pin_tag
-            target_pin_tag = link.target_pin_instance.pin_tag
-            data_link_list.append([source_pin_tag, target_pin_tag])
-        # Refresh the events list
-        setting_dict['events'] = self.tobe_exported_event_dict
-        # Update links
-        setting_dict.update({'flows': flow_link_list, 'data_links': data_link_list})
-        # Resetting all the vars value to None
-        for var_info in self._vars_dict.values():
-            var_info['value'][0] = None
-        # Update var dict
-        setting_dict.update({'vars': self._vars_dict})
-        # Update the is exposed status of the nodes and the pins value
-        try:
-            if self.node_dict.get('nodes', None) is not None:
-                for node_info in self.node_dict['nodes']:
-                    node_instance = node_info['node_instance']
-                    for pin_info in node_info['pins']:
-                        pin_value = pin_info.get('value', None)
-                        if pin_value is None:
-                            continue
-                        # If source
-                        pin_info.update({'value': dpg_get_value(pin_info['pin_instance'].value_tag)})
-                    # Clears out complex structs inside nodes' internal_data since pickle can't handle serializing them
-                    for key in node_instance.internal_data.keys():
-                        if node_instance.internal_data[key].__class__ in [str, int, float, type(None), list]:
-                            continue
-                        node_instance.internal_data[key] = None
-        except KeyError:
-            self.logger.exception('Cannot export an empty node graph')
-            return 1
+    def _refresh_node_editor_data(self):
+        """
+        Refresh all internal data to reflect latest node statuses
+        """
+
+        node_utils.reset_var_values_to_none(self._vars_dict)
+
+        # Cleanup nodes
+        if self.node_dict.get('nodes', None) is not None:
+            for node_info in self.node_dict['nodes']:
+                # Update the is exposed status of the nodes and the pins value
+                node_utils.update_pin_values_in_node_dict(node_info)
+                # Clean up non-primitive value from node internal data
+                node_instance = node_info['node_instance']
+                node_utils.eliminate_non_primitive_internal_node_data(node_instance)
 
         # Reorder the node_dict to reflect the current ordering of events
         # Incrementally match event nodes with _event_dict and move_to_end till the event_dict exhausts
@@ -182,38 +152,46 @@ class DPGNodeEditor:
                     break
                 _index += 1
 
+    def _update_necessary_entries_export_dict(self, export_dict: dict):
+        """
+        Update Flow link, Data link, Var dict to export dict
+        """
+        node_utils.update_flow_links_to_export_dict(self.flow_link_list, export_dict)
+        node_utils.update_data_links_to_export_dict(self.data_link_list, export_dict)
+        # Add the events list to dict
+        export_dict['events'] = self.tobe_exported_event_dict
+        # Add var dict
+        export_dict.update({'vars': self._vars_dict})
+
+    def _construct_export_dict(self) -> dict:
+        """
+        Construct an export dict
+        """
         # Deep copying existing node dict, so we don't mistakenly modify it
-        copy_node_dict = None
-        try:
-            # Used dill instead of deep copy cause dict contains references to modules
-            # which pickle does not support deserializing
-            copy_node_dict = dill.loads(dill.dumps(self.node_dict))
-        except TypeError:
-            self.logger.exception("Could not perform deep copy of node dict")
-        except Exception:
-            self.logger.exception("Something wrong copying node dict")
-        if copy_node_dict:
-            for node in copy_node_dict['nodes']:
-                # Remove redundant entries : node_instance
-                node.pop('node_instance')
-                # Remove redundant entries : pin_instances
-                for pin in node['pins']:
-                    pin.pop('pin_instance')
-                # Update node position
-                node['position']['x'], node['position']['y'] = dpg.get_item_pos(node['id'])
+        export_dict = dill.loads(dill.dumps(self.node_dict))
+        self._update_necessary_entries_export_dict(export_dict)
+        # Remove redundancies, such as node / pin instances
+        node_utils.remove_export_dict_redundancies(export_dict)
 
-            setting_dict.update(copy_node_dict)
+        return export_dict
 
-            with open(app_data['file_path_name'], 'w') as fp:
-                json.dump(setting_dict, fp, indent=4)
-
-            self.logger.info('**** File saved ****')
-            self.logger.debug(f'    sender          :     {str(sender)}')
-            self.logger.debug(f'    data            :     {str(app_data)}')
-            self.logger.debug(f'    setting_dict    :     {setting_dict}')
-            self.logger.debug(f'    node_dict       :     {self.node_dict}')
-        else:
-            self.logger.critical("Data is null, export terminated!")
+    def callback_tool_save(self, sender, app_data):
+        """
+        Callback to save tool as JSON file
+        """
+        # Callback action name
+        action = dpg.get_item_label(sender)
+        # app_data is the chosen file path
+        file_path = app_data['file_path_name']
+        # Refresh and cleanup data
+        self._refresh_node_editor_data()
+        # Construct export dict
+        tobe_exported_dict = self._construct_export_dict()
+        # Save constructed dict to file
+        return_message = node_utils.save_dict_to_json(tobe_exported_dict, file_path)
+        # Log
+        log_message.log_on_return_code(logger=self.logger, action=action,
+                                       return_message=return_message)
 
     def callback_file_import(self, sender, app_data):  # Import means to append the existing node graph
         self.logger.info('**** Start file importing ****')
@@ -323,6 +301,15 @@ class DPGNodeEditor:
             self.logger.debug(f'     self.data_link_list :   {self.data_link_list}')
             self.logger.debug(f'     self.flow_link_list :   {self.flow_link_list}')
             self.logger.debug(f'     node_connection_dict:   {self.node_data_link_dict}')
+
+    def _get_var_names_from_var_dict(self, imported_var_name):
+        """
+        Return list of var names, queries from var dict
+        """
+        _var_name_list = []
+        for var_info in self._vars_dict:
+            _var_name_list.append(var_info['name'])
+        return _var_name_list
 
     def callback_file_open(self, sender, app_data):
 
@@ -902,7 +889,7 @@ class DPGNodeEditor:
                     # For unknown reasons, default_is_exposed_flag is None when you add new vars
                     'is_exposed': [default_is_exposed_flag if default_is_exposed_flag is not None else False]
                 }})
-        else:       # Refresh UI
+        else:  # Refresh UI
             self._vars_dict[var_tag]['name'][0] = var_name[0]
             self._vars_dict[var_tag]['type'][0] = var_type[0]
 
@@ -911,19 +898,6 @@ class DPGNodeEditor:
         self.logger.debug(f'splitter_var_dict:  {self._splitter_var_dict}')
         return 0
 
-    # Done: input box shown on TV represents var_value
-    #
-    # Done: anytime default value change (NG), reset the var_value
-    # to None, and set the Get nodes to dirty (DONE) -> listen to default_var_value changes -> trigger self.dirty
-
-    # Done: During flow chain, if meet set var nodes, sets all get nodes to dirty
-    #
-    # Done: at begin event execution,
-    # set every vars' values to None if not exposed, apply user input value if exposed. Dirty mark them
-
-    # Done: display any exposed var on Event Graph list, at the top
-    # Done: add checkbox is_required?, If yes, when grabbing for input, the input field  cannot be None
-
     def register_var_user_input_box(self, var_tag, user_box_id):
         """
         Callback function upon enabling variable's exposed for user input flag
@@ -931,3 +905,11 @@ class DPGNodeEditor:
         self._vars_dict[var_tag]['user_input_box_id'] = user_box_id
         self.logger.debug(f'**** Register {var_tag} to take input from dpg item : {user_box_id} ****')
         self.logger.debug(f'Current var dict of {var_tag}: {self._vars_dict[var_tag]}')
+
+    def delete_item_registry(self, item_name: str):
+        """
+        Delete item registry from dpg and registry dict
+        """
+        registry_id = self.item_registry_dict[item_name]
+        dpg.delete_item(registry_id)
+        self.item_registry_dict.pop(item_name)

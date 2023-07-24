@@ -3,6 +3,7 @@ from ui.NodeEditor.node_utils import delete_selected_node
 from copy import deepcopy
 from pprint import pprint
 
+
 def event_right_click_menu(sender, app_data, user_data):
     with dpg.window(
         popup=True,
@@ -60,7 +61,7 @@ def callback_delete_event(sender, app_data, user_data):
     _master_node_editor_instance.detail_panel.refresh_ui()
     # Refresh splitter items already performed in the deletion function
     # Delete the registry of var selectable
-    dpg.delete_item(_current_node_editor_instance.item_registry_dict[_event_tag])
+    _current_node_editor_instance.delete_item_registry(_event_tag)
 
 
 def exposed_var_right_click_menu():
@@ -161,7 +162,7 @@ def delete_var_dict_entry(master_inst, var_tag):
     _splitter_panel.exposed_var_dict = deepcopy(_current_node_editor_instance.var_dict)
 
     # Delete the registry of var selectable
-    dpg.delete_item(_current_node_editor_instance.item_registry_dict[_var_tag])
+    _current_node_editor_instance.delete_item_registry(_var_tag)
 
 
 def callback_variable_copy(sender, app_data, user_data):
@@ -213,7 +214,8 @@ def callback_rename_tab(sender, app_data, user_data):
     _node_editor_tab_dict = user_data[2]
     _tab_id = _node_editor_tab_dict[_old_tab_name]['id']
     if _node_editor_tab_dict.get(_new_tab_name, None) is not None:
-        return callback_tab_ask_name(sender, app_data, user_data=(_tab_name_reference, _node_editor_tab_dict), is_retry=True)
+        return callback_tab_ask_name(sender, app_data, user_data=(_tab_name_reference, _node_editor_tab_dict),
+                                     is_retry=True)
     # Update new name to tab name reference
     _tab_name_reference[0] = _new_tab_name
     # Rename the tag UI element
@@ -225,5 +227,3 @@ def callback_rename_tab(sender, app_data, user_data):
         'node_editor_instance': _node_editor_instance,
         'id': _tab_id
     }})
-
-

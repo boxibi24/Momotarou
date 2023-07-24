@@ -3,6 +3,7 @@ from collections import OrderedDict
 from uuid import uuid1
 import logging
 from logging.handlers import QueueHandler
+import json
 
 
 def generate_uuid() -> str:
@@ -318,3 +319,8 @@ def add_user_input_box(var_type, callback=None, default_value=None,
         if add_separator:
             dpg.add_separator()
         return _user_input_box
+
+
+def json_write_to_file(file_path, value):
+    with open(file_path, 'w') as fp:
+        json.dump(value, fp, indent=4)
