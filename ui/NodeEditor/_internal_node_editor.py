@@ -16,6 +16,10 @@ class DPGNodeEditor:
         return self._id
 
     @property
+    def tag(self) -> str:
+        return self._tag
+
+    @property
     def node_instance_dict(self) -> dict:
         return self._node_instance_dict
 
@@ -106,11 +110,6 @@ class DPGNodeEditor:
         self._vars_dict = OrderedDict([])
         # list of all item registries declared that will get deleted after the node graph termination
         self.item_registry_dict = {}
-
-        # ------ LOGGER ----------
-        self.logger = create_queueHandler_logger(__name__ + '_' + dpg.get_item_label(parent_tab),
-                                                 logging_queue, self._use_debug_print)
-
         self._id = dpg.add_node_editor(
             callback=self.callback_link,
             delink_callback=self.callback_delink,
@@ -118,6 +117,11 @@ class DPGNodeEditor:
             minimap_location=dpg.mvNodeMiniMap_Location_BottomRight,
             parent=parent_tab
         )
+        self._tag = generate_uuid()
+        # ------ LOGGER ----------
+        self.logger = create_queueHandler_logger(__name__ + '_' + dpg.get_item_label(parent_tab),
+                                                 logging_queue, self._use_debug_print)
+
         self.logger.info('***** Child Node Editor initialized! *****')
 
     def callback_file_save(self, sender, app_data):

@@ -1,16 +1,19 @@
+import dearpygui.dearpygui as dpg
 from ui.NodeEditor.utils import generate_uuid, create_queueHandler_logger
 from multiprocessing import Queue
-from ui.NodeEditor.input_handler import *
+from ui.NodeEditor.input_handler import add_keyboard_handler_registry, add_mouse_handler_registry, event_handler
 from ui.NodeEditor.right_click_menu import RightClickMenu
 from ui.NodeEditor.splitter import Splitter
 from ui.NodeEditor.details_panel import DetailPanel
 from ui.NodeEditor._internal_node_editor import DPGNodeEditor
+from ui.NodeEditor.item_right_click_menus import tab_right_click_menu
 from collections import OrderedDict
 import os
 import platform
 from glob import glob
 from importlib import import_module
 from copy import deepcopy
+from pprint import pprint
 
 
 class NodeEditor:
@@ -55,7 +58,7 @@ class NodeEditor:
         # ------ ATTRIBUTES -----
         self.current_node_editor_instance = None
         self._requested_exec_node_tag = None
-        self._node_editor_dict = OrderedDict([])
+        self._node_editor_tab_dict = OrderedDict([])
         # dict to keep track of the imported modules
         self._imported_module_dict = {}
         # Tuple to store current node editor boundaries position
@@ -138,16 +141,28 @@ class NodeEditor:
                 with dpg.table_row():
                     self.splitter_panel = Splitter(parent_instance=self)
                     with dpg.tab_bar(reorderable=True, callback=self.callback_tab_bar_change) as self._tab_bar_id:
-                        self.current_tab = dpg.add_tab(label='Default', parent=self._tab_bar_id,
-                                                       closable=True, payload_type='__var',
-                                                       drop_callback=self.var_drop_callback)
-                        new_node_editor = DPGNodeEditor(parent_tab=self.current_tab,
+                        _tab_name = 'Default'
+                        _tab_id = dpg.add_tab(label=_tab_name, parent=self._tab_bar_id,
+                                              closable=True, payload_type='__var',
+                                              drop_callback=self.var_drop_callback)
+                        self.current_tab_id = _tab_id
+                        # Right click context menu for tab
+                        with dpg.item_handler_registry() as item_handler_id:
+                            dpg.add_item_clicked_handler(button=dpg.mvMouseButton_Right,
+                                                         callback=tab_right_click_menu,
+                                                         user_data=([_tab_name], self._node_editor_tab_dict))
+                        dpg.bind_item_handler_registry(_tab_id, dpg.last_container())
+                        new_node_editor = DPGNodeEditor(parent_tab=_tab_id,
                                                         splitter_panel=self.splitter_panel,
                                                         setting_dict=self._setting_dict,
                                                         imported_module_dict=self._imported_module_dict,
                                                         use_debug_print=self._use_debug_print,
                                                         logging_queue=logging_queue)
-                        self._node_editor_dict.update({self.current_tab: new_node_editor})
+                        new_node_editor.item_registry_dict.update({'tab_registry': item_handler_id})
+                        self._node_editor_tab_dict.update({_tab_name:
+                                                               {'node_editor_instance': new_node_editor,
+                                                                'id': _tab_id
+                                                                }})
                         self.current_node_editor_instance = new_node_editor
                         dpg.add_tab_button(label='+', callback=self._add_node_graph_tab_ask_name,
                                            user_data=self._tab_bar_id,
@@ -181,40 +196,55 @@ class NodeEditor:
         for handler in dpg.get_item_children("__node_editor_mouse_handler", 1):
             dpg.set_item_callback(handler, event_handler)
 
-    def _add_node_graph_tab_ask_name(self, sender, app_data, user_data):
+    def _add_node_graph_tab_ask_name(self, sender, app_data, user_data, is_retry=False):
         parent = user_data
         _mid_widget_pos = [int(dpg.get_viewport_width() / 2.5), int(dpg.get_viewport_height() / 2.5)]
-        with dpg.window(modal=True, label='New tab',
-                        pos=_mid_widget_pos, min_size=[10,10]) as _modal_window:
+        with dpg.window(label='New tab',
+                        pos=_mid_widget_pos, min_size=[10, 10], no_resize=True) as _modal_window:
             with dpg.group(horizontal=True):
                 dpg.add_text("Name your new tab: ")
                 dpg.add_input_text(width=200, callback=self._callback_on_name_new_tab,
                                    on_enter=True, user_data=(_modal_window, parent),
                                    hint='Input and press "Enter" to apply')
+            if is_retry:
+                dpg.add_text('Name existed, please retry another name!', color=(204, 51, 0, 255))
 
     def _callback_on_name_new_tab(self, sender, app_data, user_data):
         # delete the modal window
         dpg.delete_item(user_data[0])
         new_tab_name = app_data
         parent = user_data[1]
-        new_tab = dpg.add_tab(label=new_tab_name, parent=parent,
-                              closable=True, payload_type='__var', drop_callback=self.var_drop_callback)
-        new_node_editor = DPGNodeEditor(parent_tab=new_tab,
+        if self._node_editor_tab_dict.get(new_tab_name, None) is not None:  # Tab name existed
+            return self._add_node_graph_tab_ask_name(sender, app_data, user_data=parent, is_retry=True)
+        new_tab_id = dpg.add_tab(label=new_tab_name, parent=parent,
+                                 closable=True, payload_type='__var', drop_callback=self.var_drop_callback)
+        # Right click context menu for tab
+        with dpg.item_handler_registry() as item_handler_id:
+            dpg.add_item_clicked_handler(button=dpg.mvMouseButton_Right,
+                                         callback=tab_right_click_menu,
+                                         user_data=([new_tab_name], self._node_editor_tab_dict))
+        dpg.bind_item_handler_registry(new_tab_id, dpg.last_container())
+        new_node_editor = DPGNodeEditor(parent_tab=new_tab_id,
                                         splitter_panel=self.splitter_panel,
                                         setting_dict=self._setting_dict,
                                         imported_module_dict=self._imported_module_dict,
                                         use_debug_print=self._use_debug_print,
                                         logging_queue=self.logging_queue)
-        self._node_editor_dict.update({new_tab: new_node_editor})
+        new_node_editor.item_registry_dict.update({'tab_registry': item_handler_id})
+        self._node_editor_tab_dict.update({new_tab_name:
+                                               {'node_editor_instance': new_node_editor,
+                                                'id': new_tab_id
+                                                }})
 
     def callback_tab_bar_change(self, sender, app_data):
         _old_node_editor_instance = self.current_node_editor_instance
-        _old_tab_id = self.current_tab
+        _old_tab_name = dpg.get_item_label(self.current_tab_id)
+        _selected_tab = dpg.get_item_label(app_data)
         # Refresh the dict first in case user closes the tab
         self.refresh_node_editor_dict()
         try:
-            self.current_node_editor_instance = self._node_editor_dict[app_data]
-            self.current_tab = app_data
+            self.current_node_editor_instance = self._node_editor_tab_dict[_selected_tab]['node_editor_instance']
+            self.current_tab_id = app_data
         except KeyError:
             self.logger.exception('Could not query current node editor instance:')
             return -1
@@ -227,27 +257,28 @@ class NodeEditor:
 
         # If tab not deleted, delete the orphaned registry from old node graph
         # since all selectable-headers will be refreshed
-        if self._node_editor_dict.get(_old_tab_id, None) is not None:
+        if self._node_editor_tab_dict.get(_old_tab_name, None) is not None:
             for registry_id in _old_node_editor_instance.item_registry_dict.values():
                 dpg.delete_item(registry_id)
             _old_node_editor_instance.item_registry_dict.clear()
 
     def refresh_node_editor_dict(self):
-        tuple_list = list(self._node_editor_dict.items())
-        for tab_id, node_graph_inst in tuple_list:
-            if not dpg.is_item_visible(tab_id):
-                self._node_editor_dict.pop(tab_id)
-                deleted_tab_name = dpg.get_item_label(tab_id)
+        tuple_list = list(self._node_editor_tab_dict.items())
+        for tab_name, tab_info in tuple_list:
+            _tab_id = tab_info['id']
+            if not dpg.is_item_visible(_tab_id):
+                node_editor_instance = tab_info['node_editor_instance']
+                self._node_editor_tab_dict.pop(tab_name)
                 # Delete all registry that stored in the node graph
-                for registry_id in node_graph_inst.item_registry_dict.values():
+                for registry_id in node_editor_instance.item_registry_dict.values():
                     dpg.delete_item(registry_id)
                 # Delete the node graph in dpg
-                dpg.delete_item(node_graph_inst.id)
+                dpg.delete_item(node_editor_instance.id)
                 # Delete the node graph inst
-                del node_graph_inst
+                del node_editor_instance
                 # Finally delete the tab
-                dpg.delete_item(tab_id)
-                self.logger.info(f'****Deleted tab {deleted_tab_name}****')
+                dpg.delete_item(_tab_id)
+                self.logger.info(f'****Deleted tab {tab_name}****')
 
     def var_drop_callback(self, sender, app_data):
         """

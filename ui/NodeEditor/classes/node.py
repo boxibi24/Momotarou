@@ -4,7 +4,6 @@ from enum import IntFlag
 from ui.NodeEditor.utils import dpg_set_value, dpg_get_value
 from ui.NodeEditor.classes.pin import *
 
-
 def get_pin_class(pin_type):
     """
     Get pin class that corresponds to pin_type
@@ -315,6 +314,26 @@ class BaseNode:
                 ):
                     dpg.add_text(label="dummy",
                                  tag=generate_uuid())
+        # Right click context menu
+        with dpg.item_handler_registry() as item_handler_id:
+            dpg.add_item_clicked_handler(button=dpg.mvMouseButton_Right,
+                                         callback=self.node_right_click_menu)
+        dpg.bind_item_handler_registry(self._node_id, dpg.last_container())
+
+    def node_right_click_menu(self):
+        with dpg.window(
+            popup=True,
+            autosize=True,
+            no_move=True,
+            no_open_over_existing_popup=True,
+            no_saved_settings=True,
+            max_size=[200, 200],
+            min_size=[10, 10]
+        ):
+            dpg.add_selectable(label='Delete')
+            dpg.add_selectable(label='Cut')
+            dpg.add_selectable(label='Copy')
+            dpg.add_selectable(label='Duplicate')
 
     def create_node(self, **kwargs):
         assert not hasattr(super(), 'CreateNode')

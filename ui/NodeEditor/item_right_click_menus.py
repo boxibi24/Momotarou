@@ -1,23 +1,7 @@
 import dearpygui.dearpygui as dpg
-from ui.NodeEditor.input_handler import delete_selected_node
+from ui.NodeEditor.node_utils import delete_selected_node
 from copy import deepcopy
-
-
-def node_right_click_menu():
-    with dpg.window(
-        popup=True,
-        autosize=True,
-        no_move=True,
-        no_open_over_existing_popup=True,
-        no_saved_settings=True,
-        max_size=[200, 200],
-        min_size=[10, 10]
-    ):
-        dpg.add_selectable(label='Delete')
-        dpg.add_selectable(label='Cut')
-        dpg.add_selectable(label='Copy')
-        dpg.add_selectable(label='Duplicate')
-
+from pprint import pprint
 
 def event_right_click_menu(sender, app_data, user_data):
     with dpg.window(
@@ -190,3 +174,56 @@ def callback_variable_cut(sender, app_data, user_data):
 
 def callback_variable_duplicate(sender, app_data, user_data):
     pass
+
+
+def tab_right_click_menu(sender, app_data, user_data):
+    with dpg.window(
+        popup=True,
+        autosize=True,
+        no_move=True,
+        no_open_over_existing_popup=True,
+        no_saved_settings=True,
+        max_size=[200, 200],
+        min_size=[10, 10]
+    ):
+        dpg.add_selectable(label='Rename', callback=callback_tab_ask_name, user_data=user_data)
+
+
+def callback_tab_ask_name(sender, app_data, user_data, is_retry=False):
+    _tab_name_reference = user_data[0]
+    _node_editor_tab_dict = user_data[1]
+    _mid_widget_pos = [int(dpg.get_viewport_width() / 2.5), int(dpg.get_viewport_height() / 2.5)]
+    with dpg.window(label='Rename tab',
+                    pos=_mid_widget_pos, min_size=[10, 10], no_resize=True) as _modal_window:
+        with dpg.group(horizontal=True):
+            dpg.add_text("New tab name: ")
+            dpg.add_input_text(width=200, callback=callback_rename_tab,
+                               on_enter=True, user_data=(_modal_window, _tab_name_reference, _node_editor_tab_dict),
+                               hint='Input and press "Enter" to apply')
+        if is_retry:
+            dpg.add_text('Name existed, please retry another name!', color=(204, 51, 0, 255))
+
+
+def callback_rename_tab(sender, app_data, user_data):
+    # delete the modal window
+    dpg.delete_item(user_data[0])
+    _new_tab_name = app_data
+    _tab_name_reference = user_data[1]
+    _old_tab_name = _tab_name_reference[0]
+    _node_editor_tab_dict = user_data[2]
+    _tab_id = _node_editor_tab_dict[_old_tab_name]['id']
+    if _node_editor_tab_dict.get(_new_tab_name, None) is not None:
+        return callback_tab_ask_name(sender, app_data, user_data=(_tab_name_reference, _node_editor_tab_dict), is_retry=True)
+    # Update new name to tab name reference
+    _tab_name_reference[0] = _new_tab_name
+    # Rename the tag UI element
+    dpg.configure_item(_tab_id, label=_new_tab_name)
+    # Update new name to the stored dict for tabs
+    _node_editor_instance = _node_editor_tab_dict[_old_tab_name]['node_editor_instance']
+    _node_editor_tab_dict.pop(_old_tab_name)
+    _node_editor_tab_dict.update({_new_tab_name: {
+        'node_editor_instance': _node_editor_instance,
+        'id': _tab_id
+    }})
+
+

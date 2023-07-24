@@ -287,8 +287,9 @@ def main():
     logger.debug("Running main synchronously")
     while dpg.is_dearpygui_running():
         # Update node graph bounding box to restrict right click menu only shows when cursor is inside of it
-        node_editor.node_editor_bb[0] = (dpg.get_item_pos(node_editor.current_tab)[0] + 8,
-                                         dpg.get_item_pos(node_editor.current_tab)[1] + 30)
+        _current_tab_id = node_editor.current_tab_id
+        node_editor.node_editor_bb[0] = (dpg.get_item_pos(_current_tab_id)[0] + 8,
+                                         dpg.get_item_pos(_current_tab_id)[1] + 30)
         node_editor.node_editor_bb[1] = (dpg.get_item_pos('__details_panel')[0] - 2,
                                          dpg.get_viewport_height() - 47)
         # Render DPG frame
