@@ -108,4 +108,6 @@ class RightClickMenu:
                                 self.logger.debug(f'     node.node_label     :   {node.node_label}')
 
     def child_editor_add_node(self, sender, app_data, user_data):
-        self._parent_inst.current_node_editor_instance.callback_add_node(sender, app_data, user_data)
+        import_path = user_data[0]
+        import_module = user_data[1]
+        self._parent_inst.current_node_editor_instance.add_node(import_path, import_module)

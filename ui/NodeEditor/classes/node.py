@@ -4,6 +4,7 @@ from enum import IntFlag
 from ui.NodeEditor.utils import dpg_set_value, dpg_get_value
 from ui.NodeEditor.classes.pin import *
 
+
 def get_pin_class(pin_type):
     """
     Get pin class that corresponds to pin_type
@@ -161,7 +162,7 @@ class BaseNode:
                  import_path='',
                  node_tag=None,
                  succeeding_data_link_list=None,
-                 label=None,
+                 label='',
                  internal_data=None
                  ):
         self._tag_node_name = None
@@ -173,7 +174,7 @@ class BaseNode:
         else:
             self._pos = pos
         # Override node_label if param label is not None
-        if label is not None:
+        if label:
             self.node_label = label
         self._parent = parent
         self._setting_dict = setting_dict
@@ -295,11 +296,9 @@ class BaseNode:
                         'pin_type': out_exec_pin.pin_type
                     }))
 
-                # Nodes with exec pins
                 if self.node_type & NodeTypeFlag.Exec:
                     self.construct_pin(InputPinType.Exec, 'Exec In')
                     self.construct_pin(OutputPinType.Exec, 'Exec Out')
-                # Flow control nodes
                 if self.node_type & NodeTypeFlag.Sequential:
                     pass
                 # Loop through list to add pins

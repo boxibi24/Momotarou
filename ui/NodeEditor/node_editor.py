@@ -13,7 +13,12 @@ import platform
 from glob import glob
 from importlib import import_module
 from copy import deepcopy
-from pprint import pprint
+from ui.NodeEditor.node_utils import construct_var_node_label
+
+
+def callback_project_open(sender, app_data):
+    print('Hello')
+    pass
 
 
 class NodeEditor:
@@ -144,7 +149,7 @@ class NodeEditor:
                         _tab_name = 'Default'
                         _tab_id = dpg.add_tab(label=_tab_name, parent=self._tab_bar_id,
                                               closable=True, payload_type='__var',
-                                              drop_callback=self.var_drop_callback)
+                                              drop_callback=self._var_drop_callback)
                         self.current_tab_id = _tab_id
                         # Right click context menu for tab
                         with dpg.item_handler_registry() as item_handler_id:
@@ -217,7 +222,7 @@ class NodeEditor:
         if self._node_editor_tab_dict.get(new_tab_name, None) is not None:  # Tab name existed
             return self._add_node_graph_tab_ask_name(sender, app_data, user_data=parent, is_retry=True)
         new_tab_id = dpg.add_tab(label=new_tab_name, parent=parent,
-                                 closable=True, payload_type='__var', drop_callback=self.var_drop_callback)
+                                 closable=True, payload_type='__var', drop_callback=self._var_drop_callback)
         # Right click context menu for tab
         with dpg.item_handler_registry() as item_handler_id:
             dpg.add_item_clicked_handler(button=dpg.mvMouseButton_Right,
@@ -286,11 +291,7 @@ class NodeEditor:
                 dpg.delete_item(_tab_id)
                 self.logger.info(f'****Deleted tab {tab_name}****')
 
-    def var_drop_callback(self, sender, app_data):
-        """
-        Callback function upon variable drop on child Node Editor
-        """
-        # Try deleting old popup window to avoid duplication
+    def _delete_var_drop_popup(self):
         try:
             is_window_exist = dpg.is_item_enabled(self._var_drop_popup_id)
         except SystemError:
@@ -298,6 +299,12 @@ class NodeEditor:
         if is_window_exist:
             dpg.delete_item(self._var_drop_popup_id)
 
+    def _var_drop_callback(self, sender, app_data):
+        """
+        Callback function upon variable drop on child Node Editor
+        """
+        # Try deleting old popup window to avoid duplication
+        self._delete_var_drop_popup()
         # Init popup window
         with dpg.window(
             popup=True,
@@ -322,6 +329,52 @@ class NodeEditor:
                                callback=self.callback_current_editor_add_node,
                                user_data=(_var_tag, _var_name))
 
+    def _get_internal_modules_dict(self):
+        try:
+            _internal_module_dict = self.menu_construct_dict['_internal']
+            return _internal_module_dict
+        except KeyError:
+            self.logger.exception('Could not query _internal modules:')
+            return -1
+
+    def _get_internal_var_module(self, var_tag, is_get_var: bool):
+        _internal_module_dict = self._get_internal_modules_dict()
+        _var_type = self.current_node_editor_instance.var_dict[var_tag]['type'][0]
+        if is_get_var:
+            _module_name = 'Get ' + _var_type
+        else:
+            _module_name = 'Set ' + _var_type
+        try:
+            _import_path, _import_module = _internal_module_dict[_module_name]
+            return _import_path, _import_module
+        except KeyError:
+            self.logger.exception(f'Could not find internal module matched with this variable type: {_var_type}')
+            return -1
+
+    def _get_event_module(self):
+        _internal_module_dict = self._get_internal_modules_dict()
+        try:
+            _import_path, _import_module = _internal_module_dict['Event']
+            return _import_path, _import_module
+        except KeyError:
+            self.logger.exception(f'Could not find Event module')
+            return -1
+
+    def current_editor_add_var_node(self, var_tag, var_name, is_get_var :bool):
+        _import_path, _import_module = self._get_internal_var_module(var_tag, is_get_var)
+        added_node = self.current_node_editor_instance.add_node(_import_path, _import_module,
+                                                                is_variable=True,
+                                                                label=construct_var_node_label(var_name, is_get_var),
+                                                                var_tag=var_tag)
+        return added_node
+
+    def current_editor_add_event_node(self, event_name):
+        _import_path, _import_module = self._get_event_module()
+        added_node = self.current_node_editor_instance.add_node(_import_path, _import_module,
+                                                                is_variable=False,
+                                                                label='Event ' + event_name)
+        return added_node
+
     def callback_current_editor_add_node(self, sender, app_data, user_data, sender_tag=None):
         """
         Callback function to add variable node on the child Node Editor
@@ -332,72 +385,12 @@ class NodeEditor:
             _sender_tag = sender_tag
         _item_tag = user_data[0]
         _item_name = user_data[1]
-        added_node = None
         if _sender_tag == '__get_var':
-            # Get the imported internal modules
-            try:
-                _internal_module_dict = self.menu_construct_dict['_internal']
-            except KeyError:
-                self.logger.exception('Could not query _internal modules:')
-                return -1
-            # Get the module & import path to construct user data for callback_add_node
-            _var_type = self.current_node_editor_instance.var_dict[_item_tag]['type'][0]
-            try:
-                _var_module_tuple = _internal_module_dict['Get ' + _var_type]
-            except KeyError:
-                self.logger.exception(f'Could not find internal module matched with this variable type: {_var_type}')
-                return -1
-            # Run child Node Editor's callback_add_node
-            added_node = self.current_node_editor_instance.callback_add_node(sender, app_data,
-                                                                             user_data=(_var_module_tuple[0],
-                                                                                        _var_module_tuple[1],
-                                                                                        (_item_tag,
-                                                                                         'Get ' + _item_name)))
-
+            self.current_editor_add_var_node(_item_tag, _item_name, True)
         elif _sender_tag == '__set_var':
-            # Get the imported internal modules
-            try:
-                _internal_module_dict = self.menu_construct_dict['_internal']
-            except KeyError:
-                self.logger.exception('Could not query _internal modules:')
-                return -1
-            # Get the module & import path to construct user data for callback_add_node
-            _var_type = self.current_node_editor_instance.var_dict[_item_tag]['type'][0]
-            try:
-                _var_module_tuple = _internal_module_dict['Set ' + _var_type]
-            except KeyError:
-                self.logger.exception(f'Could not find internal module matched with this variable type: {_var_type}')
-                return -1
-            # Run child Node Editor's callback_add_node
-            added_node = self.current_node_editor_instance.callback_add_node(sender, app_data,
-                                                                             user_data=(_var_module_tuple[0],
-                                                                                        _var_module_tuple[1],
-                                                                                        (_item_tag,
-                                                                                         'Set ' + _item_name)))
+            self.current_editor_add_var_node(_item_tag, _item_name, False)
         elif '__event' in _sender_tag:
-            # Get the imported internal modules
-            try:
-                _internal_module_dict = self.menu_construct_dict['_internal']
-            except KeyError:
-                self.logger.exception('Could not query _internal modules:')
-                return -1
-            try:
-                _var_module_tuple = _internal_module_dict['Event']
-            except KeyError:
-                self.logger.exception(f'Could not find internal module: Event')
-                return -1
-            # Run child Node Editor's callback_add_node
-            added_node = self.current_node_editor_instance.callback_add_node(sender, app_data,
-                                                                             user_data=(_var_module_tuple[0],
-                                                                                        _var_module_tuple[1],
-                                                                                        (_item_tag,
-                                                                                         'Event ' + _item_name)))
-
-        return added_node
-
-    def callback_project_open(self, sender, app_data):
-        print('Hello')
-        pass
+            self.current_editor_add_event_node(_item_name)
 
     def callback_project_save(self, sender, app_data):
         pass

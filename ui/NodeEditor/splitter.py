@@ -117,9 +117,8 @@ class Splitter:
         # Try to generate a default name that does not match with any existing ones
         children_list: list = dpg.get_item_children(parent)[1]
         not_match_any_flag = False
-        default_name = user_data[1]
-        _null_str = user_data[0]
         new_event_tag = '__event' + generate_uuid()
+        default_name = user_data[1]
         if children_list:
             temp_name = default_name
             i = 0
@@ -133,12 +132,8 @@ class Splitter:
                         not_match_any_flag = True
                         default_name = temp_name
                 i += 1
-        new_user_data_tuple = (_null_str, default_name)
         if instant_add:
-            added_node = self._parent_instance.callback_current_editor_add_node(sender=new_event_tag,
-                                                                                app_data=True,
-                                                                                user_data=new_user_data_tuple,
-                                                                                sender_tag=new_event_tag)
+            added_node = self._parent_instance.current_editor_add_event_node(default_name)
             return added_node
         else:
             with dpg.window(
@@ -153,7 +148,7 @@ class Splitter:
                 _selectable_id = dpg.add_selectable(label='Add',
                                                     tag=new_event_tag,
                                                     callback=self._parent_instance.callback_current_editor_add_node,
-                                                    user_data=new_user_data_tuple
+                                                    user_data=('', default_name)
                                                     )
 
     def variable_header_right_click_menu(self, sender, app_data, user_data):
@@ -527,7 +522,7 @@ class Splitter:
         except KeyError:
             self._parent_instance.logger.exception('Could not query _internal modules:')
             return -1
-        # Get the module & import path to construct user data for callback_add_node
+        # Get the module & import path to construct user data for add_node
         try:
             _set_var_module_tuple = _internal_module_dict['Set ' + _var_type]
             _get_var_module_tuple = _internal_module_dict['Get ' + _var_type]
@@ -544,22 +539,15 @@ class Splitter:
                 _node_pos = dpg.get_item_pos(node.id)
                 # Delete the node
                 delete_selected_node(self._parent_instance, node_id=node.id)
-                _current_node_editor_instance.callback_add_node(sender, app_data,
-                                                                user_data=(_set_var_module_tuple[0],
-                                                                           _set_var_module_tuple[1],
-                                                                           (_var_tag,
-                                                                            'Set ' + _var_name)),
-                                                                pos=_node_pos)
+                _import_path = _set_var_module_tuple[0]
+                _import_module = _set_var_module_tuple[1]
+                _current_node_editor_instance.add_node(_import_path, _import_module, _node_pos, True, node.node_label, _var_tag)
             elif node.node_label == 'Get ' + _var_name:
+                _import_path = _get_var_module_tuple[0]
+                _import_module = _get_var_module_tuple[1]
                 _node_pos = dpg.get_item_pos(node.id)
                 # Delete the node
                 delete_selected_node(self._parent_instance, node_id=node.id)
-                _current_node_editor_instance.callback_add_node(sender, app_data,
-                                                                user_data=(_get_var_module_tuple[0],
-                                                                           _get_var_module_tuple[1],
-                                                                           (_var_tag,
-                                                                            'Get ' + _var_name)),
-                                                                pos=_node_pos)
-
+                _current_node_editor_instance.add_node(_import_path, _import_module, _node_pos, True, node.node_label, _var_tag)
         # Finally reflect new type changes to the databases
         self.var_type_update(_var_tag, _var_type)

@@ -93,18 +93,49 @@ def delete_selected_node(node_editor, node_id=None):
 def simplify_link_list(in_link_list):
     """
     Replaces instances in link list with their tags
+
+    :param in_link_list: pre-processed link list that holds link instances
+    :return: simplified link list of [source_pin_tag, destination_pin_tag]
+    :rtype: list[list[str, str]]
     """
     out_link_list = []
     for link_instance in in_link_list:
         source_pin_tag = link_instance.source_pin_instance.pin_tag
-        target_pin_tag = link_instance.target_pin_instance.pin_tag
-        out_link_list.append([source_pin_tag, target_pin_tag])
+        destination_pin_tag = link_instance.target_pin_instance.pin_tag
+        out_link_list.append([source_pin_tag, destination_pin_tag])
     return out_link_list
+
+
+def update_flow_links_to_export_dict(flow_link_list: list, export_dict: dict):
+    """
+    Replace flow link list with simplified elements
+
+    :param flow_link_list: pre-processed link list that holds link instances
+    :param export_dict: reference to the export dict that will be updated with new simplified list
+    :return:
+    """
+    _simplified_flow_link_list = simplify_link_list(flow_link_list)
+    export_dict.update({'flows': _simplified_flow_link_list})
+
+
+def update_data_links_to_export_dict(data_link_list: list, export_dict: dict):
+    """
+    Replace data link list with simplified elements
+
+    :param data_link_list: pre-processed link list that holds link instances
+    :param export_dict:  reference to the export dict that will be updated with new simplified list
+    :return:
+    """
+    _simplified_data_link_list = simplify_link_list(data_link_list)
+    export_dict.update({'data_links': _simplified_data_link_list})
 
 
 def update_pin_values_in_node_dict(node_info):
     """
     Update current pin values to node dict
+
+    :param node_info: reference to the node info
+    :return:
     """
     for pin_info in node_info['pins']:
         pin_value = pin_info.get('value', None)
@@ -114,25 +145,12 @@ def update_pin_values_in_node_dict(node_info):
         pin_info.update({'value': dpg_get_value(pin_info['pin_instance'].value_tag)})
 
 
-def update_flow_links_to_export_dict(flow_link_list: list, export_dict: dict):
-    """
-    Replace flow link lists with elements consist of the [source_pin_tag, target_pin_tag]
-    """
-    _simplified_flow_link_list = simplify_link_list(flow_link_list)
-    export_dict.update({'flows': _simplified_flow_link_list})
-
-
-def update_data_links_to_export_dict(data_link_list: list, export_dict: dict):
-    """
-    Replace flow link lists with elements consist of the [source_pin_tag, target_pin_tag]
-    """
-    _simplified_data_link_list = simplify_link_list(data_link_list)
-    export_dict.update({'data_links': _simplified_data_link_list})
-
-
 def eliminate_non_primitive_internal_node_data(node_instance):
     """
     Set value to None if found non-primitive type in internal node data
+
+    :param node_instance: instance of the node for inspection
+    :return:
     """
     # Clears out complex structs inside nodes' internal_data since pickle can't handle serializing them
     for key in node_instance.internal_data.keys():
@@ -142,12 +160,24 @@ def eliminate_non_primitive_internal_node_data(node_instance):
 
 
 def reset_var_values_to_none(var_dict):
+    """
+    Reset all variables' values to None
+
+    :param var_dict: dictionary of variables info
+    :return:
+    """
     # Resetting all the vars value to None
     for var_info in var_dict.values():
         var_info['value'][0] = None
 
 
-def remove_export_dict_redundancies(in_dict):
+def prepare_node_info_for_export(in_dict):
+    """
+    Remove redundancies and update node's position to reflect current states
+
+    :param dict in_dict: to be exported dict
+    :return:
+    """
     for node in in_dict['nodes']:
         # Remove redundant entries : node_instance
         node.pop('node_instance')
@@ -159,6 +189,13 @@ def remove_export_dict_redundancies(in_dict):
 
 
 def save_dict_to_json(in_dict, file_path) -> tuple:
+    """
+    Save dictionary to JSON file
+
+    :param dict in_dict: to be saved dictionary
+    :param str file_path: save file path
+    :return: return message
+    """
     try:
         json_write_to_file(file_path=file_path, value=in_dict)
     except Exception:
@@ -167,7 +204,15 @@ def save_dict_to_json(in_dict, file_path) -> tuple:
         return 1, f'exported_dict : {in_dict}'
 
 
-def update_pin_mapping_entry_with_imported_node_pin(imported_node_pins: list, new_node, pin_mapping_dict: dict):
+def add_pin_mapping_entries(imported_node_pins: list, new_node, pin_mapping_dict: dict):
+    """
+    Add pin mapping entries of imported pin id - newly created pin
+
+    :param list imported_node_pins: node pins info
+    :param new_node: newly created node
+    :param dict pin_mapping_dict: reference of the pin_mapping dict
+    :return:
+    """
     # Loop through a list of to-be-imported pins
     for imported_pin in imported_node_pins:
         imported_pin_label = imported_pin['label']
@@ -179,6 +224,13 @@ def update_pin_mapping_entry_with_imported_node_pin(imported_node_pins: list, ne
 
 
 def reapply_imported_pin_value_to_new_node(imported_pin_list, new_node):
+    """
+    Apply imported pin value to the newly created ones of the node
+
+    :param list imported_pin_list: list of imported pins info
+    :param new_node:
+    :return:
+    """
     for new_pin_info in new_node.pin_list:
         # if this new pin does not require value then skip
         if new_pin_info.get('value', None):
@@ -193,3 +245,26 @@ def reapply_imported_pin_value_to_new_node(imported_pin_list, new_node):
         # Set the imported value to this new pin's value
         dpg_set_value(new_pin_info['pin_instance'].value_tag, imported_value)
 
+
+def reconstruct_node_pos_from_imported_info(node_info) -> tuple[float, float]:
+    """
+    Reconstruct node position from imported info
+
+    :param dict node_info: imported node info
+    :return:
+    """
+    return node_info['position']['x'], node_info['position']['y']
+
+
+def construct_var_node_label(var_name, is_get_var: bool) -> str:
+    """
+    Construct variable node name based on whether it is get var or set var type
+
+    :param var_name: name of the variable
+    :param is_get_var: True if this node is a Get Var node
+    :return: Variable node label
+    """
+    if is_get_var:
+        return 'Get ' + var_name
+    else:
+        return 'Set ' + var_name
