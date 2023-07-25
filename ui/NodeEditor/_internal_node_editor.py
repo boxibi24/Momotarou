@@ -2,11 +2,10 @@ from time import perf_counter
 import dill
 from copy import deepcopy
 from ui.NodeEditor.utils import *
-from ui.NodeEditor.classes.link import Link
-from ui.NodeEditor.classes.pin import OutputPinType, InputPinType
+from ui.NodeEditor.classes.pin import OutputPinType, InputPinType, PinInfo
 from ui.NodeEditor.node_utils import *
 from multiprocessing import Queue
-import ui.NodeEditor.logger_message as log_message
+from ui.NodeEditor.logger_message import log_on_return_code
 
 
 class DPGNodeEditor:
@@ -199,8 +198,8 @@ class DPGNodeEditor:
         # Save constructed dict to file
         return_message = save_dict_to_json(tobe_exported_dict, file_path)
         # Log
-        log_message.log_on_return_code(logger=self.logger, action=action,
-                                       return_message=return_message)
+        log_on_return_code(logger=self.logger, action=action,
+                           return_message=return_message)
 
     def _batch_import_variable(self, var_info_dict: dict):
         """
@@ -327,7 +326,7 @@ class DPGNodeEditor:
         """
         _file_path = app_data['file_path_name']
         return_message = self._file_import(_file_path)
-        log_message.log_on_return_code(self.logger, action=dpg.get_item_label(sender), return_message=return_message)
+        log_on_return_code(self.logger, action=dpg.get_item_label(sender), return_message=return_message)
 
     def clear_all_data(self):
         """
@@ -392,17 +391,17 @@ class DPGNodeEditor:
         )
         return intermediate_node
 
-    def _initialize_intermediate_node(self, import_module, is_import_var=False, label='', var_tag=''):
+    def _initialize_intermediate_node(self, import_module, is_variable: bool, label='', var_tag=''):
         """
         Initialize an intermediate node instance that can later be called its create_node method for node initialization
 
         :param import_module: the imported module of the intermediate node
-        :param is_import_var: if True, will override default node's label and tag with that label and var_tag
+        :param is_variable: if True, will override default node's label and tag with that label and var_tag
         :param label: label of the variable node
         :param var_tag: tag of the variable node
         :return: An intermediate node holds a create_node() method that when called spawns the actual node
         """
-        if is_import_var:
+        if is_variable:
             intermediate_node = self._initialize_var_node_instance_from_import_module(import_module, label, var_tag)
         else:
             intermediate_node = self._initialize_standard_node_instance_from_import_module(import_module, label)
@@ -423,22 +422,45 @@ class DPGNodeEditor:
         else:
             intermediate_node.pos = pos
 
-    def _prepare_intermediate_node(self, import_module, pos, is_import_var, label, var_tag=''):
-        intermediate_node = self._initialize_intermediate_node(import_module, is_import_var, label, var_tag)
+    def _prepare_intermediate_node(self, import_module, pos, is_variable: bool, label: str, var_tag: str):
+        """
+        Prepare an intermediate node
+
+        :param import_module: the imported module of the node
+        :param pos: spawn position of the node
+        :param is_variable: True if this node is a Variable node
+        :param label: label of the node, if left to blank the node will use its default node label
+        :param var_tag: if this node is variable, will use var_tag to find its initialized references to its value and type
+        :return: intermediate node instance
+        """
+        intermediate_node = self._initialize_intermediate_node(import_module, is_variable, label, var_tag)
         self._set_intermediate_node_position(intermediate_node, pos)
         # Clear node selection after adding a node to avoid last_pos being overriden
         dpg.clear_selected_nodes(node_editor=self.id)
         return intermediate_node
 
-    def _update_splitter_event(self, node):
+    def _update_splitter_event(self, event_node):
+        """
+        Update the splitter event with the input event node instance
+
+        :param event_node: event node instance
+        :return:
+        """
         # Strip the first string 'Event ' out
-        _event_stripped_name = ' '.join(node.node_label.split(' ')[1:])
+        _event_stripped_name = ' '.join(event_node.node_label.split(' ')[1:])
         self._event_dict.update(
-            {node.node_tag: {'name': [_event_stripped_name], 'type': ['Button']}})
+            {event_node.node_tag: {'name': [_event_stripped_name], 'type': ['Button']}})
         # Set splitter event will also display it
         self.splitter_panel.event_dict = self._event_dict
 
     def _add_node_info_to_node_dict(self, node, import_path):
+        """
+        Add node info to node dict
+
+        :param node: node instance
+        :param import_path: path to import the node module
+        :return:
+        """
         if not self._node_dict.get('nodes'):
             self._node_dict['nodes'] = []
         self._node_dict['nodes'].append(OrderedDict({
@@ -456,12 +478,21 @@ class DPGNodeEditor:
         }))
 
     def _store_data_after_node_creation(self, node, import_path):
-        # Store event list to display it on Splitter
+        """
+        Store newly created node to the following:
+        1. Event list
+        2. Node instance dict
+        3. Node info dict
+        4. Flow link dict
+        5. Data link dict
+
+        :param node:
+        :param import_path:
+        :return:
+        """
         if node.node_type == NodeTypeFlag.Event:
             self._update_splitter_event(node)
-        # Store the node instance along with its tag
         self.node_instance_dict[node.node_tag] = node
-        # Add pins entries to private _node_dict
         self._add_node_info_to_node_dict(node, import_path)
         self.node_flow_link_dict = sort_flow_link_dict(self.flow_link_list)
         self.node_data_link_dict = sort_data_link_dict(self.data_link_list)
@@ -470,7 +501,7 @@ class DPGNodeEditor:
         """
         Callback function of adding a node from menu bar
 
-        :param import_path: path to import the module, still needed this too construct node info dict
+        :param import_path: path to import the module, still needed this to construct node info dict
         :param import_module: the imported module of the node
         :param pos: spawn position of the node
         :param is_variable: True if this node is a Variable node
@@ -483,203 +514,171 @@ class DPGNodeEditor:
         self._store_data_after_node_creation(node, import_path)
         return node
 
-    def callback_link(self, sender, app_data: list):
-        source_pin_type = None
-        destination_pin_type = None
-        source_pin_tag = dpg.get_item_alias(app_data[0])
-        target_pin_tag = dpg.get_item_alias(app_data[1])
-        source_pin_instance = None
-        target_pin_instance = None
-        source_node_tag = None
-        target_node_tag = None
-        source_node_instance = None
-        target_node_instance = None
-        link = None
-        # Loop through the node_dict to find pin id that matches with source and get its type
-        found_flag = False
-        for node in self.node_dict['nodes']:
-            pin_dict_list = node['pins']
-            for pin_dict in pin_dict_list:
-                if pin_dict['id'] == source_pin_tag:
-                    source_pin_type = pin_dict['pin_type']
-                    found_flag = True
-                    source_node_tag = node['id']
-                    source_pin_instance = pin_dict['pin_instance']
-                    source_node_instance = node['node_instance']
-                    break
-            if found_flag:
-                break
-        # Loop through the node_dict to find pin id that matches with target and get its type
-        found_flag = False
-        for node in self.node_dict['nodes']:
-            pin_dict_list = node['pins']
-            for pin_dict in pin_dict_list:
-                if pin_dict['id'] == target_pin_tag:
-                    destination_pin_type = pin_dict['pin_type']
-                    found_flag = True
-                    target_node_tag = node['id']
-                    target_pin_instance = pin_dict['pin_instance']
-                    target_node_instance = node['node_instance']
-                    break
-            if found_flag:
-                break
+    def _get_pin_info(self, pin_tag):
+        """
+        Get all pin data
 
-        # Perform "Type check" before linking
-        if not source_pin_type:
+        :param pin_tag: pin tag
+        :return:
+        """
+        for node in self.node_dict['nodes']:
+            pin_dict_list = node['pins']
+            for pin_dict in pin_dict_list:
+                if pin_dict['id'] == pin_tag:
+                    pin_instance = pin_dict['pin_instance']
+                    pin_type = pin_dict['pin_type']
+                    parent_node_instance = node['node_instance']
+                    parent_node_tag = node['id']
+                    return PinInfo(pin_instance,pin_type,parent_node_instance,parent_node_tag)
+
+    def _can_link(self, source_link_info: PinInfo, destination_link_info: PinInfo) -> bool:
+        """
+        can source and destination pin link?
+
+        :param source_link_info: source pin info
+        :param destination_link_info: destination pin info
+        :return: can these two pins link
+        :rtype: bool
+        """
+        if not source_link_info.pin_type:
             self.logger.warning("Could not get source pin type")
-        elif not destination_pin_type:
+            return False
+        elif not destination_link_info.pin_type:
             self.logger.warning("Could not get target pin type")
-        # TODO: implement ways to prevent nodes looping
-        # elif destination_node_tag in self.node_connection_dict:
-        #     raise RuntimeError("Cannot loop the nodes")
-        elif not (source_pin_type == destination_pin_type or destination_pin_type == InputPinType.WildCard):
+            return False
+        elif not (source_link_info.pin_type == destination_link_info.pin_type or
+                  destination_link_info.pin_type == InputPinType.WildCard):
             self.logger.warning("Cannot connect pins with different types")
+            return False
         # Cannot connect exec pin to wildcard pins also
-        elif source_pin_type == OutputPinType.Exec and destination_pin_type == InputPinType.WildCard:
+        elif source_link_info.pin_type == OutputPinType.Exec and destination_link_info.pin_type == InputPinType.WildCard:
             self.logger.warning("Cannot connect exec pins to wildcards")
-        elif not source_pin_instance:
+            return False
+        elif not source_link_info.pin_instance:
             self.logger.warning("Cannot find source pin instance from node dict")
-        elif not target_pin_instance:
+            return False
+        elif not source_link_info.pin_instance:
             self.logger.warning("Cannot find target pin instance from node dict")
+            return False
         else:
-            # First link occurrence
-            if source_pin_type == OutputPinType.Exec:  # Direct flow links to flow_link_list
-                if len(self.flow_link_list) == 0:
-                    # Also disallowing already connected Exec pin to perform further linkage
-                    if not source_pin_instance.is_connected:
+            return True
+
+    def _add_link(self, source_pin_info: PinInfo, destination_pin_info: PinInfo):
+        # First link occurrence
+        if source_pin_type == OutputPinType.Exec:  # Direct flow links to flow_link_list
+            if len(self.flow_link_list) == 0:
+                # Also disallowing already connected Exec pin to perform further linkage
+                if not source_pin_instance.is_connected:
+                    create_link_object()
+
+            # Check if duplicate linkage, can happen if user swap link direction
+            else:
+                if not source_pin_instance.is_connected:
+                    if not is_link_duplicate(self.flow_link_list, destination_pin_info.pin_instance):
                         try:
                             link = Link(source_node_tag,
                                         source_node_instance,
                                         source_pin_instance,
                                         source_pin_type,
-                                        target_node_tag,
-                                        target_node_instance,
-                                        target_pin_instance,
+                                        destination_node_tag,
+                                        destination_node_instance,
+                                        destination_pin_instance,
                                         destination_pin_type,
                                         self.id)
                         except:
                             self.logger.exception("Failed to link")
-
                         if link:
                             self.flow_link_list.append(link)
                             # Set pin's connected status
                             source_pin_instance.is_connected = True
-                            target_pin_instance.is_connected = True
+                            destination_pin_instance.is_connected = True
                             source_pin_instance.connected_link_list.append(link)
-                            target_pin_instance.connected_link_list.append(link)
+                            destination_pin_instance.connected_link_list.append(link)
                             # Update event dict to store target node tag if it's connected to an event node
                             if source_node_instance.node_type == NodeTypeFlag.Event:
-                                self.tobe_exported_event_dict.update({source_node_tag: target_node_tag})
+                                self.tobe_exported_event_dict.update({source_node_tag: destination_node_tag})
                         else:
                             self.logger.error("Cannot add a null link")
-                # Check if duplicate linkage, can happen if user swap link direction
+
+    def add_link(self, source_pin_tag, destination_pin_tag) -> tuple[int, str]:
+        link = None
+
+        source_pin_info = self._get_pin_info(source_pin_tag)
+        destination_pin_info = self._get_pin_info(destination_pin_tag)
+
+        if not self._can_link(source_pin_info, destination_pin_info):
+            return 0, f'Link skipped, did not pass type check: {source_pin_info.pin_type} to {destination_pin_info.pin_type}'
+
+        else:  # Direct data links to data_link_list
+            if len(self.data_link_list) == 0:
+                try:
+                    link = Link(source_node_tag,
+                                source_node_instance,
+                                source_pin_instance,
+                                source_pin_type,
+                                destination_node_tag,
+                                destination_node_instance,
+                                destination_pin_instance,
+                                destination_pin_type,
+                                self.id)
+                except:
+                    self.logger.exception("Failed to link")
+
+                if link:
+                    self.data_link_list.append(link)
+                    # Mark the target node as dirty
+                    destination_node_instance.is_dirty = True
+                    # Also update the nodes' data_link_list
+                    source_node_instance.succeeding_data_link_list.append(link)
+                    # Set pin's connected status
+                    source_pin_instance.is_connected = True
+                    destination_pin_instance.is_connected = True
+                    source_pin_instance.connected_link_list.append(link)
+                    destination_pin_instance.connected_link_list.append(link)
                 else:
-                    if not source_pin_instance.is_connected:
-                        duplicate_flag = False
-                        for node_link in self.flow_link_list:
-                            if target_pin_instance == node_link.target_pin_instance:
-                                duplicate_flag = True
-                        if not duplicate_flag:
-                            try:
-                                link = Link(source_node_tag,
-                                            source_node_instance,
-                                            source_pin_instance,
-                                            source_pin_type,
-                                            target_node_tag,
-                                            target_node_instance,
-                                            target_pin_instance,
-                                            destination_pin_type,
-                                            self.id)
-                            except:
-                                self.logger.exception("Failed to link")
-                            if link:
-                                self.flow_link_list.append(link)
-                                # Set pin's connected status
-                                source_pin_instance.is_connected = True
-                                target_pin_instance.is_connected = True
-                                source_pin_instance.connected_link_list.append(link)
-                                target_pin_instance.connected_link_list.append(link)
-                                # Update event dict to store target node tag if it's connected to an event node
-                                if source_node_instance.node_type == NodeTypeFlag.Event:
-                                    self.tobe_exported_event_dict.update({source_node_tag: target_node_tag})
-                            else:
-                                self.logger.error("Cannot add a null link")
-            else:  # Direct data links to data_link_list
-                if len(self.data_link_list) == 0:
+                    self.logger.error("Cannot add a null link")
+            # Check if duplicate linkage, can happen if user swap link direction
+            else:
+                duplicate_flag = False
+                for node_link in self.data_link_list:
+                    if destination_pin_instance == node_link.destination_pin_instance:
+                        duplicate_flag = True
+                if not duplicate_flag:
                     try:
                         link = Link(source_node_tag,
                                     source_node_instance,
                                     source_pin_instance,
                                     source_pin_type,
-                                    target_node_tag,
-                                    target_node_instance,
-                                    target_pin_instance,
+                                    destination_node_tag,
+                                    destination_node_instance,
+                                    destination_pin_instance,
                                     destination_pin_type,
                                     self.id)
                     except:
                         self.logger.exception("Failed to link")
-
                     if link:
                         self.data_link_list.append(link)
                         # Mark the target node as dirty
-                        target_node_instance.is_dirty = True
+                        destination_node_instance.is_dirty = True
                         # Also update the nodes' data_link_list
                         source_node_instance.succeeding_data_link_list.append(link)
-                        # Set pin's connected status
+                        # Set pin's connected status and store the link instance into both of the pins
                         source_pin_instance.is_connected = True
-                        target_pin_instance.is_connected = True
+                        destination_pin_instance.is_connected = True
                         source_pin_instance.connected_link_list.append(link)
-                        target_pin_instance.connected_link_list.append(link)
+                        destination_pin_instance.connected_link_list.append(link)
                     else:
                         self.logger.error("Cannot add a null link")
-                # Check if duplicate linkage, can happen if user swap link direction
-                else:
-                    duplicate_flag = False
-                    for node_link in self.data_link_list:
-                        if target_pin_instance == node_link.target_pin_instance:
-                            duplicate_flag = True
-                    if not duplicate_flag:
-                        try:
-                            link = Link(source_node_tag,
-                                        source_node_instance,
-                                        source_pin_instance,
-                                        source_pin_type,
-                                        target_node_tag,
-                                        target_node_instance,
-                                        target_pin_instance,
-                                        destination_pin_type,
-                                        self.id)
-                        except:
-                            self.logger.exception("Failed to link")
-                        if link:
-                            self.data_link_list.append(link)
-                            # Mark the target node as dirty
-                            target_node_instance.is_dirty = True
-                            # Also update the nodes' data_link_list
-                            source_node_instance.succeeding_data_link_list.append(link)
-                            # Set pin's connected status and store the link instance into both of the pins
-                            source_pin_instance.is_connected = True
-                            target_pin_instance.is_connected = True
-                            source_pin_instance.connected_link_list.append(link)
-                            target_pin_instance.connected_link_list.append(link)
-                        else:
-                            self.logger.error("Cannot add a null link")
         self.node_data_link_dict = sort_data_link_dict(self.data_link_list)
         self.node_flow_link_dict = sort_flow_link_dict(self.flow_link_list)
         if link:
             self.logger.info('**** Nodes linked ****')
 
-        # Debug print
-        if link:
-            self.logger.debug(f'    sender                     :     {sender}')
-            self.logger.debug(f'    source_pin_tag             :     {source_pin_instance}')
-            self.logger.debug(f'    target_pin_tag             :     {target_pin_instance}')
-            self.logger.debug(f'    self.data_link_list        :     {self.data_link_list}')
-            self.logger.debug(f'    self.flow_link_list        :     {self.flow_link_list}')
-            self.logger.debug(f'    self.node_dict             :     {self.node_dict}')
-            self.logger.debug(f'    self.node_data_link_dict   :     {self.node_data_link_dict}')
-            self.logger.debug(f'    self.node_flow_link_dict   :     {self.node_flow_link_dict}')
-            self.logger.debug(f'    self.event_dict            :     {self.tobe_exported_event_dict}')
+    def callback_link(self, sender, app_data: list):
+        source_pin_tag = dpg.get_item_alias(app_data[0])
+        destination_pin_tag = dpg.get_item_alias(app_data[1])
+        return_message = self.add_link(source_pin_tag, destination_pin_tag)
+        log_on_return_code(self.logger, 'Link Node', return_message)
 
     def callback_delink(self, sender, app_data):
         # Remove instance from link list hence trigger its destructor
@@ -695,9 +694,9 @@ class DPGNodeEditor:
                     dpg.delete_item(link.link_id)
                     self.node_data_link_dict = sort_data_link_dict(self.data_link_list)
                     # Safely set target pin's status to not connected
-                    link.target_pin_instance.is_connected = False
+                    link.destination_pin_instance.is_connected = False
                     # Set target pin's connected link instance to None
-                    link.target_pin_instance.connected_link_list.clear()
+                    link.destination_pin_instance.connected_link_list.clear()
                     # Now check if source pin (output pin) is not connecting to another link
                     found_flag = False
                     source_pin_tag = link.source_pin_instance.pin_tag
@@ -723,10 +722,10 @@ class DPGNodeEditor:
                     self.node_flow_link_dict = sort_flow_link_dict(self.flow_link_list)
                     # Can safely set duo pins' status to not connected
                     link.source_pin_instance.is_connected = False
-                    link.target_pin_instance.is_connected = False
+                    link.destination_pin_instance.is_connected = False
                     # Also set the connected link instance of the pins to None
                     link.source_pin_instance.connected_link_list.clear()
-                    link.target_pin_instance.connected_link_list.clear()
+                    link.destination_pin_instance.connected_link_list.clear()
                     # Also remove this entry from event dict
                     if link.source_node_instance.node_type == NodeTypeFlag.Event:
                         self.tobe_exported_event_dict.pop(link.source_node_instance.node_tag)
@@ -815,13 +814,13 @@ class DPGNodeEditor:
                 for pin_info in current_node.pin_list:
                     if pin_info['meta_type'] == 'FlowOut':
                         if pin_info['pin_instance'].is_connected and pin_info['label'] == 'True':
-                            next_node = pin_info['pin_instance'].connected_link_list[0].target_node_instance
+                            next_node = pin_info['pin_instance'].connected_link_list[0].destination_node_instance
                             break
             else:
                 for pin_info in current_node.pin_list:
                     if pin_info['meta_type'] == 'FlowOut':
                         if pin_info['pin_instance'].is_connected and pin_info['label'] == 'False':
-                            next_node = pin_info['pin_instance'].connected_link_list[0].target_node_instance
+                            next_node = pin_info['pin_instance'].connected_link_list[0].destination_node_instance
                             break
         # If normal Blueprint node which has only one Exec pin out then next_node is deterministic
         else:
@@ -829,7 +828,7 @@ class DPGNodeEditor:
             for pin_info in current_node.pin_list:
                 if pin_info['meta_type'] == 'FlowOut':
                     if pin_info['pin_instance'].is_connected:
-                        next_node = pin_info['pin_instance'].connected_link_list[0].target_node_instance
+                        next_node = pin_info['pin_instance'].connected_link_list[0].destination_node_instance
                     break
         # If current node is a Set variable value type, then mark all of its get nodes to dirty
         if 'Set ' in current_node.node_label:
@@ -853,7 +852,7 @@ class DPGNodeEditor:
                 for pin_info in current_node.pin_list:
                     if pin_info['meta_type'] == 'FlowOut':
                         if pin_info['pin_instance'].is_connected:
-                            anchors.append(pin_info['pin_instance'].connected_link_list[0].target_node_instance)
+                            anchors.append(pin_info['pin_instance'].connected_link_list[0].destination_node_instance)
                 return 0
             elif current_node.node_label == 'Do N':
                 iteration_num = current_node.internal_data.get('N', None)

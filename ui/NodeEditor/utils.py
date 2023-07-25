@@ -100,17 +100,17 @@ def sort_data_link_dict(data_link_list: list):
     node_data_link_dict = OrderedDict({})
     # Loop through the list of links and make:
     # 1: node_tag_dict = 'target_node' : source_node
-    # 2: node_data_link_dict = 'target_node' : [source_pin_instance, target_pin_instance]
+    # 2: node_data_link_dict = 'target_node' : [source_pin_instance, destination_pin_instance]
     for link in data_link_list:
         source_node_tag = link.source_node_tag
-        target_node_tag = link.target_node_tag
+        target_node_tag = link.destination_node_tag
         if target_node_tag not in node_tag_dict:
             node_tag_dict[target_node_tag] = [source_node_tag]
         else:
             node_tag_dict[target_node_tag].append(source_node_tag)
         source_pin_instance = link.source_pin_instance
-        target_pin_instance = link.target_pin_instance
-        # Keep a dict of connections (links) that contains list of [source_pin_instance, target_pin_instance]
+        target_pin_instance = link.destination_pin_instance
+        # Keep a dict of connections (links) that contains list of [source_pin_instance, destination_pin_instance]
         if target_node_tag not in node_data_link_dict:
             node_data_link_dict[target_node_tag] = [[source_pin_instance, target_pin_instance]]
         else:
@@ -153,17 +153,17 @@ def sort_flow_link_dict(flow_link_list: list):
     flow_dict = OrderedDict({})
     # Loop through the list of links and make:
     # 1: node_tag_dict = 'target_node' : source_node
-    # 2: flow_dict = 'target_node' : [source_pin_instance, target_pin_instance]
+    # 2: flow_dict = 'target_node' : [source_pin_instance, destination_pin_instance]
     for link in flow_link_list:
         source_node_tag = link.source_node_tag
-        target_node_tag = link.target_node_tag
+        target_node_tag = link.destination_node_tag
         if target_node_tag not in node_tag_dict:
             node_tag_dict[target_node_tag] = [source_node_tag]
         else:
             node_tag_dict[target_node_tag].append(source_node_tag)
         source_pin_instance = link.source_pin_instance
-        target_pin_instance = link.target_pin_instance
-        # Keep a dict of connections (links) that contains list of [source_pin_instance, target_pin_instance]
+        target_pin_instance = link.destination_pin_instance
+        # Keep a dict of connections (links) that contains list of [source_pin_instance, destination_pin_instance]
         if target_node_tag not in flow_dict:
             flow_dict[target_node_tag] = [[source_pin_instance, target_pin_instance]]
         else:

@@ -41,6 +41,17 @@ class OutputPinType(IntEnum):
     MultilineString = auto()
     PerforceInstance = auto()
 
+class PinInfo:
+    def __init__(self,
+                 pin_instance,
+                 pin_type,
+                 parent_node_instance,
+                 parent_node_tag,
+                 ):
+        self.pin_instance = pin_instance
+        self.pin_type = pin_type
+        self.parent_node_instance = parent_node_instance
+        self.parent_node_tag = parent_node_tag
 
 class PinBase:
     def __init__(self,

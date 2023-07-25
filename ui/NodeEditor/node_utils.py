@@ -3,6 +3,7 @@ from ui.NodeEditor.classes.node import NodeTypeFlag
 from ui.NodeEditor.utils import sort_data_link_dict, sort_flow_link_dict, \
     dpg_get_value, dpg_set_value, json_write_to_file
 import traceback
+from ui.NodeEditor.classes.link import Link
 
 
 def delete_selected_node(node_editor, node_id=None):
@@ -33,7 +34,7 @@ def delete_selected_node(node_editor, node_id=None):
         link_remove_list.clear()
     for link in node_editor.current_node_editor_instance.data_link_list:
         source_node_tag = link.source_node_tag
-        destination_node_tag = link.target_node_tag
+        destination_node_tag = link.destination_node_tag
         # Store it on a list of links to iteratively remove it later
         if source_node_tag == node_tag or destination_node_tag == node_tag:
             link_remove_list.append(link)
@@ -49,7 +50,7 @@ def delete_selected_node(node_editor, node_id=None):
         link_remove_list.clear()
     for link in node_editor.current_node_editor_instance.flow_link_list:
         source_node_tag = link.source_node_tag
-        destination_node_tag = link.target_node_tag
+        destination_node_tag = link.destination_node_tag
         # Store it on a list of links to iteratively remove it later
         if source_node_tag == node_tag or destination_node_tag == node_tag:
             link_remove_list.append(link)
@@ -101,7 +102,7 @@ def simplify_link_list(in_link_list):
     out_link_list = []
     for link_instance in in_link_list:
         source_pin_tag = link_instance.source_pin_instance.pin_tag
-        destination_pin_tag = link_instance.target_pin_instance.pin_tag
+        destination_pin_tag = link_instance.destination_pin_instance.pin_tag
         out_link_list.append([source_pin_tag, destination_pin_tag])
     return out_link_list
 
@@ -268,3 +269,42 @@ def construct_var_node_label(var_name, is_get_var: bool) -> str:
         return 'Get ' + var_name
     else:
         return 'Set ' + var_name
+
+
+def reflect_new_link_on_connected_pins(link):
+    # Set pin's connected status
+    link.source_pin_instance.is_connected = True
+    link.destination_pin_instance.is_connected = True
+    link.source_pin_instance.connected_link_list.append(link)
+    link.destination_pin_instance.connected_link_list.append(link)
+
+
+def create_link_object(source_pin_info, destination_pin_info, parent):
+    try:
+        link = Link(source_pin_info.node_tag,
+                    source_pin_info.node_instance,
+                    source_pin_info.pin_instance,
+                    source_pin_info.pin_type,
+                    destination_pin_info.node_tag,
+                    destination_pin_info.node_instance,
+                    destination_pin_info.pin_instance,
+                    destination_pin_info.pin_type,
+                    parent)
+    except:
+        return None
+    reflect_new_link_on_connected_pins(link)
+    return link
+
+
+def is_link_duplicate(check_list, destination_pin_instance) -> bool:
+    for node_link in check_list:
+        if destination_pin_instance == node_link.destination_pin_instance:
+            return True
+    return False
+
+
+def _update_new_link_info(link, to_update_link_list, to_update_event_dict):
+    # Update event dict to store target node tag if it's connected to an event node
+    if link.source_node_type == NodeTypeFlag.Event:
+        to_update_event_dict.update({link.source_pin_info: link.destination_node_tag})
+    to_update_link_list.append(link)

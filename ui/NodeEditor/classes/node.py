@@ -126,7 +126,7 @@ class BaseNode:
         # Go down the chain of succeeding nodes to mark them as 'dirty'
         for link in self._succeeding_data_link_list:
             # Get the target node
-            target_node = link.target_node_instance
+            target_node = link.destination_node_instance
             # Mark it status as 'dirty'
             target_node.is_dirty = True
 
@@ -364,7 +364,7 @@ class BaseNode:
         assert not hasattr(super(), 'query_input_values')
         if link.source_pin_type is not OutputPinType.Exec:
             source_value = dpg_get_value(link.source_pin_instance.value_tag)
-            dpg_set_value(link.target_pin_instance.value_tag, source_value)
+            dpg_set_value(link.destination_pin_instance.value_tag, source_value)
             return source_value
 
     def refresh_output_pin_value(self):
@@ -382,7 +382,7 @@ class BaseNode:
             # Try to get value from previous node's internal data instead if the pin's value is None
             # this case happens when the pin is of user created Pin Class
             source_value = link.source_node_instance.internal_data.get(link.source_pin_instance.label, None)
-            self._internal_data.update({link.target_pin_instance.label: source_value})
+            self._internal_data.update({link.destination_pin_instance.label: source_value})
 
     def on_node_deletion(self, **kwargs):
         assert not hasattr(super(), 'Close')
