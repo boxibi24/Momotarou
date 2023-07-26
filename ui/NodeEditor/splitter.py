@@ -5,6 +5,7 @@ from ui.NodeEditor.classes.pin import InputPinType
 from ui.NodeEditor.utils import generate_uuid, add_user_input_box
 from ui.NodeEditor.item_right_click_menus import variable_right_click_menu, event_right_click_menu
 from ui.NodeEditor.input_handler import delete_selected_node
+from ui.NodeEditor.node_utils import create_list_from_dict_values
 
 
 class Splitter:
@@ -118,6 +119,7 @@ class Splitter:
         children_list: list = dpg.get_item_children(parent)[1]
         not_match_any_flag = False
         new_event_tag = '__event' + generate_uuid()
+        override_pos = user_data[0]
         default_name = user_data[1]
         if children_list:
             temp_name = default_name
@@ -133,7 +135,7 @@ class Splitter:
                         default_name = temp_name
                 i += 1
         if instant_add:
-            added_node = self._parent_instance.current_editor_add_event_node(default_name)
+            added_node = self._parent_instance.current_editor_add_event_node(default_name, override_pos)
             return added_node
         else:
             with dpg.window(
@@ -514,23 +516,32 @@ class Splitter:
         dpg.delete_item(user_data[1])
         _current_node_editor_instance = self._parent_instance.current_node_editor_instance
         _var_tag = user_data[0][0]
-        _var_type = user_data[0][1]
-        _var_name = _current_node_editor_instance.var_dict[_var_tag]['name'][0]
-        _node_list = []
-        for node in _current_node_editor_instance.node_instance_dict.values():
-            _node_list.append(node)
+        new_var_type = user_data[0][1]
+        _var_name = self._get_variable_name_from_tag(_var_tag)
+        _node_list = create_list_from_dict_values(_current_node_editor_instance.node_instance_dict)
         for node in _node_list:
             if node.node_label == 'Set ' + _var_name:
-                _node_pos = dpg.get_item_pos(node.id)
-                # Delete the node
-                delete_selected_node(self._parent_instance, node_id=node.id)
-                var_module = self._parent_instance.get_variable_module_from_var_type_and_action(node.node_type)
-                _current_node_editor_instance.add_node_from_module(var_module, _node_pos, node.node_label, _var_tag)
+                self._replace_set_var_node_with_new_type(node, new_var_type, _var_tag)
             elif node.node_label == 'Get ' + _var_name:
-                _node_pos = dpg.get_item_pos(node.id)
-                # Delete the node
-                delete_selected_node(self._parent_instance, node_id=node.id)
-                var_module = self._parent_instance.get_variable_module_from_var_type_and_action(node.node_type, is_get_var=True)
-                _current_node_editor_instance.add_node_from_module(var_module, _node_pos, node.node_label, _var_tag)
+                self._replace_get_var_node_with_new_type(node, new_var_type, _var_tag)
         # Finally reflect new type changes to the databases
-        self.var_type_update(_var_tag, _var_type)
+        self.var_type_update(_var_tag, new_var_type)
+
+    def _get_variable_name_from_tag(self, var_tag) -> str:
+        return self._parent_instance.current_node_editor_instance.var_dict[var_tag]['name'][0]
+
+    def _replace_get_var_node_with_new_type(self, node, new_var_type: str, var_tag: str):
+        _current_node_editor_instance = self._parent_instance.current_node_editor_instance
+        _node_pos = dpg.get_item_pos(node.id)
+        # Delete the node
+        delete_selected_node(self._parent_instance, node_id=node.id)
+        var_module = self._parent_instance.get_variable_module_from_var_type_and_action(new_var_type, True)
+        _current_node_editor_instance.add_node_from_module(var_module, _node_pos, node.node_label, var_tag)
+
+    def _replace_set_var_node_with_new_type(self, node, new_var_type: str, var_tag: str):
+        _current_node_editor_instance = self._parent_instance.current_node_editor_instance
+        _node_pos = dpg.get_item_pos(node.id)
+        # Delete the node
+        delete_selected_node(self._parent_instance, node_id=node.id)
+        var_module = self._parent_instance.get_variable_module_from_var_type_and_action(new_var_type, False)
+        _current_node_editor_instance.add_node_from_module(var_module, _node_pos, node.node_label, var_tag)

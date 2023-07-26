@@ -280,6 +280,10 @@ def reflect_new_link_on_connected_pins(link):
     link.destination_pin_instance.connected_link_list.append(link)
 
 
+def split_event_name_from_node_label(node_label: str):
+    return ' '.join(node_label.split(' ')[1:])
+
+
 def create_link_object_from_link_info(link_info: LinkInfo):
     try:
         link = Link(link_info.source_pin_info.node_tag,
@@ -357,3 +361,14 @@ def add_link_to_pins_connected_link_list(link):
 
 def get_node_category_from_import_path(import_path) -> str:
     return import_path.split('.')[1]
+
+
+def construct_module_name_from_var_action_and_type(var_action: str, var_type: str) -> str:
+    return var_action + '_' + var_type.lower() + '_var'
+
+
+def create_list_from_dict_values(in_dict: dict):
+    _node_list = []
+    for node in in_dict.values():
+        _node_list.append(node)
+    return _node_list

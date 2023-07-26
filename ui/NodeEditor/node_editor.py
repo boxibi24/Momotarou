@@ -8,7 +8,7 @@ from ui.NodeEditor.details_panel import DetailPanel
 from ui.NodeEditor._internal_node_editor import DPGNodeEditor
 from ui.NodeEditor.item_right_click_menus import tab_right_click_menu
 from ui.NodeEditor.classes.node import NodeModule
-from ui.NodeEditor.node_utils import construct_var_node_label
+from ui.NodeEditor.node_utils import construct_var_node_label, construct_module_name_from_var_action_and_type
 from collections import OrderedDict
 import os
 import platform
@@ -16,6 +16,8 @@ from glob import glob
 from importlib import import_module
 from copy import deepcopy
 from pprint import pprint
+
+INTERNAL_NODE_CATEGORY = '_internal'
 
 
 def callback_project_open(sender, app_data):
@@ -66,8 +68,6 @@ class NodeEditor:
         self.current_node_editor_instance = None
         self._requested_exec_node_tag = None
         self._node_editor_tab_dict = OrderedDict([])
-        # dict to keep track of the imported modules
-        self._imported_module_dict = {}
         # Tuple to store current node editor boundaries position
         self._node_editor_bb = [(), ()]
 
@@ -119,7 +119,6 @@ class NodeEditor:
                     # import the module
                     module = import_module(import_path)
                     if module:
-                        self._imported_module_dict.update({import_path: module})
                         node_category = tree_node_info[1]
                         if self.menu_construct_dict.get(node_category, None) is None:
                             node_module_item = OrderedDict([])
@@ -130,7 +129,7 @@ class NodeEditor:
                             self.menu_construct_dict.update({node_category: node_module_item})
                         else:
                             self.menu_construct_dict[node_category].update(
-                                {module.Node.node_label: NodeModule(module, import_path, module.Node.node_type)})
+                                {import_path: NodeModule(module, import_path, module.Node.node_type)})
                     else:
                         self.logger.critical(f"Could not import module {import_path}")
 
@@ -161,9 +160,8 @@ class NodeEditor:
                                                          user_data=([_tab_name], self._node_editor_tab_dict))
                         dpg.bind_item_handler_registry(_tab_id, dpg.last_container())
                         new_node_editor = DPGNodeEditor(parent_tab=_tab_id,
-                                                        splitter_panel=self.splitter_panel,
+                                                        parent_instance=self,
                                                         setting_dict=self._setting_dict,
-                                                        imported_module_dict=self._imported_module_dict,
                                                         use_debug_print=self._use_debug_print,
                                                         logging_queue=logging_queue)
                         new_node_editor.item_registry_dict.update({'tab_registry': item_handler_id})
@@ -178,7 +176,6 @@ class NodeEditor:
                     self.detail_panel = DetailPanel(parent_instance=self)
             # Initialize right click menu
             self.right_click_menu = RightClickMenu(parent_inst=self,
-                                                   imported_module_dict=self._imported_module_dict,
                                                    menu_construct_dict=self.menu_construct_dict,
                                                    setting_dict=self._setting_dict,
                                                    use_debug_print=self._use_debug_print,
@@ -233,9 +230,8 @@ class NodeEditor:
                                          user_data=([new_tab_name], self._node_editor_tab_dict))
         dpg.bind_item_handler_registry(new_tab_id, dpg.last_container())
         new_node_editor = DPGNodeEditor(parent_tab=new_tab_id,
-                                        splitter_panel=self.splitter_panel,
+                                        parent_instance=self,
                                         setting_dict=self._setting_dict,
-                                        imported_module_dict=self._imported_module_dict,
                                         use_debug_print=self._use_debug_print,
                                         logging_queue=self.logging_queue)
         new_node_editor.item_registry_dict.update({'tab_registry': item_handler_id})
@@ -332,53 +328,6 @@ class NodeEditor:
                                callback=self.callback_current_editor_add_node,
                                user_data=(_var_tag, _var_name))
 
-    def _get_internal_modules_dict(self):
-        try:
-            _internal_module_dict = self.menu_construct_dict['_internal']
-            return _internal_module_dict
-        except KeyError:
-            self.logger.exception('Could not query _internal modules:')
-            return -1
-
-    def _get_internal_var_module(self, var_tag, is_get_var: bool):
-        var_type = self._get_var_type_from_var_tag(var_tag)
-        var_module = self.get_variable_module_from_var_type_and_action(var_type, is_get_var)
-        return var_module
-
-    def _get_var_type_from_var_tag(self, var_tag):
-        return self.current_node_editor_instance.var_dict[var_tag]['type'][0]
-
-    def get_variable_module_from_var_type_and_action(self, var_type: str, is_get_var: bool):
-        if is_get_var:
-            var_action = 'get'
-        else:
-            var_action = 'set'
-
-        for import_path, module in self._imported_module_dict:
-            if var_action + '_' + var_type.lower() in import_path:
-                return module
-        self.logger.error(f'Could not find python to {var_action} {var_type} variable')
-        return None
-
-    def _get_event_module(self):
-        _internal_module_dict = self._get_internal_modules_dict()
-        event_module = _internal_module_dict[self.EVENT_IMPORT_PATH]
-        return event_module
-
-    def current_editor_add_var_node(self, var_tag, var_name, is_get_var: bool):
-        var_module = self._get_internal_var_module(var_tag, is_get_var)
-        added_node = self.current_node_editor_instance.add_node_from_module(var_module,
-                                                                            override_label=construct_var_node_label(
-                                                                                var_name, is_get_var),
-                                                                            var_tag=var_tag)
-        return added_node
-
-    def current_editor_add_event_node(self, event_name):
-        event_module = self._get_event_module()
-        added_node = self.current_node_editor_instance.add_node_from_module(event_module,
-                                                                            override_label='Event ' + event_name)
-        return added_node
-
     def callback_current_editor_add_node(self, sender, app_data, user_data, sender_tag=None):
         """
         Callback function to add variable node on the child Node Editor
@@ -395,6 +344,56 @@ class NodeEditor:
             self.current_editor_add_var_node(_item_tag, _item_name, False)
         elif '__event' in _sender_tag:
             self.current_editor_add_event_node(_item_name)
+
+    def current_editor_add_var_node(self, var_tag, var_name, is_get_var: bool):
+        var_module = self._get_internal_var_module(var_tag, is_get_var)
+        added_node = self.current_node_editor_instance.add_node_from_module(var_module,
+                                                                            override_label=construct_var_node_label(
+                                                                                var_name, is_get_var),
+                                                                            var_tag=var_tag)
+        return added_node
+
+    def _get_internal_var_module(self, var_tag, is_get_var: bool):
+        var_type = self._get_var_type_from_var_tag(var_tag)
+        var_module = self.get_variable_module_from_var_type_and_action(var_type, is_get_var)
+        return var_module
+
+    def _get_var_type_from_var_tag(self, var_tag):
+        return self.current_node_editor_instance.var_dict[var_tag]['type'][0]
+
+    def get_variable_module_from_var_type_and_action(self, var_type: str, is_get_var: bool):
+        if is_get_var:
+            var_action = 'get'
+        else:
+            var_action = 'set'
+        return self._get_var_imported_module_from_var_type_and_action(var_action, var_type)
+
+    def _get_var_imported_module_from_var_type_and_action(self, var_action: str, var_type: str):
+        check_string = construct_module_name_from_var_action_and_type(var_action, var_type)
+        for import_path, module in self.menu_construct_dict[INTERNAL_NODE_CATEGORY].items():
+            if check_string == import_path.split('.')[-1]:
+                return module
+        self.logger.error(f'Could not find python to {var_action} {var_type} variable')
+        return None
+
+    def current_editor_add_event_node(self, event_name, override_pos: tuple[float, float]):
+        event_module = self._get_event_module()
+        added_node = self.current_node_editor_instance.add_node_from_module(event_module, pos=override_pos,
+                                                                            override_label='Event ' + event_name)
+        return added_node
+
+    def _get_event_module(self):
+        _internal_module_dict = self._get_internal_modules_dict()
+        event_module = _internal_module_dict[self.EVENT_IMPORT_PATH]
+        return event_module
+
+    def _get_internal_modules_dict(self):
+        try:
+            _internal_module_dict = self.menu_construct_dict['_internal']
+            return _internal_module_dict
+        except KeyError:
+            self.logger.exception('Could not query _internal modules:')
+            return -1
 
     def callback_project_save(self, sender, app_data):
         pass

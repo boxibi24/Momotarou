@@ -8,7 +8,7 @@ class Node(BaseNode):
     ver = '0.0.1'
     # node_label needs to match with the OutputPinType. Later on, this param will be overridden by var_name
     node_label = 'Get Int'
-    node_type = NodeTypeFlag.Pure
+    node_type = NodeTypeFlag.GetVariable
     pin_dict = {
         'Int out': OutputPinType.Int
     }

@@ -8,7 +8,7 @@ class Node(BaseNode):
     ver = '0.0.1'
     # node_label needs to match with the OutputPinType. Later on, this param will be overridden by var_name
     node_label = 'Set Json'
-    node_type = NodeTypeFlag.Blueprint
+    node_type = NodeTypeFlag.SetVariable
     pin_dict = {
         'Json in': InputPinType.Json,
         'Json out': OutputPinType.Json

@@ -7,10 +7,6 @@ from ui.NodeEditor.utils import create_queueHandler_logger
 class RightClickMenu:
 
     @property
-    def imported_module_dict(self) -> OrderedDict:
-        return self._imported_module_dict
-
-    @property
     def show(self) -> bool:
         return self._show
 
@@ -25,7 +21,6 @@ class RightClickMenu:
 
     def __init__(self,
                  parent_inst,
-                 imported_module_dict=None,
                  menu_construct_dict=None,
                  setting_dict=None,
                  use_debug_print=False,
@@ -41,11 +36,6 @@ class RightClickMenu:
             self._setting_dict = {}
         else:
             self._setting_dict = setting_dict
-        # dict of imported module to expose to Node Editor
-        if imported_module_dict is None:
-            self._imported_module_dict = OrderedDict([])
-        else:
-            self._imported_module_dict = imported_module_dict
         # dict with more info to help construct menu every time called
         if menu_construct_dict is None:
             self._menu_construct_dict = OrderedDict([])

@@ -8,6 +8,7 @@ from multiprocessing import Queue
 from ui.NodeEditor.logger_message import log_on_return_code
 from pprint import pprint
 
+
 class DPGNodeEditor:
 
     @property
@@ -72,9 +73,8 @@ class DPGNodeEditor:
 
     def __init__(self,
                  parent_tab,
-                 splitter_panel,
+                 parent_instance,
                  setting_dict=None,
-                 imported_module_dict=None,
                  use_debug_print=False,
                  logging_queue=Queue(),
                  ):
@@ -85,14 +85,10 @@ class DPGNodeEditor:
             self._setting_dict = {}
         else:
             self._setting_dict = setting_dict
-        # dict to keep track of the imported modules
-        if imported_module_dict is None:
-            self._imported_module_dict = {}
-        else:
-            self._imported_module_dict = imported_module_dict
         # ----- PARENT ITEMS -----
         # Shared splitter panel from master app
-        self.splitter_panel = splitter_panel
+        self.parent_instance = parent_instance
+        self.splitter_panel = parent_instance.splitter_panel
         # ----- ATTRIBUTES ------
         self.last_pos = (0, 0)
         self._node_instance_dict = {}
@@ -467,14 +463,12 @@ class DPGNodeEditor:
         import_path = node_info['import_path']
         _node_label = node_info['label']
         node_module = self._get_module_from_node_import_path(import_path)
-        pprint(vars(node_module))
         if node_module is None:
             return None
         if node_module.node_type == NodeTypeFlag.Event:  # Event nodes have custom labels, use splitter event add instead
             added_node = self.splitter_panel.event_graph_header_right_click_menu(sender='__add_node',
                                                                                  app_data=False,
-                                                                                 user_data=('', ' '.join(
-                                                                                     _node_label.split(' ')[1:])),
+                                                                                 user_data=(reconstruct_node_pos_from_imported_info(node_info), split_event_name_from_node_label(_node_label)),
                                                                                  instant_add=True)
         else:
             added_node = self.add_node_from_module(node_module, reconstruct_node_pos_from_imported_info(node_info))
@@ -489,10 +483,7 @@ class DPGNodeEditor:
         :rtype: tuple(str, Any)
         """
         node_category = get_node_category_from_import_path(import_path)
-        pprint(self._imported_module_dict)
-        return self._imported_module_dict[node_category][import_path]
-
-
+        return self.parent_instance.menu_construct_dict[node_category][import_path]
 
     def _batch_import_link(self, link_list: list, pin_mapping_dict: dict):
         """

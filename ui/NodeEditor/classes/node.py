@@ -45,7 +45,7 @@ class NodeTypeFlag(IntFlag):
     Blueprint = Pure | Exec
     Variable = 1 << 4
     SetVariable = Variable | Exec
-    GetVariable = Variable | Exec
+    GetVariable = Variable | Pure
 
 
 class NodeModule:
