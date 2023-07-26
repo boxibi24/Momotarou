@@ -43,6 +43,19 @@ class NodeTypeFlag(IntFlag):
     Sequential = 1 << 2 | Pure
     Event = 1 << 3
     Blueprint = Pure | Exec
+    Variable = 1 << 4
+    SetVariable = Variable | Exec
+    GetVariable = Variable | Exec
+
+
+class NodeModule:
+    def __init__(self,
+                 python_module,
+                 import_path,
+                 node_type: NodeTypeFlag):
+        self.python_module = python_module
+        self.import_path = import_path
+        self.node_type = node_type
 
 
 class BaseNode:
@@ -159,7 +172,7 @@ class BaseNode:
                  setting_dict=None,
                  callback=None,
                  pos=None,
-                 import_path='',
+                 import_path=None,
                  node_tag=None,
                  succeeding_data_link_list=None,
                  label='',
@@ -183,6 +196,10 @@ class BaseNode:
             self._node_tag = node_tag
         self._node_tag = generate_uuid()
         self._pin_list = []
+        if import_path is None:
+            self._import_path = ''
+        else:
+            self._import_path = import_path
         self._import_path = import_path
         self._default_output_value_dict = {}
         if internal_data is None:
@@ -194,7 +211,6 @@ class BaseNode:
             self._succeeding_data_link_list = succeeding_data_link_list
         else:
             self._succeeding_data_link_list = []
-
         # ____FLAGS____
         if self.node_type & NodeTypeFlag.Event:
             self._is_dirty = False
@@ -347,7 +363,8 @@ class BaseNode:
                             self.node_type,
                             self.pin_dict,
                             run_function=self.run,
-                            internal_data=self.internal_data)
+                            internal_data=self.internal_data,
+                            import_path=self.import_path)
         return node
 
     @staticmethod
@@ -439,10 +456,11 @@ class NodeInstance(BaseNode):
                  node_type=None,
                  pin_dict=None,
                  run_function=None,
-                 internal_data=None
+                 internal_data=None,
+                 import_path=None
                  ):
         super().__init__(parent=parent, setting_dict=setting_dict, callback=callback,
-                         pos=pos, internal_data=internal_data)
+                         pos=pos, internal_data=internal_data, import_path=import_path)
         self.node_label = node_label
         self.node_type = node_type
         self.pin_dict = pin_dict

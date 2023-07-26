@@ -2,11 +2,11 @@ from time import perf_counter
 import dill
 from copy import deepcopy
 from ui.NodeEditor.utils import *
-from ui.NodeEditor.classes.pin import OutputPinType, InputPinType, PinInfo
+from ui.NodeEditor.classes.pin import OutputPinType, InputPinType
 from ui.NodeEditor.node_utils import *
 from multiprocessing import Queue
 from ui.NodeEditor.logger_message import log_on_return_code
-
+from pprint import pprint
 
 class DPGNodeEditor:
 
@@ -123,6 +123,182 @@ class DPGNodeEditor:
 
         self.logger.info('***** Child Node Editor initialized! *****')
 
+    def add_node_from_module(self, node_module, pos=(0, 0), override_label='', var_tag=''):
+        """
+        Callback function of adding a node from menu bar
+
+        :param node_module: imported node module
+        :param pos: spawn position of the node
+        :param override_label: label of the node, if left to blank the node will use its default node label
+        :param var_tag: if this node is variable, will use var_tag to find its initialized references to its value and type
+        :return: added node instance
+        """
+        intermediate_node = self._prepare_intermediate_node(node_module, pos, override_label, var_tag)
+        node = intermediate_node.create_node()
+        self._store_new_node_data(node)
+        return node
+
+    def _prepare_intermediate_node(self, node_module, pos, label: str, var_tag: str):
+        """
+        Prepare an intermediate node
+
+        :param node_module: the imported module of the node
+        :param pos: spawn position of the node
+        :param label: label of the node, if left to blank the node will use its default node label
+        :param var_tag: if this node is variable, will use var_tag to find its initialized references to its value and type
+        :return: intermediate node instance
+        """
+        intermediate_node = self._initialize_intermediate_node(node_module, label, var_tag)
+        self._set_intermediate_node_position(intermediate_node, pos)
+        # Clear node selection after adding a node to avoid last_pos being overriden
+        dpg.clear_selected_nodes(node_editor=self.id)
+        return intermediate_node
+
+    def _initialize_intermediate_node(self, node_module, label='', var_tag=''):
+        """
+        Initialize an intermediate node instance that can later be called its create_node method for node initialization
+
+        :param node_module: the imported module of the intermediate node
+        :param label: label of the variable node
+        :param var_tag: tag of the variable node
+        :return: An intermediate node holds a create_node() method that when called spawns the actual node
+        """
+        if node_module.node_type & NodeTypeFlag.Variable:
+            intermediate_node = self._initialize_var_node_instance_from_import_module(node_module, label, var_tag)
+        else:
+            intermediate_node = self._initialize_standard_node_instance_from_import_module(node_module, label)
+        return intermediate_node
+
+    def _initialize_var_node_instance_from_import_module(self, node_module, var_label, var_tag):
+        """
+        Initialize an intermediate variable node
+
+        :param node_module: imported intermediate variable node module
+        :param var_label: variable label
+        :param var_tag: variable tag
+        :return: intermediate variable node
+        """
+        intermediate_node = node_module.python_module.Node(
+            parent=self.id,
+            setting_dict=self._setting_dict,
+            pos=[0, 0],
+            label=var_label,
+            internal_data={'var_value': self._vars_dict[var_tag]['value'] if var_tag else None,
+                           'default_var_value': self._vars_dict[var_tag]['default_value']} if var_tag else None,
+            import_path=node_module.import_path
+        )
+        return intermediate_node
+
+    def _initialize_standard_node_instance_from_import_module(self, node_module, label):
+        """
+        Initialize an intermediate standard node
+
+        :param node_module: imported intermediate node module
+        :param str label: node label if want to override the default
+        :return: intermediate node
+        """
+        intermediate_node = node_module.python_module.Node(
+            parent=self.id,
+            setting_dict=self._setting_dict,
+            pos=[0, 0],
+            label=label,
+            import_path=node_module.import_path
+        )
+        return intermediate_node
+
+    def _set_intermediate_node_position(self, intermediate_node, pos):
+        """
+        Set intermediate node position
+
+        :param intermediate_node:
+        :param tuple[float,float] pos: node position
+        :return:
+        """
+        if pos == (0, 0):
+            # offset last pos a little bit
+            self.last_pos = (self.last_pos[0] + 10, self.last_pos[1] + 10)
+            intermediate_node.pos = self.last_pos
+        else:
+            intermediate_node.pos = pos
+
+    def _store_new_node_data(self, node):
+        """
+        Store newly created node to the following:
+        1. Event list
+        2. Node instance dict
+        3. Node info dict
+        4. Flow link dict
+        5. Data link dict
+
+        :param node:
+        :return:
+        """
+        if node.node_type == NodeTypeFlag.Event:
+            self._update_splitter_event(node)
+        self.node_instance_dict[node.node_tag] = node
+        self._add_node_info_to_node_dict(node)
+        self.node_flow_link_dict = sort_flow_link_dict(self.flow_link_list)
+        self.node_data_link_dict = sort_data_link_dict(self.data_link_list)
+
+    def _update_splitter_event(self, event_node):
+        """
+        Update the splitter event with the input event node instance
+
+        :param event_node: event node instance
+        :return:
+        """
+        # Strip the first string 'Event ' out
+        _event_stripped_name = ' '.join(event_node.node_label.split(' ')[1:])
+        self._event_dict.update(
+            {event_node.node_tag: {'name': [_event_stripped_name], 'type': ['Button']}})
+        # Set splitter event will also display it
+        self.splitter_panel.event_dict = self._event_dict
+
+    def _add_node_info_to_node_dict(self, node):
+        """
+        Add node info to node dict
+
+        :param node: node instance
+        :return:
+        """
+        if not self._node_dict.get('nodes'):
+            self._node_dict['nodes'] = []
+        self._node_dict['nodes'].append(OrderedDict({
+            'id': node.node_tag,
+            'label': node.node_label,
+            'node_instance': node,
+            'pins': node.pin_list,
+            'meta_type': node.node_type,
+            'import_path': node.import_path,
+            'position':
+                {
+                    'x': self.last_pos[0],
+                    'y': self.last_pos[1]
+                }
+        }))
+
+    def callback_tool_save(self, sender, app_data):
+        """
+        Callback to save tool as JSON file
+
+        :param sender: DPG item that triggers this callback
+        :param app_data: DPG item's data
+        :return:
+        """
+        # Callback action name
+        action = dpg.get_item_label(sender)
+        # app_data is the chosen file path
+        file_path = app_data['file_path_name']
+        # Refresh and cleanup data
+        self._refresh_node_editor_data()
+        # Construct export dict
+        tobe_exported_dict = self._construct_export_dict()
+        # Save constructed dict to file
+        return_message = save_dict_to_json(tobe_exported_dict, file_path)
+        # Log
+        log_on_return_code(logger=self.logger, action=action,
+                           return_message=return_message)
+
     def _refresh_node_editor_data(self):
         """
         Refresh all internal data to reflect latest node statuses
@@ -151,20 +327,6 @@ class DPGNodeEditor:
                     break
                 _index += 1
 
-    def _update_necessary_entries_export_dict(self, export_dict: dict):
-        """
-        Update Flow link, Data link, Var dict to export dict
-
-        :param export_dict: reference to the to be exported dict to update data to it
-        :return:
-        """
-        update_flow_links_to_export_dict(self.flow_link_list, export_dict)
-        update_data_links_to_export_dict(self.data_link_list, export_dict)
-        # Add the events list to dict
-        export_dict['events'] = self.tobe_exported_event_dict
-        # Add var dict
-        export_dict.update({'vars': self._vars_dict})
-
     def _construct_export_dict(self) -> dict:
         """
         Construct an export dict
@@ -179,115 +341,59 @@ class DPGNodeEditor:
 
         return export_dict
 
-    def callback_tool_save(self, sender, app_data):
+    def _update_necessary_entries_export_dict(self, export_dict: dict):
         """
-        Callback to save tool as JSON file
+        Update Flow link, Data link, Var dict to export dict
+
+        :param export_dict: reference to the to be exported dict to update data to it
+        :return:
+        """
+        update_flow_links_to_export_dict(self.flow_link_list, export_dict)
+        update_data_links_to_export_dict(self.data_link_list, export_dict)
+        # Add the events list to dict
+        export_dict['events'] = self.tobe_exported_event_dict
+        # Add var dict
+        export_dict.update({'vars': self._vars_dict})
+
+    def callback_file_open(self, sender, app_data):
+        """
+        Callback to open an RTool file as a new node graph
+
+        :param sender: DPG item that triggers this callback
+        :param app_data: DPG item's data
+        """
+
+        # First clear out everything from the current node graph
+        self.clear_all_data()
+        # Then perform file JSON import
+        self.callback_file_import(sender, app_data)
+
+    def clear_all_data(self):
+        """
+        Clear all storage databases from this node graph
+
+        :return:
+        """
+        self.node_dict.clear()
+        self.flow_link_list.clear()
+        self.data_link_list.clear()
+        for node_instance in self.node_instance_dict.values():
+            dpg.delete_item(node_instance.node_tag)
+        self.node_instance_dict.clear()
+
+        self.logger.info('**** Cleared current node graph ****')
+
+    def callback_file_import(self, sender, app_data):
+        """
+        Callback to perform RTool import to current node graph
 
         :param sender: DPG item that triggers this callback
         :param app_data: DPG item's data
         :return:
         """
-        # Callback action name
-        action = dpg.get_item_label(sender)
-        # app_data is the chosen file path
-        file_path = app_data['file_path_name']
-        # Refresh and cleanup data
-        self._refresh_node_editor_data()
-        # Construct export dict
-        tobe_exported_dict = self._construct_export_dict()
-        # Save constructed dict to file
-        return_message = save_dict_to_json(tobe_exported_dict, file_path)
-        # Log
-        log_on_return_code(logger=self.logger, action=action,
-                           return_message=return_message)
-
-    def _batch_import_variable(self, var_info_dict: dict):
-        """
-        Batch import variables with a var info dict
-
-        :param var_info_dict: variable info
-        :return:
-        """
-        for var_info in var_info_dict.values():
-            self.splitter_panel.add_var('', '', var_info['name'][0],
-                                        default_value=var_info['default_value'][0],
-                                        var_type=var_info['type'][0],
-                                        default_is_exposed_flag=var_info['is_exposed'][0])
-
-        # Refresh exposed var window since it does not update by itself
-        self.splitter_panel.exposed_var_dict = deepcopy(self._vars_dict)
-
-    def _get_module_from_imported_node_type(self, imported_node_type):
-        """
-        Get imported module of node type
-
-        :param str imported_node_type: type of the node
-        :return: a tuple of (import_path, module)
-        :rtype: tuple(str, Any)
-        """
-
-        import_path = '.'.join(imported_node_type.split('.')[:-1])
-        module = self._imported_module_dict.get(import_path, None)
-
-        if module is None:
-            self.logger.error(f"Could not find an entry in imported module dict for {imported_node_type}")
-            return None, None
-
-        return import_path, module
-
-    def _add_node_with_imported_info(self, node_info):
-        """
-        Add node with imported info
-
-        :param dict node_info: imported node info
-        :return:
-        """
-        _node_type = node_info['type']
-        _node_label = node_info['label']
-        import_path, module = self._get_module_from_imported_node_type(_node_type)
-        if module is None:
-            return None
-        if _node_type == NodeTypeFlag.Event:  # Event nodes have custom labels, use splitter event add instead
-            added_node = self.splitter_panel.event_graph_header_right_click_menu(sender='__add_node',
-                                                                                 app_data=False,
-                                                                                 user_data=('', ' '.join(
-                                                                                     _node_label.split(' ')[1:])),
-                                                                                 instant_add=True)
-        else:
-            added_node = self.add_node(import_path, module,
-                                       reconstruct_node_pos_from_imported_info(node_info))
-        return added_node
-
-    def _batch_import_node(self, node_info_list: list, pin_mapping: dict):
-        """
-        Batch import nodes from node info list
-
-        :param list node_info_list: imported node info list
-        :param dict pin_mapping: reference to a pin_mapping that will be updated per node creation
-        :return:
-        """
-        for node_info in node_info_list:
-            _imported_pin_list = node_info['pins']
-            added_node = self._add_node_with_imported_info(node_info)
-            if added_node is None:
-                self.logger.error(f'Could not add this node {node_info}')
-                continue
-            # Perform mapping new pins IDs to old ones to replicate exported connections
-            add_pin_mapping_entries(_imported_pin_list, added_node, pin_mapping)
-            # Perform applying imported pin value to newly created pins
-            reapply_imported_pin_value_to_new_node(_imported_pin_list, added_node)
-
-    def _batch_import_link(self, link_list: list, pin_mapping_dict: dict):
-        """
-        Batch import link from a pin mapping
-
-        :param link_list: imported link list
-        :param pin_mapping_dict: a mapping of imported pin with newly created pins from nodes
-        :return:
-        """
-        for link in link_list:
-            self.callback_link(sender=self.id, app_data=[pin_mapping_dict[link[0]],
-                                                         pin_mapping_dict[link[1]]])
+        _file_path = app_data['file_path_name']
+        return_message = self._file_import(_file_path)
+        log_on_return_code(self.logger, action=dpg.get_item_label(sender), return_message=return_message)
 
     def _file_import(self, file_path):  # Import means to append the existing node graph
         """
@@ -316,369 +422,200 @@ class DPGNodeEditor:
 
         return 1, f'Current node graph : {self.node_dict}'
 
-    def callback_file_import(self, sender, app_data):
+    def _batch_import_variable(self, var_info_dict: dict):
         """
-        Callback to perform RTool import to current node graph
+        Batch import variables with a var info dict
 
-        :param sender: DPG item that triggers this callback
-        :param app_data: DPG item's data
+        :param var_info_dict: variable info
         :return:
         """
-        _file_path = app_data['file_path_name']
-        return_message = self._file_import(_file_path)
-        log_on_return_code(self.logger, action=dpg.get_item_label(sender), return_message=return_message)
+        for var_info in var_info_dict.values():
+            self.splitter_panel.add_var('', '', var_info['name'][0],
+                                        default_value=var_info['default_value'][0],
+                                        var_type=var_info['type'][0],
+                                        default_is_exposed_flag=var_info['is_exposed'][0])
 
-    def clear_all_data(self):
+        # Refresh exposed var window since it does not update by itself
+        self.splitter_panel.exposed_var_dict = deepcopy(self._vars_dict)
+
+    def _batch_import_node(self, node_info_list: list, pin_mapping: dict):
         """
-        Clear all storage databases from this node graph
+        Batch import nodes from node info list
 
+        :param list node_info_list: imported node info list
+        :param dict pin_mapping: reference to a pin_mapping that will be updated per node creation
         :return:
         """
-        self.node_dict.clear()
-        self.flow_link_list.clear()
-        self.data_link_list.clear()
-        for node_instance in self.node_instance_dict.values():
-            dpg.delete_item(node_instance.node_tag)
-        self.node_instance_dict.clear()
+        for node_info in node_info_list:
+            _imported_pin_list = node_info['pins']
+            added_node = self._add_node_with_imported_info(node_info)
+            if added_node is None:
+                self.logger.error(f'Could not add this node {node_info}')
+                continue
+            # Perform mapping new pins IDs to old ones to replicate exported connections
+            add_pin_mapping_entries(_imported_pin_list, added_node, pin_mapping)
+            # Perform applying imported pin value to newly created pins
+            reapply_imported_pin_value_to_new_node(_imported_pin_list, added_node)
 
-        self.logger.info('**** Cleared current node graph ****')
-
-    def callback_file_open(self, sender, app_data):
+    def _add_node_with_imported_info(self, node_info):
         """
-        Callback to open an RTool file as a new node graph
+        Add node with imported info
 
-        :param sender: DPG item that triggers this callback
-        :param app_data: DPG item's data
+        :param dict node_info: imported node info
+        :return:
         """
-
-        # First clear out everything from the current node graph
-        self.clear_all_data()
-        # Then perform file JSON import
-        self.callback_file_import(sender, app_data)
-
-    def _initialize_var_node_instance_from_import_module(self, import_module, var_label, var_tag):
-        """
-        Initialize an intermediate variable node
-
-        :param import_module: imported intermediate variable node module
-        :param var_label: variable label
-        :param var_tag: variable tag
-        :return: intermediate variable node
-        """
-        intermediate_node = import_module.Node(
-            parent=self.id,
-            setting_dict=self._setting_dict,
-            pos=[0, 0],
-            label=var_label,
-            internal_data={'var_value': self._vars_dict[var_tag]['value'] if var_tag else None,
-                           'default_var_value': self._vars_dict[var_tag]['default_value']} if var_tag else None
-        )
-        return intermediate_node
-
-    def _initialize_standard_node_instance_from_import_module(self, import_module, label):
-        """
-        Initialize an intermediate standard node
-
-        :param import_module: imported intermediate node module
-        :param str label: node label if want to override the default
-        :return: intermediate node
-        """
-        intermediate_node = import_module.Node(
-            parent=self.id,
-            setting_dict=self._setting_dict,
-            pos=[0, 0],
-            label=label
-        )
-        return intermediate_node
-
-    def _initialize_intermediate_node(self, import_module, is_variable: bool, label='', var_tag=''):
-        """
-        Initialize an intermediate node instance that can later be called its create_node method for node initialization
-
-        :param import_module: the imported module of the intermediate node
-        :param is_variable: if True, will override default node's label and tag with that label and var_tag
-        :param label: label of the variable node
-        :param var_tag: tag of the variable node
-        :return: An intermediate node holds a create_node() method that when called spawns the actual node
-        """
-        if is_variable:
-            intermediate_node = self._initialize_var_node_instance_from_import_module(import_module, label, var_tag)
+        import_path = node_info['import_path']
+        _node_label = node_info['label']
+        node_module = self._get_module_from_node_import_path(import_path)
+        pprint(vars(node_module))
+        if node_module is None:
+            return None
+        if node_module.node_type == NodeTypeFlag.Event:  # Event nodes have custom labels, use splitter event add instead
+            added_node = self.splitter_panel.event_graph_header_right_click_menu(sender='__add_node',
+                                                                                 app_data=False,
+                                                                                 user_data=('', ' '.join(
+                                                                                     _node_label.split(' ')[1:])),
+                                                                                 instant_add=True)
         else:
-            intermediate_node = self._initialize_standard_node_instance_from_import_module(import_module, label)
-        return intermediate_node
+            added_node = self.add_node_from_module(node_module, reconstruct_node_pos_from_imported_info(node_info))
+        return added_node
 
-    def _set_intermediate_node_position(self, intermediate_node, pos):
+    def _get_module_from_node_import_path(self, import_path):
         """
-        Set intermediate node position
+        Get imported node_module of node type
 
-        :param intermediate_node:
-        :param tuple[float,float] pos: node position
+        :param str import_path: type of the node
+        :return: a tuple of (import_path, node_module)
+        :rtype: tuple(str, Any)
+        """
+        node_category = get_node_category_from_import_path(import_path)
+        pprint(self._imported_module_dict)
+        return self._imported_module_dict[node_category][import_path]
+
+
+
+    def _batch_import_link(self, link_list: list, pin_mapping_dict: dict):
+        """
+        Batch import link from a pin mapping
+
+        :param link_list: imported link list
+        :param pin_mapping_dict: a mapping of imported pin with newly created pins from nodes
         :return:
         """
-        if pos == (0, 0):
-            # offset last pos a little bit
-            self.last_pos = (self.last_pos[0] + 10, self.last_pos[1] + 10)
-            intermediate_node.pos = self.last_pos
+        for link in link_list:
+            self.callback_link(sender=self.id, app_data=[pin_mapping_dict[link[0]],
+                                                         pin_mapping_dict[link[1]]])
+
+    def callback_link(self, sender, app_data: list):
+        source_pin_tag = dpg.get_item_alias(app_data[0])
+        destination_pin_tag = dpg.get_item_alias(app_data[1])
+        return_message = self.add_link_from_sourcePin_to_destinationPin(source_pin_tag, destination_pin_tag)
+        log_on_return_code(self.logger, 'Link Node', return_message)
+
+    def add_link_from_sourcePin_to_destinationPin(self, source_pin_tag, destination_pin_tag) -> tuple[int, str]:
+
+        prepared_link_info = self._construct_link_info_from_source_and_destination_pin_tag(source_pin_tag,
+                                                                                           destination_pin_tag)
+
+        if not self._is_linkable(prepared_link_info):
+            return 0, f'Link skipped, did not pass type check:' \
+                      f' {prepared_link_info.source_pin_info.pin_type} to {prepared_link_info.destination_pin_info.pin_type}'
+
+        if prepared_link_info.source_pin_info.pin_type == OutputPinType.Exec:
+            link = self._add_flow_link_from_source_pin_to_destination_pin(prepared_link_info)
         else:
-            intermediate_node.pos = pos
+            link = self._add_data_link_from_source_pin_to_destination_pin(prepared_link_info)
 
-    def _prepare_intermediate_node(self, import_module, pos, is_variable: bool, label: str, var_tag: str):
-        """
-        Prepare an intermediate node
+        if link:
+            return 1, f"New link created from {link.source_pin_instance.pin_tag} to {link.destination_pin_instance.pin_tag}"
 
-        :param import_module: the imported module of the node
-        :param pos: spawn position of the node
-        :param is_variable: True if this node is a Variable node
-        :param label: label of the node, if left to blank the node will use its default node label
-        :param var_tag: if this node is variable, will use var_tag to find its initialized references to its value and type
-        :return: intermediate node instance
-        """
-        intermediate_node = self._initialize_intermediate_node(import_module, is_variable, label, var_tag)
-        self._set_intermediate_node_position(intermediate_node, pos)
-        # Clear node selection after adding a node to avoid last_pos being overriden
-        dpg.clear_selected_nodes(node_editor=self.id)
-        return intermediate_node
+    def _construct_link_info_from_source_and_destination_pin_tag(self, source_pin_tag, destination_pin_tag):
+        source_pin_info = find_pin_and_construct_pin_info_in_node_list(source_pin_tag, self.node_dict['nodes'])
+        destination_pin_info = find_pin_and_construct_pin_info_in_node_list(destination_pin_tag,
+                                                                            self.node_dict['nodes'])
+        return construct_link_info_from_source_and_destination_pin_info(source_pin_info, destination_pin_info)
 
-    def _update_splitter_event(self, event_node):
-        """
-        Update the splitter event with the input event node instance
-
-        :param event_node: event node instance
-        :return:
-        """
-        # Strip the first string 'Event ' out
-        _event_stripped_name = ' '.join(event_node.node_label.split(' ')[1:])
-        self._event_dict.update(
-            {event_node.node_tag: {'name': [_event_stripped_name], 'type': ['Button']}})
-        # Set splitter event will also display it
-        self.splitter_panel.event_dict = self._event_dict
-
-    def _add_node_info_to_node_dict(self, node, import_path):
-        """
-        Add node info to node dict
-
-        :param node: node instance
-        :param import_path: path to import the node module
-        :return:
-        """
-        if not self._node_dict.get('nodes'):
-            self._node_dict['nodes'] = []
-        self._node_dict['nodes'].append(OrderedDict({
-            'id': node.node_tag,
-            'label': node.node_label,
-            'node_instance': node,
-            'pins': node.pin_list,
-            'meta_type': node.node_type,
-            'type': import_path + '.' + node.__class__.__name__,
-            'position':
-                {
-                    'x': self.last_pos[0],
-                    'y': self.last_pos[1]
-                }
-        }))
-
-    def _store_data_after_node_creation(self, node, import_path):
-        """
-        Store newly created node to the following:
-        1. Event list
-        2. Node instance dict
-        3. Node info dict
-        4. Flow link dict
-        5. Data link dict
-
-        :param node:
-        :param import_path:
-        :return:
-        """
-        if node.node_type == NodeTypeFlag.Event:
-            self._update_splitter_event(node)
-        self.node_instance_dict[node.node_tag] = node
-        self._add_node_info_to_node_dict(node, import_path)
-        self.node_flow_link_dict = sort_flow_link_dict(self.flow_link_list)
-        self.node_data_link_dict = sort_data_link_dict(self.data_link_list)
-
-    def add_node(self, import_path, import_module, pos=(0, 0), is_variable=False, label='', var_tag=''):
-        """
-        Callback function of adding a node from menu bar
-
-        :param import_path: path to import the module, still needed this to construct node info dict
-        :param import_module: the imported module of the node
-        :param pos: spawn position of the node
-        :param is_variable: True if this node is a Variable node
-        :param label: label of the node, if left to blank the node will use its default node label
-        :param var_tag: if this node is variable, will use var_tag to find its initialized references to its value and type
-        :return: added node instance
-        """
-        intermediate_node = self._prepare_intermediate_node(import_module, pos, is_variable, label, var_tag)
-        node = intermediate_node.create_node()
-        self._store_data_after_node_creation(node, import_path)
-        return node
-
-    def _get_pin_info(self, pin_tag):
-        """
-        Get all pin data
-
-        :param pin_tag: pin tag
-        :return:
-        """
-        for node in self.node_dict['nodes']:
-            pin_dict_list = node['pins']
-            for pin_dict in pin_dict_list:
-                if pin_dict['id'] == pin_tag:
-                    pin_instance = pin_dict['pin_instance']
-                    pin_type = pin_dict['pin_type']
-                    parent_node_instance = node['node_instance']
-                    parent_node_tag = node['id']
-                    return PinInfo(pin_instance,pin_type,parent_node_instance,parent_node_tag)
-
-    def _can_link(self, source_link_info: PinInfo, destination_link_info: PinInfo) -> bool:
+    def _is_linkable(self, link_info) -> bool:
         """
         can source and destination pin link?
 
-        :param source_link_info: source pin info
-        :param destination_link_info: destination pin info
+        :param link_info: link info
         :return: can these two pins link
         :rtype: bool
         """
-        if not source_link_info.pin_type:
+        if not link_info.source_pin_info.pin_type:
             self.logger.warning("Could not get source pin type")
             return False
-        elif not destination_link_info.pin_type:
+        elif not link_info.destination_pin_info.pin_type:
             self.logger.warning("Could not get target pin type")
             return False
-        elif not (source_link_info.pin_type == destination_link_info.pin_type or
-                  destination_link_info.pin_type == InputPinType.WildCard):
+        elif not (link_info.source_pin_info.pin_type == link_info.destination_pin_info.pin_type or
+                  link_info.destination_pin_info.pin_type == InputPinType.WildCard):
             self.logger.warning("Cannot connect pins with different types")
             return False
         # Cannot connect exec pin to wildcard pins also
-        elif source_link_info.pin_type == OutputPinType.Exec and destination_link_info.pin_type == InputPinType.WildCard:
+        elif link_info.source_pin_info.pin_type == OutputPinType.Exec and link_info.destination_pin_info.pin_type == InputPinType.WildCard:
             self.logger.warning("Cannot connect exec pins to wildcards")
             return False
-        elif not source_link_info.pin_instance:
+        elif not link_info.source_pin_info.pin_instance:
             self.logger.warning("Cannot find source pin instance from node dict")
             return False
-        elif not source_link_info.pin_instance:
+        elif not link_info.source_pin_info.pin_instance:
             self.logger.warning("Cannot find target pin instance from node dict")
             return False
         else:
             return True
 
-    def _add_link(self, source_pin_info: PinInfo, destination_pin_info: PinInfo):
-        # First link occurrence
-        if source_pin_type == OutputPinType.Exec:  # Direct flow links to flow_link_list
-            if len(self.flow_link_list) == 0:
-                # Also disallowing already connected Exec pin to perform further linkage
-                if not source_pin_instance.is_connected:
-                    create_link_object()
+    def _add_flow_link_from_source_pin_to_destination_pin(self, link_info):
+        link = self._create_flow_link_if_not_duplicate(link_info)
+        if link:
+            self._reflect_new_flow_link_to_all_data(link)
+            return link
+        else:
+            return None
 
-            # Check if duplicate linkage, can happen if user swap link direction
-            else:
-                if not source_pin_instance.is_connected:
-                    if not is_link_duplicate(self.flow_link_list, destination_pin_info.pin_instance):
-                        try:
-                            link = Link(source_node_tag,
-                                        source_node_instance,
-                                        source_pin_instance,
-                                        source_pin_type,
-                                        destination_node_tag,
-                                        destination_node_instance,
-                                        destination_pin_instance,
-                                        destination_pin_type,
-                                        self.id)
-                        except:
-                            self.logger.exception("Failed to link")
-                        if link:
-                            self.flow_link_list.append(link)
-                            # Set pin's connected status
-                            source_pin_instance.is_connected = True
-                            destination_pin_instance.is_connected = True
-                            source_pin_instance.connected_link_list.append(link)
-                            destination_pin_instance.connected_link_list.append(link)
-                            # Update event dict to store target node tag if it's connected to an event node
-                            if source_node_instance.node_type == NodeTypeFlag.Event:
-                                self.tobe_exported_event_dict.update({source_node_tag: destination_node_tag})
-                        else:
-                            self.logger.error("Cannot add a null link")
+    def _create_flow_link_if_not_duplicate(self, link_info):
+        if not is_link_duplicate_in_check_list(link_info, self.flow_link_list):
+            return create_link_object_from_link_info_if_node_unconnected(link_info)
+        else:
+            return None
 
-    def add_link(self, source_pin_tag, destination_pin_tag) -> tuple[int, str]:
-        link = None
+    def _reflect_new_flow_link_to_all_data(self, link):
+        self._append_flow_link_to_list(link)
+        reflect_new_link_to_pins(link)
+        self._update_new_event_if_source_is_event_node(link)
 
-        source_pin_info = self._get_pin_info(source_pin_tag)
-        destination_pin_info = self._get_pin_info(destination_pin_tag)
+    def _append_flow_link_to_list(self, link):
+        self.flow_link_list.append(link)
 
-        if not self._can_link(source_pin_info, destination_pin_info):
-            return 0, f'Link skipped, did not pass type check: {source_pin_info.pin_type} to {destination_pin_info.pin_type}'
+    def _update_new_event_if_source_is_event_node(self, link):
+        if link.source_node_instance.node_type == NodeTypeFlag.Event:
+            self.tobe_exported_event_dict.update({link.source_node_tag: link.destination_node_tag})
 
-        else:  # Direct data links to data_link_list
-            if len(self.data_link_list) == 0:
-                try:
-                    link = Link(source_node_tag,
-                                source_node_instance,
-                                source_pin_instance,
-                                source_pin_type,
-                                destination_node_tag,
-                                destination_node_instance,
-                                destination_pin_instance,
-                                destination_pin_type,
-                                self.id)
-                except:
-                    self.logger.exception("Failed to link")
+    def _add_data_link_from_source_pin_to_destination_pin(self, link_info):
+        link = self._create_data_link_if_not_duplicate(link_info)
+        if link:
+            self._reflect_new_data_link_to_all_data(link)
+            return link
+        else:
+            return None
 
-                if link:
-                    self.data_link_list.append(link)
-                    # Mark the target node as dirty
-                    destination_node_instance.is_dirty = True
-                    # Also update the nodes' data_link_list
-                    source_node_instance.succeeding_data_link_list.append(link)
-                    # Set pin's connected status
-                    source_pin_instance.is_connected = True
-                    destination_pin_instance.is_connected = True
-                    source_pin_instance.connected_link_list.append(link)
-                    destination_pin_instance.connected_link_list.append(link)
-                else:
-                    self.logger.error("Cannot add a null link")
-            # Check if duplicate linkage, can happen if user swap link direction
-            else:
-                duplicate_flag = False
-                for node_link in self.data_link_list:
-                    if destination_pin_instance == node_link.destination_pin_instance:
-                        duplicate_flag = True
-                if not duplicate_flag:
-                    try:
-                        link = Link(source_node_tag,
-                                    source_node_instance,
-                                    source_pin_instance,
-                                    source_pin_type,
-                                    destination_node_tag,
-                                    destination_node_instance,
-                                    destination_pin_instance,
-                                    destination_pin_type,
-                                    self.id)
-                    except:
-                        self.logger.exception("Failed to link")
-                    if link:
-                        self.data_link_list.append(link)
-                        # Mark the target node as dirty
-                        destination_node_instance.is_dirty = True
-                        # Also update the nodes' data_link_list
-                        source_node_instance.succeeding_data_link_list.append(link)
-                        # Set pin's connected status and store the link instance into both of the pins
-                        source_pin_instance.is_connected = True
-                        destination_pin_instance.is_connected = True
-                        source_pin_instance.connected_link_list.append(link)
-                        destination_pin_instance.connected_link_list.append(link)
-                    else:
-                        self.logger.error("Cannot add a null link")
+    def _create_data_link_if_not_duplicate(self, link_info):
+        if not is_link_duplicate_in_check_list(link_info, self.data_link_list):
+            return create_link_object_from_link_info_if_node_unconnected(link_info)
+        else:
+            return None
+
+    def _reflect_new_data_link_to_all_data(self, link):
+        self._append_data_link_to_list(link)
+        reflect_new_link_to_pins(link)
+
+    def _append_data_link_to_list(self, link):
+        self.data_link_list.append(link)
+
+    def _refresh_link_list(self):
         self.node_data_link_dict = sort_data_link_dict(self.data_link_list)
         self.node_flow_link_dict = sort_flow_link_dict(self.flow_link_list)
-        if link:
-            self.logger.info('**** Nodes linked ****')
-
-    def callback_link(self, sender, app_data: list):
-        source_pin_tag = dpg.get_item_alias(app_data[0])
-        destination_pin_tag = dpg.get_item_alias(app_data[1])
-        return_message = self.add_link(source_pin_tag, destination_pin_tag)
-        log_on_return_code(self.logger, 'Link Node', return_message)
 
     def callback_delink(self, sender, app_data):
         # Remove instance from link list hence trigger its destructor

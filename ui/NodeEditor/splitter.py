@@ -516,21 +516,6 @@ class Splitter:
         _var_tag = user_data[0][0]
         _var_type = user_data[0][1]
         _var_name = _current_node_editor_instance.var_dict[_var_tag]['name'][0]
-
-        try:
-            _internal_module_dict = self._parent_instance.menu_construct_dict['_internal']
-        except KeyError:
-            self._parent_instance.logger.exception('Could not query _internal modules:')
-            return -1
-        # Get the module & import path to construct user data for add_node
-        try:
-            _set_var_module_tuple = _internal_module_dict['Set ' + _var_type]
-            _get_var_module_tuple = _internal_module_dict['Get ' + _var_type]
-        except KeyError:
-            self._parent_instance.logger.exception(
-                f'Could not find internal module matched with this variable type: {_var_type}')
-            return -1
-        # Store a node list first to avoid interfering with the original node_instance_dict
         _node_list = []
         for node in _current_node_editor_instance.node_instance_dict.values():
             _node_list.append(node)
@@ -539,15 +524,13 @@ class Splitter:
                 _node_pos = dpg.get_item_pos(node.id)
                 # Delete the node
                 delete_selected_node(self._parent_instance, node_id=node.id)
-                _import_path = _set_var_module_tuple[0]
-                _import_module = _set_var_module_tuple[1]
-                _current_node_editor_instance.add_node(_import_path, _import_module, _node_pos, True, node.node_label, _var_tag)
+                var_module = self._parent_instance.get_variable_module_from_var_type_and_action(node.node_type)
+                _current_node_editor_instance.add_node_from_module(var_module, _node_pos, node.node_label, _var_tag)
             elif node.node_label == 'Get ' + _var_name:
-                _import_path = _get_var_module_tuple[0]
-                _import_module = _get_var_module_tuple[1]
                 _node_pos = dpg.get_item_pos(node.id)
                 # Delete the node
                 delete_selected_node(self._parent_instance, node_id=node.id)
-                _current_node_editor_instance.add_node(_import_path, _import_module, _node_pos, True, node.node_label, _var_tag)
+                var_module = self._parent_instance.get_variable_module_from_var_type_and_action(node.node_type, is_get_var=True)
+                _current_node_editor_instance.add_node_from_module(var_module, _node_pos, node.node_label, _var_tag)
         # Finally reflect new type changes to the databases
         self.var_type_update(_var_tag, _var_type)

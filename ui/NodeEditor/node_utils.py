@@ -3,7 +3,8 @@ from ui.NodeEditor.classes.node import NodeTypeFlag
 from ui.NodeEditor.utils import sort_data_link_dict, sort_flow_link_dict, \
     dpg_get_value, dpg_set_value, json_write_to_file
 import traceback
-from ui.NodeEditor.classes.link import Link
+from ui.NodeEditor.classes.link import Link, LinkInfo
+from ui.NodeEditor.classes.pin import PinInfo
 
 
 def delete_selected_node(node_editor, node_id=None):
@@ -279,32 +280,80 @@ def reflect_new_link_on_connected_pins(link):
     link.destination_pin_instance.connected_link_list.append(link)
 
 
-def create_link_object(source_pin_info, destination_pin_info, parent):
+def create_link_object_from_link_info(link_info: LinkInfo):
     try:
-        link = Link(source_pin_info.node_tag,
-                    source_pin_info.node_instance,
-                    source_pin_info.pin_instance,
-                    source_pin_info.pin_type,
-                    destination_pin_info.node_tag,
-                    destination_pin_info.node_instance,
-                    destination_pin_info.pin_instance,
-                    destination_pin_info.pin_type,
-                    parent)
+        link = Link(link_info.source_pin_info.node_tag,
+                    link_info.source_pin_info.node_instance,
+                    link_info.source_pin_info.pin_instance,
+                    link_info.source_pin_info.pin_type,
+                    link_info.destination_pin_info.node_tag,
+                    link_info.destination_pin_info.node_instance,
+                    link_info.destination_pin_info.pin_instance,
+                    link_info.destination_pin_info.pin_type,
+                    parent=link_info.source_pin_info.node_instance.parent)
     except:
         return None
     reflect_new_link_on_connected_pins(link)
     return link
 
 
-def is_link_duplicate(check_list, destination_pin_instance) -> bool:
+def find_pin_and_construct_pin_info_in_node_list(pin_tag: str, node_list: list):
+    """
+    Get all pin data
+
+    :param pin_tag: pin tag
+    :return:
+    """
+    for node in node_list:
+        pin_dict_list = node['pins']
+        for pin_dict in pin_dict_list:
+            if pin_dict['id'] == pin_tag:
+                pin_instance = pin_dict['pin_instance']
+                pin_type = pin_dict['pin_type']
+                parent_node_instance = node['node_instance']
+                parent_node_tag = node['id']
+                return PinInfo(pin_instance, pin_type, parent_node_instance, parent_node_tag)
+
+
+def construct_link_info_from_source_and_destination_pin_info(source_pin_info, destination_pin_info):
+    return LinkInfo(source_pin_info, destination_pin_info)
+
+
+def is_link_duplicate_in_check_list(link_info: LinkInfo, check_list: list) -> bool:
     for node_link in check_list:
-        if destination_pin_instance == node_link.destination_pin_instance:
+        if link_info.destination_pin_info.destination_pin_instance == node_link.destination_pin_instance:
             return True
     return False
 
 
-def _update_new_link_info(link, to_update_link_list, to_update_event_dict):
+def create_link_object_from_link_info_if_node_unconnected(link_info: LinkInfo):
+    if not link_info.source_pin_info.pin_instance.is_connected:
+        return create_link_object_from_link_info(link_info)
+    else:
+        return None
+
+
+def update_new_link_info(link, to_update_link_list, to_update_event_dict):
     # Update event dict to store target node tag if it's connected to an event node
     if link.source_node_type == NodeTypeFlag.Event:
         to_update_event_dict.update({link.source_pin_info: link.destination_node_tag})
     to_update_link_list.append(link)
+
+
+def reflect_new_link_to_pins(link):
+    set_pins_in_link_to_connected(link)
+    add_link_to_pins_connected_link_list(link)
+
+
+def set_pins_in_link_to_connected(link):
+    link.source_pin_instance.is_connected = True
+    link.destination_pin_instance.is_connected = True
+
+
+def add_link_to_pins_connected_link_list(link):
+    link.source_pin_instance.connected_link_list.append(link)
+    link.destination_pin_instance.connected_link_list.append(link)
+
+
+def get_node_category_from_import_path(import_path) -> str:
+    return import_path.split('.')[1]

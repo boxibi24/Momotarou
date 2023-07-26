@@ -1,19 +1,21 @@
 import dearpygui.dearpygui as dpg
-from ui.NodeEditor.utils import generate_uuid, create_queueHandler_logger
 from multiprocessing import Queue
+from ui.NodeEditor.utils import generate_uuid, create_queueHandler_logger
 from ui.NodeEditor.input_handler import add_keyboard_handler_registry, add_mouse_handler_registry, event_handler
 from ui.NodeEditor.right_click_menu import RightClickMenu
 from ui.NodeEditor.splitter import Splitter
 from ui.NodeEditor.details_panel import DetailPanel
 from ui.NodeEditor._internal_node_editor import DPGNodeEditor
 from ui.NodeEditor.item_right_click_menus import tab_right_click_menu
+from ui.NodeEditor.classes.node import NodeModule
+from ui.NodeEditor.node_utils import construct_var_node_label
 from collections import OrderedDict
 import os
 import platform
 from glob import glob
 from importlib import import_module
 from copy import deepcopy
-from ui.NodeEditor.node_utils import construct_var_node_label
+from pprint import pprint
 
 
 def callback_project_open(sender, app_data):
@@ -118,16 +120,17 @@ class NodeEditor:
                     module = import_module(import_path)
                     if module:
                         self._imported_module_dict.update({import_path: module})
-                        node_category = tree_node_info[0]
+                        node_category = tree_node_info[1]
                         if self.menu_construct_dict.get(node_category, None) is None:
                             node_module_item = OrderedDict([])
-                            node_module_item.update({module.Node.node_label: (import_path, module)})
-                            self.menu_construct_dict.update({node_category:
-                                                                 node_module_item
-                                                             })
+                            node_module_item.update(
+                                {import_path: NodeModule(module, import_path, module.Node.node_type)})
+                            if 'event' in import_path:
+                                self.EVENT_IMPORT_PATH = import_path
+                            self.menu_construct_dict.update({node_category: node_module_item})
                         else:
                             self.menu_construct_dict[node_category].update(
-                                {module.Node.node_label: (import_path, module)})
+                                {module.Node.node_label: NodeModule(module, import_path, module.Node.node_type)})
                     else:
                         self.logger.critical(f"Could not import module {import_path}")
 
@@ -338,41 +341,42 @@ class NodeEditor:
             return -1
 
     def _get_internal_var_module(self, var_tag, is_get_var: bool):
-        _internal_module_dict = self._get_internal_modules_dict()
-        _var_type = self.current_node_editor_instance.var_dict[var_tag]['type'][0]
+        var_type = self._get_var_type_from_var_tag(var_tag)
+        var_module = self.get_variable_module_from_var_type_and_action(var_type, is_get_var)
+        return var_module
+
+    def _get_var_type_from_var_tag(self, var_tag):
+        return self.current_node_editor_instance.var_dict[var_tag]['type'][0]
+
+    def get_variable_module_from_var_type_and_action(self, var_type: str, is_get_var: bool):
         if is_get_var:
-            _module_name = 'Get ' + _var_type
+            var_action = 'get'
         else:
-            _module_name = 'Set ' + _var_type
-        try:
-            _import_path, _import_module = _internal_module_dict[_module_name]
-            return _import_path, _import_module
-        except KeyError:
-            self.logger.exception(f'Could not find internal module matched with this variable type: {_var_type}')
-            return -1
+            var_action = 'set'
+
+        for import_path, module in self._imported_module_dict:
+            if var_action + '_' + var_type.lower() in import_path:
+                return module
+        self.logger.error(f'Could not find python to {var_action} {var_type} variable')
+        return None
 
     def _get_event_module(self):
         _internal_module_dict = self._get_internal_modules_dict()
-        try:
-            _import_path, _import_module = _internal_module_dict['Event']
-            return _import_path, _import_module
-        except KeyError:
-            self.logger.exception(f'Could not find Event module')
-            return -1
+        event_module = _internal_module_dict[self.EVENT_IMPORT_PATH]
+        return event_module
 
-    def current_editor_add_var_node(self, var_tag, var_name, is_get_var :bool):
-        _import_path, _import_module = self._get_internal_var_module(var_tag, is_get_var)
-        added_node = self.current_node_editor_instance.add_node(_import_path, _import_module,
-                                                                is_variable=True,
-                                                                label=construct_var_node_label(var_name, is_get_var),
-                                                                var_tag=var_tag)
+    def current_editor_add_var_node(self, var_tag, var_name, is_get_var: bool):
+        var_module = self._get_internal_var_module(var_tag, is_get_var)
+        added_node = self.current_node_editor_instance.add_node_from_module(var_module,
+                                                                            override_label=construct_var_node_label(
+                                                                                var_name, is_get_var),
+                                                                            var_tag=var_tag)
         return added_node
 
     def current_editor_add_event_node(self, event_name):
-        _import_path, _import_module = self._get_event_module()
-        added_node = self.current_node_editor_instance.add_node(_import_path, _import_module,
-                                                                is_variable=False,
-                                                                label='Event ' + event_name)
+        event_module = self._get_event_module()
+        added_node = self.current_node_editor_instance.add_node_from_module(event_module,
+                                                                            override_label='Event ' + event_name)
         return added_node
 
     def callback_current_editor_add_node(self, sender, app_data, user_data, sender_tag=None):

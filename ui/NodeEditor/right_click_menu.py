@@ -76,26 +76,26 @@ class RightClickMenu:
                                        hint='Type to search', width=150)
                 with dpg.table_row():
                     with dpg.filter_set(tag='__right_click_menu_filter'):
-                        for node_category_info in self._menu_construct_dict.items():
+                        for node_category, node_module_dict in self._menu_construct_dict.items():
                             # Skip loading _internal category
-                            if node_category_info[0] == '_internal':
+                            if node_category == '_internal':
                                 continue
                             dpg.add_separator()
-                            dpg.add_text(default_value=node_category_info[0], filter_key=node_category_info[0], color=(221, 84, 255, 255))
+                            dpg.add_text(default_value=node_category, filter_key=node_category, color=(221, 84, 255, 255))
                             dpg.add_separator()
-                            for node_module_item in node_category_info[1].items():
-                                import_path, module = node_module_item[1]
-                                node = module.Node(
+                            for node_name, node_module in node_module_dict.items():
+                                node = node_module.python_module.Node(
                                     parent=self._parent_id,
                                     setting_dict=self._setting_dict,
-                                    pos=[0, 0]
+                                    pos=[0, 0],
+                                    import_path=node_module.import_path
                                 )
                                 # add menu item for the node
                                 dpg.add_selectable(
                                     tag='Menu_' + node.node_label,
                                     label=node.node_label,
                                     callback=self.child_editor_add_node,
-                                    user_data=(import_path, module),
+                                    user_data=node_module,
                                     filter_key=node.node_label,
                                     indent=20
                                 )
@@ -108,6 +108,5 @@ class RightClickMenu:
                                 self.logger.debug(f'     node.node_label     :   {node.node_label}')
 
     def child_editor_add_node(self, sender, app_data, user_data):
-        import_path = user_data[0]
-        import_module = user_data[1]
-        self._parent_inst.current_node_editor_instance.add_node(import_path, import_module)
+        node_module = user_data
+        self._parent_inst.current_node_editor_instance.add_node_from_module(node_module)
