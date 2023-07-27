@@ -1,6 +1,6 @@
 import dearpygui.dearpygui as dpg
 from multiprocessing import Queue
-from ui.NodeEditor.utils import generate_uuid, create_queueHandler_logger, json_write_to_file, log_on_return_message
+from ui.NodeEditor.utils import generate_uuid, json_write_to_file, log_on_return_message
 from ui.NodeEditor.input_handler import add_keyboard_handler_registry, add_mouse_handler_registry, event_handler
 from ui.NodeEditor.right_click_menu import RightClickMenu
 from ui.NodeEditor.splitter import Splitter
@@ -16,7 +16,7 @@ from glob import glob
 from importlib import import_module
 from copy import deepcopy
 import traceback
-from pprint import pprint
+from core.utils import create_queueHandler_logger
 
 INTERNAL_NODE_CATEGORY = '_internal'
 

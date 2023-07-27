@@ -1,5 +1,5 @@
 import dearpygui.dearpygui as dpg
-from ui.NodeEditor.classes.node import NodeTypeFlag
+from core.enum_type import NodeTypeFlag
 from ui.NodeEditor.utils import sort_data_link_dict, sort_flow_link_dict, \
     dpg_get_value, dpg_set_value, json_write_to_file
 import traceback

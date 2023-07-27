@@ -1,7 +1,7 @@
 import dearpygui.dearpygui as dpg
 from collections import OrderedDict
 from multiprocessing import Queue
-from ui.NodeEditor.utils import create_queueHandler_logger
+from core.utils import create_queueHandler_logger
 
 
 class RightClickMenu:

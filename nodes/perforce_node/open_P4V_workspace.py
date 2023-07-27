@@ -1,5 +1,5 @@
-from ui.NodeEditor.classes.node import BaseNode, NodeTypeFlag
-from ui.NodeEditor.classes.pin import InputPinType
+from ui.NodeEditor.classes.node import BaseNode
+from core.enum_type import NodeTypeFlag, InputPinType
 from subprocess import Popen
 
 

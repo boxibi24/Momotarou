@@ -1,45 +1,10 @@
+from core.enum_type import InputPinType, OutputPinType
+from misc.color import teal, pink, orange, white, green, darkpink, darkred, brown
 from ui.NodeEditor.utils import generate_uuid
-from enum import auto, IntEnum
 import dearpygui.dearpygui as dpg
 
-# Define some colors for label of each type
 BLUE = (92, 108, 255, 255)
-TEAL = (84, 252, 255, 255)
-PINK = (221, 84, 255, 255)
-ORANGE = (255, 172, 84, 255)
-WHITE = (255, 255, 255, 255)
-GREEN = (102, 255, 51, 255)
-DARKPINK = (204, 0, 153, 255)
-DARKRED = (204, 51, 0, 255)
-BROWN = (102, 51, 0, 255)
 
-
-class InputPinType(IntEnum):
-    """Enum class for pin input types, order matters"""
-    String = auto()
-    Float = auto()
-    Json = auto()
-    Int = auto()
-    Exec = auto()
-    WildCard = auto()
-    Password = auto()
-    Bool = auto()
-    MultilineString = auto()
-    PerforceInstance = auto()
-
-
-class OutputPinType(IntEnum):
-    """Enum class for pin outputs, order matters"""
-    String = auto()
-    Float = auto()
-    Json = auto()
-    Int = auto()
-    Exec = auto()
-    WildCard = auto()
-    Password = auto()
-    Bool = auto()
-    MultilineString = auto()
-    PerforceInstance = auto()
 
 class PinInfo:
     def __init__(self,
@@ -52,6 +17,7 @@ class PinInfo:
         self.pin_type = pin_type
         self.parent_node_instance = parent_node_instance
         self.parent_node_tag = parent_node_tag
+
 
 class PinBase:
     def __init__(self,
@@ -190,7 +156,7 @@ class PinBase:
                     shape=self._pin_shape
                 ):
                     dpg.add_text(default_value=self.label,
-                                 color=GREEN)
+                                 color=green)
                     dpg.add_slider_float(tag=self.value_tag,
                                          default_value=self._default_data,
                                          width=self._input_window_width,
@@ -204,7 +170,7 @@ class PinBase:
                     shape=self._pin_shape
                 ):
                     dpg.add_text(default_value=self.label,
-                                 color=PINK)
+                                 color=pink)
                     dpg.add_input_text(tag=self.value_tag,
                                        default_value=self._default_data,
                                        width=self._input_window_width,
@@ -218,7 +184,7 @@ class PinBase:
                     shape=self._pin_shape
                 ):
                     dpg.add_text(default_value=self.label,
-                                 color=ORANGE)
+                                 color=orange)
                     dpg.add_input_text(tag=self.value_tag,
                                        width=self._input_window_width,
                                        callback=self._callback,
@@ -233,7 +199,7 @@ class PinBase:
                     shape=self._pin_shape
                 ):
                     dpg.add_text(default_value=self.label,
-                                 color=WHITE)
+                                 color=white)
             elif self.pin_type == InputPinType.WildCard:  # Wildcard input Pin
                 with dpg.node_attribute(
                     tag=self._pin_tag,
@@ -241,7 +207,7 @@ class PinBase:
                     shape=self._pin_shape
                 ):
                     dpg.add_text(default_value=self.label,
-                                 color=BROWN)
+                                 color=brown)
                     dpg.add_input_text(tag=self.value_tag,
                                        default_value=self._default_data,
                                        width=self._input_window_width,
@@ -255,7 +221,7 @@ class PinBase:
                     shape=self._pin_shape
                 ):
                     dpg.add_text(default_value=self.label,
-                                 color=DARKPINK)
+                                 color=darkpink)
                     dpg.add_input_text(tag=self.value_tag,
                                        default_value=self._default_data,
                                        width=self._input_window_width,
@@ -270,7 +236,7 @@ class PinBase:
                     shape=self._pin_shape
                 ):
                     dpg.add_text(default_value=self.label,
-                                 color=DARKRED)
+                                 color=darkred)
                     dpg.add_checkbox(tag=self.value_tag,
                                      default_value=self._default_data,
                                      callback=self._callback,
@@ -297,7 +263,7 @@ class PinBase:
                     shape=self._pin_shape
                 ):
                     dpg.add_text(default_value=self.label,
-                                 color=TEAL)
+                                 color=teal)
         elif self.attribute_type == dpg.mvNode_Attr_Output:
             # Output Pin
             if self.pin_type == OutputPinType.Int:  # Int output Pin
@@ -323,7 +289,7 @@ class PinBase:
                 ):
                     dpg.add_text(default_value=self.label,
                                  indent=self._input_window_width,
-                                 color=GREEN)
+                                 color=green)
                     dpg.add_slider_float(tag=self.value_tag,
                                          default_value=self._default_data,
                                          width=self._input_window_width - 50,
@@ -338,7 +304,7 @@ class PinBase:
                 ):
                     dpg.add_text(default_value=self.label,
                                  indent=self._input_window_width,
-                                 color=PINK)
+                                 color=pink)
                     dpg.add_input_text(tag=self.value_tag,
                                        default_value=self._default_data,
                                        width=self._input_window_width - 50,
@@ -353,7 +319,7 @@ class PinBase:
                 ):
                     dpg.add_text(default_value=self.label,
                                  indent=self._input_window_width,
-                                 color=ORANGE)
+                                 color=orange)
                     dpg.add_input_text(tag=self.value_tag,
                                        width=self._input_window_width - 50,
                                        callback=self._callback,
@@ -378,7 +344,7 @@ class PinBase:
                 ):
                     dpg.add_text(default_value=self.label,
                                  indent=self._input_window_width,
-                                 color=BROWN)
+                                 color=brown)
                     dpg.add_input_text(tag=self.value_tag,
                                        default_value=self._default_data,
                                        callback=self._callback,
@@ -394,7 +360,7 @@ class PinBase:
                 ):
                     dpg.add_text(default_value=self.label,
                                  indent=self._input_window_width,
-                                 color=DARKPINK)
+                                 color=darkpink)
                     dpg.add_input_text(tag=self.value_tag,
                                        width=self._input_window_width - 50,
                                        callback=self._callback,
@@ -411,7 +377,7 @@ class PinBase:
                 ):
                     dpg.add_text(default_value=self.label,
                                  indent=self._input_window_width,
-                                 color=DARKRED)
+                                 color=darkred)
                     dpg.add_checkbox(tag=self.value_tag,
                                      default_value=self._default_data,
                                      callback=self._callback,
@@ -426,7 +392,7 @@ class PinBase:
                 ):
                     dpg.add_text(default_value=self.label,
                                  indent=self._input_window_width,
-                                 color=PINK)
+                                 color=pink)
                     dpg.add_input_text(tag=self.value_tag,
                                        default_value=self._default_data,
                                        label=self.label,
@@ -445,7 +411,7 @@ class PinBase:
                 ):
                     dpg.add_text(default_value=self.label,
                                  indent=self._input_window_width,
-                                 color=TEAL)
+                                 color=teal)
         # Static Pin
         else:
             with dpg.node_attribute(

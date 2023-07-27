@@ -1,6 +1,6 @@
 from collections import OrderedDict
-from enum import IntFlag
 
+from core.enum_type import NodeTypeFlag
 from ui.NodeEditor.utils import dpg_set_value, dpg_get_value
 from ui.NodeEditor.classes.pin import *
 
@@ -34,18 +34,6 @@ def get_pin_class(pin_type):
         return PerforceInstancePin
     else:
         return PinBase
-
-
-class NodeTypeFlag(IntFlag):
-    Dummy = 0
-    Pure = 1 << 0
-    Exec = 1 << 1
-    Sequential = 1 << 2 | Pure
-    Event = 1 << 3
-    Blueprint = Pure | Exec
-    Variable = 1 << 4
-    SetVariable = Variable | Exec
-    GetVariable = Variable | Pure
 
 
 class NodeModule:
@@ -237,7 +225,7 @@ class BaseNode:
                             label=label,
                             input_window_width=self.setting_dict['input_window_width'],
                             callback=callback)
-            self.pin_list.append(OrderedDict({
+            self._pin_list.append(OrderedDict({
                 'id': pin.pin_tag,
                 'pin_instance': pin,
                 'label': label,
@@ -245,7 +233,7 @@ class BaseNode:
                 'pin_type': pin.pin_type
             }))
             if pin_type != InputPinType.Exec:
-                self.pin_list[-1].update({'value': dpg_get_value(pin.value_tag)})
+                self._pin_list[-1].update({'value': dpg_get_value(pin.value_tag)})
             # Update internal data
             if pin_type != InputPinType.Exec:
                 self._internal_data.update({pin.label: pin.default_data})
@@ -260,7 +248,7 @@ class BaseNode:
             pin = pin_class(parent=self.node_tag, attribute_type=attribute_type, pin_type=pin_type,
                             label=label,
                             input_window_width=self.setting_dict['input_window_width'])
-            self.pin_list.append(OrderedDict({
+            self._pin_list.append(OrderedDict({
                 'id': pin.pin_tag,
                 'pin_instance': pin,
                 'label': label,
@@ -272,7 +260,7 @@ class BaseNode:
             # Output pins will need to store a default value for Tools viewer in case node is not computed for value
             # therefore prompt KeyErrorException
             if pin_type != OutputPinType.Exec:
-                self.pin_list[-1].update({'default_value': dpg_get_value(pin.value_tag)})
+                self._pin_list[-1].update({'default_value': dpg_get_value(pin.value_tag)})
             # Update internal data
             if pin_type != InputPinType.Exec:
                 self._internal_data.update({pin.label: pin.default_data})
@@ -304,7 +292,7 @@ class BaseNode:
                     out_exec_pin = PinEvent(self.node_tag, dpg.mvNode_Attr_Output, OutputPinType.Exec, label='Exec out',
                                             input_window_width=self.setting_dict['input_window_width'],
                                             callback=self.callback, user_data=self.node_tag)
-                    self.pin_list.append(OrderedDict({
+                    self._pin_list.append(OrderedDict({
                         'id': out_exec_pin.pin_tag,
                         'pin_instance': out_exec_pin,
                         'label': 'Exec Out',
@@ -405,7 +393,7 @@ class BaseNode:
         assert not hasattr(super(), 'Close')
 
     def update_internal_input_data(self):
-        for pin_info in self.pin_list:
+        for pin_info in self._pin_list:
             if pin_info['meta_type'] == 'DataIn':
                 pin_value = dpg.get_value(pin_info['pin_instance'].value_tag)
                 if pin_value is not None:
@@ -413,7 +401,7 @@ class BaseNode:
 
     def compute_internal_output_data(self):
         # First update the input values
-        for pin_info in self.pin_list:
+        for pin_info in self._pin_list:
             if pin_info['meta_type'] == 'DataIn' and \
                 pin_info['pin_instance'].connected_link_list:
                 queried_value = self.query_input_value(pin_info['pin_instance'].connected_link_list[0])
@@ -434,7 +422,7 @@ class BaseNode:
         self._is_executed = True
 
     def update_output_pin_value(self):
-        for pin_info in self.pin_list:
+        for pin_info in self._pin_list:
             if pin_info['meta_type'] == 'DataOut':
                 for key, value in self._internal_data.items():
                     if key == pin_info['label']:

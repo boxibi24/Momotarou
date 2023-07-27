@@ -1,8 +1,6 @@
 import dearpygui.dearpygui as dpg
 from collections import OrderedDict
 from uuid import uuid1
-import logging
-from logging.handlers import QueueHandler
 import json
 
 
@@ -197,17 +195,6 @@ def sort_flow_link_dict(flow_link_list: list):
     # Add nodes that do not appear in the connection list (input nodes, etc.)
     # index = 0
     return OrderedDict(flow_list)
-
-
-def create_queueHandler_logger(logger_name, queue, is_debug_mode: bool):
-    logger = logging.getLogger(logger_name)
-    qh = QueueHandler(queue)
-    logger.addHandler(qh)
-    if is_debug_mode:
-        logger.setLevel(logging.DEBUG)
-    else:
-        logger.setLevel(logging.INFO)
-    return logger
 
 
 def add_user_input_box(var_type, callback=None, default_value=None,

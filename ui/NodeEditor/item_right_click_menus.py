@@ -1,6 +1,7 @@
 import dearpygui.dearpygui as dpg
 from ui.NodeEditor.node_utils import delete_selected_node
 from copy import deepcopy
+from core.execute import execute_event
 from pprint import pprint
 
 
@@ -22,7 +23,7 @@ def callback_run_event(sender, app_data, user_data):
     _event_node_tag = user_data[0]
     _master_node_editor_instance = user_data[1]
     _current_node_editor_instance = _master_node_editor_instance.current_node_editor_instance
-    _current_node_editor_instance.execute_event('', '', user_data=_event_node_tag)
+    execute_event(_event_node_tag)
 
 
 def callback_ask_event_delete(sender, app_data, user_data):
