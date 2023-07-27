@@ -1,6 +1,6 @@
 import dearpygui.dearpygui as dpg
 from multiprocessing import Queue
-from ui.NodeEditor.utils import generate_uuid, create_queueHandler_logger
+from ui.NodeEditor.utils import generate_uuid, create_queueHandler_logger, json_write_to_file, log_on_return_message
 from ui.NodeEditor.input_handler import add_keyboard_handler_registry, add_mouse_handler_registry, event_handler
 from ui.NodeEditor.right_click_menu import RightClickMenu
 from ui.NodeEditor.splitter import Splitter
@@ -15,6 +15,7 @@ import platform
 from glob import glob
 from importlib import import_module
 from copy import deepcopy
+import traceback
 from pprint import pprint
 
 INTERNAL_NODE_CATEGORY = '_internal'
@@ -292,22 +293,30 @@ class NodeEditor:
         self.logger.info(f'****Deleted tab {tab_name}****')
 
     def _reflect_current_order_to_tab_dict(self):
-        self._get_tabs_order()
-        pprint(self._node_editor_tab_dict)
+        sorted_tab_list = self._get_tab_list_with_order()
+        self._refresh_tab_dict_with_new_order_from_list(sorted_tab_list)
 
-    def _get_tabs_order(self):
+    def _refresh_tab_dict_with_new_order_from_list(self, new_order: list):
+        for tab_name in new_order:
+            self._node_editor_tab_dict.move_to_end(tab_name)
+
+    def _get_tab_list_with_order(self) -> list:
         converter = {}
+        tab_name_list_with_order = []
         for item in dpg.get_item_children(self._tab_bar_id, 1):
             # Skip add button
             if dpg.get_item_label(item) == '+':
                 continue
             converter[tuple(dpg.get_item_rect_min(item))] = dpg.get_item_label(item)
 
-        pos = [dpg.get_item_rect_min(item) for item in dpg.get_item_children(self._tab_bar_id, 1) if dpg.get_item_label(item) != '+']
+        pos = [dpg.get_item_rect_min(item) for item in dpg.get_item_children(self._tab_bar_id, 1) if
+               dpg.get_item_label(item) != '+']
         sortedPos = sorted(pos, key=lambda pos: pos[0])
 
         for item in sortedPos:
-            print(converter[tuple(item)])
+            tab_name_list_with_order.append(converter[tuple(item)])
+
+        return tab_name_list_with_order
 
     def var_drop_callback(self, sender, app_data):
         """
@@ -395,7 +404,7 @@ class NodeEditor:
         self.logger.error(f'Could not find python to {var_action} {var_type} variable')
         return None
 
-    def current_editor_add_event_node(self, event_name, override_pos: tuple[float, float]):
+    def current_editor_add_event_node(self, event_name, override_pos=(0, 0)):
         event_module = self._get_event_module()
         added_node = self.current_node_editor_instance.add_node_from_module(event_module, pos=override_pos,
                                                                             override_label='Event ' + event_name)
@@ -414,18 +423,40 @@ class NodeEditor:
             self.logger.exception('Could not query _internal modules:')
             return -1
 
-    def callback_project_save(self, sender, app_data):
-        self.refresh_node_editor_dict()
-        project_dict = self._construct_project_dict()
-        self._save_project_to_file(project_dict)
+    def _construct_project_dict(self) -> OrderedDict:
+        # project_dict = OrderedDict([])
+        # self._compile_child_tools_id_to_list()
+        # self._node_editor_tab_dict
+        # return project_dict
+        pass
 
-    def _construct_project_dict(self) -> dict:
-        project_dict = OrderedDict([])
-        self._compile_child_tools_id_to_list()
-        self._node_editor_tab_dict
-
-    def callback_project_import(self, sender, app_data):
+    def callback_project_new(self, sender, app_data):
         pass
 
     def callback_project_open(self, sender, app_data):
         pass
+
+    def callback_project_save(self, sender, app_data):
+        file_path = app_data['file_path_name']
+        action = dpg.get_item_label(sender)
+        return_message = self._project_save_to_file(file_path)
+        log_on_return_message(self.logger, action, return_message)
+
+    def _project_save_to_file(self, file_path):
+        try:
+            self.refresh_node_editor_dict()
+            project_dict = self._construct_project_dict()
+            json_write_to_file(file_path, project_dict)
+        except Exception:
+            return 4, traceback.format_exc()
+        return 1,
+    def _compile_child_tools_id_to_list(self):
+        pass
+
+    def refresh_node_graph_bounding_box(self):
+        # Update node graph bounding box to restrict right click menu only shows when cursor is inside of it
+        _current_tab_id = self.current_tab_id
+        self.node_editor_bb[0] = (dpg.get_item_pos(_current_tab_id)[0] + 8,
+                                                 dpg.get_item_pos(_current_tab_id)[1] + 30)
+        self.node_editor_bb[1] = (dpg.get_item_pos('__details_panel')[0] - 2,
+                                                 dpg.get_viewport_height() - 47)

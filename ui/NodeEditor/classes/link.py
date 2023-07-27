@@ -9,6 +9,7 @@ class LinkInfo:
         self.source_pin_info = source_pin_info
         self.destination_pin_info = destination_pin_info
 
+
 class Link:
     def __init__(self,
                  source_node_tag,

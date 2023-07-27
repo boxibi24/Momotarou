@@ -272,39 +272,45 @@ def construct_var_node_label(var_name, is_get_var: bool) -> str:
         return 'Set ' + var_name
 
 
-def reflect_new_link_on_connected_pins(link):
-    # Set pin's connected status
-    link.source_pin_instance.is_connected = True
-    link.destination_pin_instance.is_connected = True
-    link.source_pin_instance.connected_link_list.append(link)
-    link.destination_pin_instance.connected_link_list.append(link)
-
-
 def split_event_name_from_node_label(node_label: str):
     return ' '.join(node_label.split(' ')[1:])
 
 
 def create_link_object_from_link_info(link_info: LinkInfo):
-    try:
-        link = Link(link_info.source_pin_info.node_tag,
-                    link_info.source_pin_info.node_instance,
-                    link_info.source_pin_info.pin_instance,
-                    link_info.source_pin_info.pin_type,
-                    link_info.destination_pin_info.node_tag,
-                    link_info.destination_pin_info.node_instance,
-                    link_info.destination_pin_info.pin_instance,
-                    link_info.destination_pin_info.pin_type,
-                    parent=link_info.source_pin_info.node_instance.parent)
-    except:
-        return None
+    link = Link(link_info.source_pin_info.parent_node_tag,
+                link_info.source_pin_info.parent_node_instance,
+                link_info.source_pin_info.pin_instance,
+                link_info.source_pin_info.pin_type,
+                link_info.destination_pin_info.parent_node_tag,
+                link_info.destination_pin_info.parent_node_instance,
+                link_info.destination_pin_info.pin_instance,
+                link_info.destination_pin_info.pin_type,
+                parent=link_info.source_pin_info.parent_node_instance.parent)
     reflect_new_link_on_connected_pins(link)
     return link
+
+
+def reflect_new_link_on_connected_pins(link: Link):
+    _reflect_new_link_on_source_pin(link)
+    _reflect_new_link_on_destination_pin(link)
+
+
+def _reflect_new_link_on_source_pin(link: Link):
+    link.source_pin_instance.is_connected = True
+    link.source_pin_instance.connected_link_list.append(link)
+
+
+def _reflect_new_link_on_destination_pin(link: Link):
+    link.destination_pin_instance.is_connected = True
+    link.destination_pin_instance.connected_link_list.append(link)
+
 
 
 def find_pin_and_construct_pin_info_in_node_list(pin_tag: str, node_list: list):
     """
     Get all pin data
 
+    :param node_list:
     :param pin_tag: pin tag
     :return:
     """

@@ -5,7 +5,6 @@ from ui.NodeEditor.utils import *
 from ui.NodeEditor.classes.pin import OutputPinType, InputPinType
 from ui.NodeEditor.node_utils import *
 from multiprocessing import Queue
-from ui.NodeEditor.logger_message import log_on_return_code
 from pprint import pprint
 
 
@@ -292,8 +291,8 @@ class DPGNodeEditor:
         # Save constructed dict to file
         return_message = save_dict_to_json(tobe_exported_dict, file_path)
         # Log
-        log_on_return_code(logger=self.logger, action=action,
-                           return_message=return_message)
+        log_on_return_message(logger=self.logger, action=action,
+                              return_message=return_message)
 
     def _refresh_node_editor_data(self):
         """
@@ -389,7 +388,7 @@ class DPGNodeEditor:
         """
         _file_path = app_data['file_path_name']
         return_message = self._file_import(_file_path)
-        log_on_return_code(self.logger, action=dpg.get_item_label(sender), return_message=return_message)
+        log_on_return_message(self.logger, action=dpg.get_item_label(sender), return_message=return_message)
 
     def _file_import(self, file_path):  # Import means to append the existing node graph
         """
@@ -468,7 +467,11 @@ class DPGNodeEditor:
         if node_module.node_type == NodeTypeFlag.Event:  # Event nodes have custom labels, use splitter event add instead
             added_node = self.splitter_panel.event_graph_header_right_click_menu(sender='__add_node',
                                                                                  app_data=False,
-                                                                                 user_data=(reconstruct_node_pos_from_imported_info(node_info), split_event_name_from_node_label(_node_label)),
+                                                                                 user_data=(
+                                                                                     reconstruct_node_pos_from_imported_info(
+                                                                                         node_info),
+                                                                                     split_event_name_from_node_label(
+                                                                                         _node_label)),
                                                                                  instant_add=True)
         else:
             added_node = self.add_node_from_module(node_module, reconstruct_node_pos_from_imported_info(node_info))
@@ -501,7 +504,7 @@ class DPGNodeEditor:
         source_pin_tag = dpg.get_item_alias(app_data[0])
         destination_pin_tag = dpg.get_item_alias(app_data[1])
         return_message = self.add_link_from_sourcePin_to_destinationPin(source_pin_tag, destination_pin_tag)
-        log_on_return_code(self.logger, 'Link Node', return_message)
+        log_on_return_message(self.logger, 'Link Node', return_message)
 
     def add_link_from_sourcePin_to_destinationPin(self, source_pin_tag, destination_pin_tag) -> tuple[int, str]:
 
@@ -519,6 +522,8 @@ class DPGNodeEditor:
 
         if link:
             return 1, f"New link created from {link.source_pin_instance.pin_tag} to {link.destination_pin_instance.pin_tag}"
+        else:
+            return 0, f'No link established'
 
     def _construct_link_info_from_source_and_destination_pin_tag(self, source_pin_tag, destination_pin_tag):
         source_pin_info = find_pin_and_construct_pin_info_in_node_list(source_pin_tag, self.node_dict['nodes'])
@@ -604,68 +609,86 @@ class DPGNodeEditor:
     def _append_data_link_to_list(self, link):
         self.data_link_list.append(link)
 
-    def _refresh_link_list(self):
+    def _refresh_link_dict(self):
         self.node_data_link_dict = sort_data_link_dict(self.data_link_list)
         self.node_flow_link_dict = sort_flow_link_dict(self.flow_link_list)
 
     def callback_delink(self, sender, app_data):
-        # Remove instance from link list hence trigger its destructor
-        for link in self.data_link_list:
-            if link.link_id == app_data:
-                try:
-                    self.data_link_list.remove(link)
-                except ValueError:
-                    self.logger.exception("Could not find the link for removal")
-                except:
-                    self.logger.exception("Some thing is wrong deleting the link")
-                else:
-                    dpg.delete_item(link.link_id)
-                    self.node_data_link_dict = sort_data_link_dict(self.data_link_list)
-                    # Safely set target pin's status to not connected
-                    link.destination_pin_instance.is_connected = False
-                    # Set target pin's connected link instance to None
-                    link.destination_pin_instance.connected_link_list.clear()
-                    # Now check if source pin (output pin) is not connecting to another link
-                    found_flag = False
-                    source_pin_tag = link.source_pin_instance.pin_tag
-                    for alt_link in self.data_link_list:
-                        if source_pin_tag == alt_link.source_pin_instance.pin_tag:
-                            found_flag = True
-                            link.source_pin_instance.connected_link_list.remove(link)
-                            break
-                    if not found_flag:
-                        link.source_pin_instance.is_connected = False
-                        link.source_pin_instance.connected_link_list.clear()
+        action = 'Delink'
+        tobe_removed_link_id = app_data
+        tobe_removed_link, is_data_link = self._get_link_from_id(tobe_removed_link_id)
+        if is_data_link:
+            self.remove_data_link(tobe_removed_link)
+        else:
+            self.remove_flow_link(tobe_removed_link)
+        log_on_return_message(self.logger, action, (1,''))
 
-        for link in self.flow_link_list:
-            if link.link_id == app_data:
-                try:
-                    self.flow_link_list.remove(link)
-                except ValueError:
-                    self.logger.exception("Could not find flow link for removal ")
-                except:
-                    self.logger.exception("Some thing is wrong deleting the link")
-                else:
-                    dpg.delete_item(link.link_id)
-                    self.node_flow_link_dict = sort_flow_link_dict(self.flow_link_list)
-                    # Can safely set duo pins' status to not connected
-                    link.source_pin_instance.is_connected = False
-                    link.destination_pin_instance.is_connected = False
-                    # Also set the connected link instance of the pins to None
-                    link.source_pin_instance.connected_link_list.clear()
-                    link.destination_pin_instance.connected_link_list.clear()
-                    # Also remove this entry from event dict
-                    if link.source_node_instance.node_type == NodeTypeFlag.Event:
-                        self.tobe_exported_event_dict.pop(link.source_node_instance.node_tag)
-                    return 0
+    def _get_link_from_id(self, link_id) -> tuple[Link, bool]:
+        for link in self._data_link_list:
+            if link.link_id == link_id:
+                return link, True
+        for link in self._flow_link_list:
+            if link.link_id == link_id:
+                return link, False
 
-        self.logger.info('**** Link broke ****')
-        self.logger.debug(f'     sender                      :    {sender}')
-        self.logger.debug(f'     app_data                    :    {app_data}')
-        self.logger.debug(f'     self.data_link_list         :    {self.data_link_list}')
-        self.logger.debug(f'     self.flow_link_list         :    {self.flow_link_list}')
-        self.logger.debug(f'     self.node_data_link_dict    :    {self.node_data_link_dict}')
-        self.logger.debug(f'     self.node_flow_link_dict    :    {self.node_flow_link_dict}')
+    def remove_data_link(self, link: Link):
+        self._remove_data_link_in_all_data_bases(link)
+        self._reflect_remove_data_link_on_connected_pins(link)
+        return 1,
+
+    def _remove_data_link_in_all_data_bases(self, link: Link):
+        dpg.delete_item(link.link_id)
+        self.data_link_list.remove(link)
+        self._refresh_link_dict()
+
+    def _reflect_remove_data_link_on_connected_pins(self, link):
+        self._reflect_remove_data_link_on_source_pin(link)
+        self._reflect_remove_link_on_destination_pin(link)
+
+    def _reflect_remove_data_link_on_source_pin(self, link: Link):
+        """
+        Check and set source pin to unconnected only if it does not have any other existing links
+
+        :param link:
+        :return:
+        """
+        found_flag = False
+        source_pin_tag = link.source_pin_instance.pin_tag
+        for alt_link in self.data_link_list:
+            if source_pin_tag == alt_link.source_pin_instance.pin_tag:
+                found_flag = True
+                link.source_pin_instance.connected_link_list.remove(link)
+                break
+        if not found_flag:
+            link.source_pin_instance.is_connected = False
+            link.source_pin_instance.connected_link_list.clear()
+
+    @staticmethod
+    def _reflect_remove_link_on_destination_pin(link: Link):
+        # Safely set target pin's status to not connected
+        link.destination_pin_instance.is_connected = False
+        # Set target pin's connected link instance to None
+        link.destination_pin_instance.connected_link_list.clear()
+
+    def remove_flow_link(self, link: Link):
+        self._remove_flow_link_in_all_data_bases(link)
+        self._reflect_remove_flow_link_on_connected_pins(link)
+
+    def _remove_flow_link_in_all_data_bases(self, link: Link):
+        dpg.delete_item(link.link_id)
+        self._flow_link_list.remove(link)
+        self._refresh_link_dict()
+
+    def _reflect_remove_flow_link_on_connected_pins(self, link: Link):
+        self._reflect_remove_flow_link_on_source_pin(link)
+        self._reflect_remove_link_on_destination_pin(link)
+
+    def _reflect_remove_flow_link_on_source_pin(self, link: Link):
+        link.source_pin_instance.is_connected = False
+        link.source_pin_instance.connected_link_list.clear()
+        # Also remove this entry from event dict
+        if link.source_node_instance.node_type == NodeTypeFlag.Event:
+            self.tobe_exported_event_dict.pop(link.source_node_instance.node_tag)
 
     def preprocess_execute_event(self):
         # Reset every vars' value to None if it's not exposed, else get from user input box

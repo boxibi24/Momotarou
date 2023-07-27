@@ -4,7 +4,6 @@ from uuid import uuid1
 import logging
 from logging.handlers import QueueHandler
 import json
-import traceback
 
 
 def generate_uuid() -> str:
@@ -38,16 +37,16 @@ def dpg_get_value(tag: str):
     return value
 
 
+def callback_project_new_menu():
+    dpg.show_item('project_new')
+
+
 def callback_project_open_menu():
     dpg.show_item('project_open')
 
 
 def callback_project_save_menu():
     dpg.show_item('project_save')
-
-
-def callback_project_import_menu():
-    dpg.show_item('project_import')
 
 
 def callback_ng_file_open_menu():
@@ -336,3 +335,21 @@ def json_load_from_file(file_path):
             return None
 
 
+def log_on_return_message(logger, action: str, return_message=(0, ''), **kwargs):
+    return_code = return_message[0]
+    message = return_message[1]
+    if return_code == 0:
+        logger.info(f'{action} was skipped!')
+        logger.debug(message)
+    elif return_code == 1:
+        logger.info(f'{action} performed successfully')
+        logger.debug(message)
+    elif return_code == 2:
+        logger.info(f'{action} was performed partially')
+        logger.debug(message)
+    elif return_code == 3:
+        logger.info(f'{action} did not performed. Failure encountered. Please check the log for details')
+        logger.error(message)
+    elif return_code == 4:
+        logger.info(f'{action} did not performed. Exception encountered')
+        logger.error(message)
