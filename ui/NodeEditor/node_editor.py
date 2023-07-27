@@ -20,11 +20,6 @@ from pprint import pprint
 INTERNAL_NODE_CATEGORY = '_internal'
 
 
-def callback_project_open(sender, app_data):
-    print('Hello')
-    pass
-
-
 class NodeEditor:
     _ver = '0.0.1'
     node_editor_label = 'Node Editor'
@@ -151,7 +146,7 @@ class NodeEditor:
                         _tab_name = 'Default'
                         _tab_id = dpg.add_tab(label=_tab_name, parent=self._tab_bar_id,
                                               closable=True, payload_type='__var',
-                                              drop_callback=self._var_drop_callback)
+                                              drop_callback=self.var_drop_callback)
                         self.current_tab_id = _tab_id
                         # Right click context menu for tab
                         with dpg.item_handler_registry() as item_handler_id:
@@ -222,7 +217,7 @@ class NodeEditor:
         if self._node_editor_tab_dict.get(new_tab_name, None) is not None:  # Tab name existed
             return self._add_node_graph_tab_ask_name(sender, app_data, user_data=parent, is_retry=True)
         new_tab_id = dpg.add_tab(label=new_tab_name, parent=parent,
-                                 closable=True, payload_type='__var', drop_callback=self._var_drop_callback)
+                                 closable=True, payload_type='__var', drop_callback=self.var_drop_callback)
         # Right click context menu for tab
         with dpg.item_handler_registry() as item_handler_id:
             dpg.add_item_clicked_handler(button=dpg.mvMouseButton_Right,
@@ -273,32 +268,48 @@ class NodeEditor:
             _old_node_editor_instance.item_registry_dict.update({'tab_registry': _tab_register_id})
 
     def refresh_node_editor_dict(self):
+        self._check_all_tabs_and_trigger_deletion_if_found_closed()
+        self._reflect_current_order_to_tab_dict()
+
+    def _check_all_tabs_and_trigger_deletion_if_found_closed(self):
         tuple_list = list(self._node_editor_tab_dict.items())
         for tab_name, tab_info in tuple_list:
-            _tab_id = tab_info['id']
-            if not dpg.is_item_visible(_tab_id):
-                node_editor_instance = tab_info['node_editor_instance']
-                self._node_editor_tab_dict.pop(tab_name)
-                # Delete all registry that stored in the node graph
-                for registry_id in node_editor_instance.item_registry_dict.values():
-                    dpg.delete_item(registry_id)
-                # Delete the node graph in dpg
-                dpg.delete_item(node_editor_instance.id)
-                # Delete the node graph inst
-                del node_editor_instance
-                # Finally delete the tab
-                dpg.delete_item(_tab_id)
-                self.logger.info(f'****Deleted tab {tab_name}****')
+            if not dpg.is_item_visible(tab_info['id']):
+                self._delete_tab(tab_info, tab_name)
 
-    def _delete_var_drop_popup(self):
-        try:
-            is_window_exist = dpg.is_item_enabled(self._var_drop_popup_id)
-        except SystemError:
-            is_window_exist = False
-        if is_window_exist:
-            dpg.delete_item(self._var_drop_popup_id)
+    def _delete_tab(self, tab_info, tab_name):
+        node_editor_instance = tab_info['node_editor_instance']
+        self._node_editor_tab_dict.pop(tab_name)
+        # Delete all registry that stored in the node graph
+        for registry_id in node_editor_instance.item_registry_dict.values():
+            dpg.delete_item(registry_id)
+        # Delete the node graph in dpg
+        dpg.delete_item(node_editor_instance.id)
+        # Delete the node graph inst
+        del node_editor_instance
+        # Finally delete the tab
+        dpg.delete_item(tab_info['id'])
+        self.logger.info(f'****Deleted tab {tab_name}****')
 
-    def _var_drop_callback(self, sender, app_data):
+    def _reflect_current_order_to_tab_dict(self):
+        self._get_tabs_order()
+        pprint(self._node_editor_tab_dict)
+
+    def _get_tabs_order(self):
+        converter = {}
+        for item in dpg.get_item_children(self._tab_bar_id, 1):
+            # Skip add button
+            if dpg.get_item_label(item) == '+':
+                continue
+            converter[tuple(dpg.get_item_rect_min(item))] = dpg.get_item_label(item)
+
+        pos = [dpg.get_item_rect_min(item) for item in dpg.get_item_children(self._tab_bar_id, 1) if dpg.get_item_label(item) != '+']
+        sortedPos = sorted(pos, key=lambda pos: pos[0])
+
+        for item in sortedPos:
+            print(converter[tuple(item)])
+
+    def var_drop_callback(self, sender, app_data):
         """
         Callback function upon variable drop on child Node Editor
         """
@@ -327,6 +338,14 @@ class NodeEditor:
                                tag='__set_var',
                                callback=self.callback_current_editor_add_node,
                                user_data=(_var_tag, _var_name))
+
+    def _delete_var_drop_popup(self):
+        try:
+            is_window_exist = dpg.is_item_enabled(self._var_drop_popup_id)
+        except SystemError:
+            is_window_exist = False
+        if is_window_exist:
+            dpg.delete_item(self._var_drop_popup_id)
 
     def callback_current_editor_add_node(self, sender, app_data, user_data, sender_tag=None):
         """
@@ -396,7 +415,17 @@ class NodeEditor:
             return -1
 
     def callback_project_save(self, sender, app_data):
-        pass
+        self.refresh_node_editor_dict()
+        project_dict = self._construct_project_dict()
+        self._save_project_to_file(project_dict)
+
+    def _construct_project_dict(self) -> dict:
+        project_dict = OrderedDict([])
+        self._compile_child_tools_id_to_list()
+        self._node_editor_tab_dict
 
     def callback_project_import(self, sender, app_data):
+        pass
+
+    def callback_project_open(self, sender, app_data):
         pass
