@@ -65,7 +65,7 @@ def delete_selected_node(node_editor, node_id=None):
 
     # Cleanup node info in node_dict
     for node_info in node_editor.current_node_editor_instance.node_dict['nodes']:
-        if node_info['id'] == node_tag:
+        if node_info['uuid'] == node_tag:
             try:
                 node_editor.current_node_editor_instance.node_dict['nodes'].remove(node_info)
                 break
@@ -187,7 +187,7 @@ def prepare_node_info_for_export(in_dict):
         for pin in node['pins']:
             pin.pop('pin_instance')
         # Update node position
-        node['position']['x'], node['position']['y'] = dpg.get_item_pos(node['id'])
+        node['position']['x'], node['position']['y'] = dpg.get_item_pos(node['uuid'])
 
 
 def save_dict_to_json(in_dict, file_path) -> tuple:
@@ -221,7 +221,7 @@ def add_pin_mapping_entries(imported_node_pins: list, new_node, pin_mapping_dict
         for added_pin in new_node.pin_list:
             # Get the matching pin id from the newly created pins list of the newly created node
             if imported_pin_label == added_pin['label']:
-                pin_mapping_dict.update({imported_pin['id']: added_pin['id']})
+                pin_mapping_dict.update({imported_pin['uuid']: added_pin['uuid']})
                 break
 
 
@@ -317,11 +317,11 @@ def find_pin_and_construct_pin_info_in_node_list(pin_tag: str, node_list: list):
     for node in node_list:
         pin_dict_list = node['pins']
         for pin_dict in pin_dict_list:
-            if pin_dict['id'] == pin_tag:
+            if pin_dict['uuid'] == pin_tag:
                 pin_instance = pin_dict['pin_instance']
-                pin_type = pin_dict['pin_type']
+                pin_type = pin_dict['type']
                 parent_node_instance = node['node_instance']
-                parent_node_tag = node['id']
+                parent_node_tag = node['uuid']
                 return PinInfo(pin_instance, pin_type, parent_node_instance, parent_node_tag)
 
 
@@ -331,7 +331,7 @@ def construct_link_info_from_source_and_destination_pin_info(source_pin_info, de
 
 def is_link_duplicate_in_check_list(link_info: LinkInfo, check_list: list) -> bool:
     for node_link in check_list:
-        if link_info.destination_pin_info.destination_pin_instance == node_link.destination_pin_instance:
+        if link_info.destination_pin_info.pin_instance == node_link.destination_pin_instance:
             return True
     return False
 

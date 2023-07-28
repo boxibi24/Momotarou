@@ -54,7 +54,7 @@ def _initialize_primary_window_as_node_graph(setting_dict: dict, logger_queue: Q
                                          logging_queue=logger_queue)
 
         initialize_file_dialog(node_editor_project)
-        initialize_menu_bar()
+        initialize_menu_bar(node_editor_project)
     dpg.set_primary_window('Main_Window', True)
     dpg.show_viewport()
     setup_core_logger(logger_queue, is_debug_mode)

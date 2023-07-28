@@ -4,11 +4,14 @@ from time import perf_counter
 from core.enum_type import NodeTypeFlag
 from core.utils import create_queueHandler_logger
 
+logger = None
+is_debug_mode = False
+data_base = {}
 
 def setup_core_logger(logger_queue, debug_mode: bool):
     global logger, is_debug_mode
-    is_debug_mode: bool = debug_mode
-    logger: Logger = create_queueHandler_logger(__name__, logger_queue, is_debug_mode)
+    is_debug_mode= debug_mode
+    logger = create_queueHandler_logger(__name__, logger_queue, is_debug_mode)
 
 
 def setup_execution_data_base(data: dict):

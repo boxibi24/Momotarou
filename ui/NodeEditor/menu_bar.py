@@ -118,7 +118,7 @@ def callback_file_dialog(sender, app_data, user_data):
         user_data.current_node_editor_instance.callback_file_import(sender, app_data)
 
 
-def initialize_menu_bar():
+def initialize_menu_bar(node_editor_project: object):
     with dpg.menu_bar(label='Main Menu', tag='__menu_bar'):
         # Export/Import file
         with dpg.menu(label='File'):
@@ -158,6 +158,12 @@ def initialize_menu_bar():
                 tag='Menu_Save_Viewport',
                 label='Save Current Viewport',
                 callback=lambda: save_init
+            )
+        with dpg.menu(label='Build'):
+            dpg.add_menu_item(
+                tag='Menu_Compile_Tool',
+                label='Compile',
+                callback=node_editor_project.callback_compile_current_node_graph
             )
 
 

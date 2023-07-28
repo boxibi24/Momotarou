@@ -1,6 +1,6 @@
 from collections import OrderedDict
 
-from core.enum_type import NodeTypeFlag
+from core.enum_type import NodeTypeFlag, PinMetaType
 from ui.NodeEditor.utils import dpg_set_value, dpg_get_value
 from ui.NodeEditor.classes.pin import *
 
@@ -218,19 +218,19 @@ class BaseNode:
             pin_class = get_pin_class(pin_type)
             # Exec pins get different meta_type
             if pin_type == InputPinType.Exec:
-                meta_type = 'FlowIn'
+                meta_type = PinMetaType.FlowIn
             else:
-                meta_type = 'DataIn'
+                meta_type = PinMetaType.DataIn
             pin = pin_class(parent=self.node_tag, attribute_type=attribute_type, pin_type=pin_type,
                             label=label,
                             input_window_width=self.setting_dict['input_window_width'],
                             callback=callback)
             self._pin_list.append(OrderedDict({
-                'id': pin.pin_tag,
+                'uuid': pin.pin_tag,
                 'pin_instance': pin,
                 'label': label,
                 'meta_type': meta_type,
-                'pin_type': pin.pin_type
+                'type': pin.pin_type
             }))
             if pin_type != InputPinType.Exec:
                 self._pin_list[-1].update({'value': dpg_get_value(pin.value_tag)})
@@ -242,18 +242,18 @@ class BaseNode:
             pin_class = get_pin_class(pin_type)
             # Exec pins get different meta_type
             if pin_type == InputPinType.Exec:
-                meta_type = 'FlowOut'
+                meta_type = PinMetaType.FlowOut
             else:
-                meta_type = 'DataOut'
+                meta_type = PinMetaType.DataOut
             pin = pin_class(parent=self.node_tag, attribute_type=attribute_type, pin_type=pin_type,
                             label=label,
                             input_window_width=self.setting_dict['input_window_width'])
             self._pin_list.append(OrderedDict({
-                'id': pin.pin_tag,
+                'uuid': pin.pin_tag,
                 'pin_instance': pin,
                 'label': label,
                 'meta_type': meta_type,
-                'pin_type': pin.pin_type
+                'type': pin.pin_type
             }))
             if meta_type == 'DataOut':
                 self._default_output_value_dict.update({label: dpg_get_value(pin.value_tag)})
@@ -293,11 +293,11 @@ class BaseNode:
                                             input_window_width=self.setting_dict['input_window_width'],
                                             callback=self.callback, user_data=self.node_tag)
                     self._pin_list.append(OrderedDict({
-                        'id': out_exec_pin.pin_tag,
+                        'uuid': out_exec_pin.pin_tag,
                         'pin_instance': out_exec_pin,
                         'label': 'Exec Out',
                         'meta_type': 'FlowOut',
-                        'pin_type': out_exec_pin.pin_type
+                        'type': out_exec_pin.pin_type
                     }))
 
                 if self.node_type & NodeTypeFlag.Exec:

@@ -1,6 +1,6 @@
 import dearpygui.dearpygui as dpg
 from multiprocessing import Queue
-from ui.NodeEditor.utils import generate_uuid, json_write_to_file, log_on_return_message
+from ui.NodeEditor.utils import generate_uuid, json_write_to_file, log_on_return_message, json_load_from_file
 from ui.NodeEditor.input_handler import add_keyboard_handler_registry, add_mouse_handler_registry, event_handler
 from ui.NodeEditor.right_click_menu import RightClickMenu
 from ui.NodeEditor.splitter import Splitter
@@ -17,6 +17,7 @@ from importlib import import_module
 from copy import deepcopy
 import traceback
 from core.utils import create_queueHandler_logger
+from core.data_loader import refresh_core_data_with_json_dict
 
 INTERNAL_NODE_CATEGORY = '_internal'
 
@@ -460,3 +461,10 @@ class NodeEditor:
                                                  dpg.get_item_pos(_current_tab_id)[1] + 30)
         self.node_editor_bb[1] = (dpg.get_item_pos('__details_panel')[0] - 2,
                                                  dpg.get_viewport_height() - 47)
+
+    def callback_compile_current_node_graph(self, sender):
+        cache_file_path = r'G:\gitlab\cts_riotuniversaltool\build\cache.rtool'
+        self.current_node_editor_instance.callback_tool_save(sender,
+                                                             app_data={'file_path_name': cache_file_path})
+        data_dict = json_load_from_file(cache_file_path)
+        refresh_core_data_with_json_dict(data_dict)

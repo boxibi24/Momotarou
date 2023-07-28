@@ -68,18 +68,3 @@ class Link:
     @property
     def destination_pin_type(self) -> str:
         return self._destination_pin_type
-
-    @property
-    def link_list(self) -> list[dict[str, str]]:
-        return [
-            {
-                'id': self.source_pin_instance.pin_tag,
-                'node': self.source_node_tag,
-                'pin_type': self.source_pin_type,
-            },
-            {
-                'id': self.destination_pin_instance.pin_tag,
-                'node': self.destination_node_tag,
-                'pin_type': self.destination_pin_type
-            }
-        ]

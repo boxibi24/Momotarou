@@ -386,8 +386,8 @@ class ToolsViewer:
 
     def compile_events(self):
         # self.compile_flag = False
-        for first_exec_node_tag in list(self.event_dict.values()):
-            for i, node_info in enumerate(self.node_list):
+        for first_exec_node_tag in list(self._event_dict.values()):
+            for i, node_info in enumerate(self._node_list):
                 if node_info.get('id', None) == first_exec_node_tag:
                     self.forward_construct_node(node_info, i)
                     break

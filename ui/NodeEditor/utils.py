@@ -58,7 +58,6 @@ def callback_ng_file_save_menu():
 def callback_ng_file_import_menu():
     dpg.show_item('NG_file_import')
 
-
 def callback_drop_var(sender, app_data):
     var_name = app_data[0].get(app_data[1], None)[0]
     if var_name is None:

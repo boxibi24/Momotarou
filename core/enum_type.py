@@ -1,4 +1,4 @@
-from enum import IntFlag, IntEnum, auto
+from enum import IntFlag, IntEnum, auto, Enum
 
 
 class NodeTypeFlag(IntFlag):
@@ -39,3 +39,9 @@ class OutputPinType(IntEnum):
     Bool = auto()
     MultilineString = auto()
     PerforceInstance = auto()
+
+class PinMetaType(IntEnum):
+    DataIn = auto()
+    DataOut = auto()
+    FlowIn = auto()
+    FlowOut = auto()

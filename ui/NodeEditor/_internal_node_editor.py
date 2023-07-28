@@ -5,6 +5,7 @@ from core.enum_type import InputPinType, OutputPinType
 from ui.NodeEditor.node_utils import *
 from multiprocessing import Queue
 from core.utils import create_queueHandler_logger
+from pprint import pprint
 
 
 class DPGNodeEditor:
@@ -90,7 +91,7 @@ class DPGNodeEditor:
         # ----- ATTRIBUTES ------
         self.last_pos = (0, 0)
         self._node_instance_dict = {}
-        self._node_dict = {}
+        self._node_dict = {'nodes': []}
         self._flow_link_list = []
         self._data_link_list = []
         self._node_data_link_dict = OrderedDict([])
@@ -255,10 +256,10 @@ class DPGNodeEditor:
         :param node: node instance
         :return:
         """
-        if not self._node_dict.get('nodes'):
+        if not self._node_dict.get('nodes', None):
             self._node_dict['nodes'] = []
         self._node_dict['nodes'].append(OrderedDict({
-            'id': node.node_tag,
+            'uuid': node.node_tag,
             'label': node.node_label,
             'node_instance': node,
             'pins': node.pin_list,
@@ -316,8 +317,8 @@ class DPGNodeEditor:
         for _event_tag in self._event_dict.keys():
             _index = 0
             for node_info in self._node_dict['nodes']:
-                if node_info['id'] == _event_tag:
-                    self._node_dict['nodes'].append(self.node_dict['nodes'].pop(_index))
+                if node_info['uuid'] == _event_tag:
+                    self._node_dict['nodes'].append(self._node_dict['nodes'].pop(_index))
                     break
                 _index += 1
 
@@ -688,7 +689,6 @@ class DPGNodeEditor:
         # Also remove this entry from event dict
         if link.source_node_instance.node_type == NodeTypeFlag.Event:
             self.tobe_exported_event_dict.pop(link.source_node_instance.node_tag)
-
 
     def add_var(self, var_info: dict, default_value=None, default_is_exposed_flag=False):
         # Save one for the splitter's var_dict
