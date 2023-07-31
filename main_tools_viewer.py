@@ -125,7 +125,6 @@ def main():
             task_queue.put(tool_viewer.requested_exec_node_tag)
             Process(target=tool_viewer.worker, args=(task_queue, logger_queue)).start()
             NUMBER_OF_PROCESSES += 1
-            tool_viewer.exec_flag = False
             tool_viewer.requested_exec_node_tag = None
         # TODO: this is inefficient, try an alternative
         # TODO: got buggy when closing the JSON file dialog

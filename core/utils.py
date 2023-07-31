@@ -13,3 +13,8 @@ def create_queueHandler_logger(logger_name: str, queue: Queue, is_debug_mode: bo
     else:
         logger.setLevel(logging.INFO)
     return logger
+
+
+def extract_var_name_from_node_info(node_info: dict) -> str:
+    node_label = node_info['label']
+    return ' '.join(node_label.split(' ')[1:])

@@ -1,8 +1,11 @@
-from core.enum_type import PinMetaType, NodeTypeFlag
-from importlib import import_module
 from pprint import pprint
+from core.enum_types import PinMetaType, NodeTypeFlag
+from importlib import import_module
+from copy import deepcopy
+from core.utils import extract_var_name_from_node_info
 
-core_data = {}
+nodes_data = {}
+vars_data = {}
 events_data = {}
 node_list = []
 data_link_list = []
@@ -14,9 +17,8 @@ def refresh_core_data_with_json_dict(json_dict: dict):
     _load_events_data(json_dict)
     _load_data_link_list(json_dict)
     _load_flow_link_list(json_dict)
+    _load_vars_data(json_dict)
     _load_nodes_data(json_dict)
-
-    pprint(core_data)
     return 1, ''
 
 
@@ -27,7 +29,7 @@ def _load_json_node_dict(json_dict: dict):
 
 def _load_events_data(json_dict: dict):
     global events_data
-    events_data = json_dict['events']
+    events_data.update(json_dict['events'])
 
 
 def _load_data_link_list(json_dict: dict):
@@ -38,6 +40,25 @@ def _load_data_link_list(json_dict: dict):
 def _load_flow_link_list(json_dict: dict):
     global flow_link_list
     flow_link_list = json_dict['flows']
+
+
+def _load_vars_data(json_dict: dict):
+    global vars_data
+    vars_data.update(_restructure_imported_vars_data(json_dict))
+
+
+def _restructure_imported_vars_data(json_dict: dict) -> dict:
+    """
+    Replace var tag with var name as dictionary keys
+    :param json_dict: imported data
+    :return:
+    """
+    restructured_vars_dict = {}
+    for key, vars_info in json_dict['vars'].items():
+        _name_removed_vars_info_dict = deepcopy(vars_info)
+        _name_removed_vars_info_dict.pop('name')
+        restructured_vars_dict.update({vars_info['name'][0]: _name_removed_vars_info_dict})
+    return restructured_vars_dict
 
 
 def _load_nodes_data(json_dict: dict):
@@ -81,7 +102,7 @@ def _get_source_node_and_pin_index_dataLinked_to_pin(pin_info: dict) -> tuple[in
     if not data_link:
         return 0, 0
     source_node_index, source_pin_index = _get_source_node_index_in_data_link(data_link)
-    if not source_node_index:
+    if source_node_index is None:
         raise Exception(f'Could not find source node info from {data_link}')
     return source_node_index, source_pin_index
 
@@ -141,27 +162,42 @@ def _set_pin_unconnected(node_index: int, pin_index: int):
 
 
 def _construct_and_update_node_info(node_index: int):
-    global core_data
+    global nodes_data
     node_data = node_list[node_index]
     module = import_module(node_data['import_path'])
     node_run_func = getattr(module, 'Node').run
     node_internal_data = _construct_node_internal_data(node_index)
-    core_data.update({node_data['uuid']: {
+    nodes_data.update({node_data['uuid']: {
         'label': node_data['label'],
         'pins': node_data['pins'],
         'type': node_data['type'],
         'run': node_run_func,
         'is_dirty': True,
+        'is_executed': False,
         'internal_data': node_internal_data
     }})
 
 
 def _construct_node_internal_data(node_index: int) -> dict:
     internal_data = {}
-    for pin_info in node_list[node_index]['pins']:
-        if pin_info['meta_type'] == PinMetaType.DataIn:
-            internal_data.update({pin_info['label']: pin_info['value']})
+    node_info = node_list[node_index]
+    _update_standard_node_internal_data(internal_data, node_info['pins'])
+    if node_list[node_index]['type'] & NodeTypeFlag.Variable:
+        _update_var_node_internal_data(internal_data, extract_var_name_from_node_info(node_info))
     return internal_data
+
+
+def _update_standard_node_internal_data(internal_data_reference: dict, pin_list: list):
+    for pin_info in pin_list:
+        if pin_info['meta_type'] == PinMetaType.DataIn:
+            internal_data_reference.update({pin_info['label']: pin_info['value']})
+
+
+def _update_var_node_internal_data(internal_data_reference: dict, var_name: str):
+    pprint(vars_data)
+    print(f'var name is :  {var_name}')
+    internal_data_reference.update({'var_value': vars_data[var_name]['value'],
+                                    'default_value': vars_data[var_name]['default_value']})
 
 
 def _get_following_exec_node_and_update_connection_data(node_index: int) -> int:
@@ -169,7 +205,6 @@ def _get_following_exec_node_and_update_connection_data(node_index: int) -> int:
         if pin_info['meta_type'] != PinMetaType.FlowOut:
             continue
         following_node_index, following_pin_index = _get_destination_node_and_pin_index_flowLinked_to_pin(pin_info)
-        print(f'following node: {following_pin_index}')
         if not following_node_index:
             _set_pin_unconnected(node_index, pin_index)
             continue

@@ -1,7 +1,7 @@
 import dearpygui.dearpygui as dpg
 from ui.NodeEditor.node_editor_project import NodeEditor
 from ui.NodeEditor.menu_bar import initialize_file_dialog, initialize_menu_bar
-from core.execute import setup_core_logger
+from core.executor import setup_executor_logger
 from multiprocessing import Queue
 import os
 
@@ -57,7 +57,7 @@ def _initialize_primary_window_as_node_graph(setting_dict: dict, logger_queue: Q
         initialize_menu_bar(node_editor_project)
     dpg.set_primary_window('Main_Window', True)
     dpg.show_viewport()
-    setup_core_logger(logger_queue, is_debug_mode)
+    setup_executor_logger(logger_queue, is_debug_mode)
     return node_editor_project
 
 

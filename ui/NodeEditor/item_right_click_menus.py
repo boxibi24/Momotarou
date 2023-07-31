@@ -1,7 +1,8 @@
 import dearpygui.dearpygui as dpg
 from ui.NodeEditor.node_utils import delete_selected_node
+from ui.NodeEditor.utils import log_on_return_message
 from copy import deepcopy
-from core.execute import execute_event
+from core.executor import execute_event
 from pprint import pprint
 
 
@@ -22,8 +23,9 @@ def event_right_click_menu(sender, app_data, user_data):
 def callback_run_event(sender, app_data, user_data):
     _event_node_tag = user_data[0]
     _master_node_editor_instance = user_data[1]
-    _current_node_editor_instance = _master_node_editor_instance.current_node_editor_instance
-    execute_event(_event_node_tag)
+    _master_node_editor_instance.callback_compile_current_node_graph(sender)
+    return_message = execute_event(_event_node_tag)
+    log_on_return_message(_master_node_editor_instance.logger, dpg.get_item_label(sender), return_message)
 
 
 def callback_ask_event_delete(sender, app_data, user_data):

@@ -12,6 +12,7 @@ from ui.NodeEditor.node_utils import construct_var_node_label, construct_module_
 from collections import OrderedDict
 import os
 import platform
+import tempfile
 from glob import glob
 from importlib import import_module
 from copy import deepcopy
@@ -20,6 +21,7 @@ from core.utils import create_queueHandler_logger
 from core.data_loader import refresh_core_data_with_json_dict
 
 INTERNAL_NODE_CATEGORY = '_internal'
+CACHE_DIR = tempfile.gettempdir()
 
 
 class NodeEditor:
@@ -451,6 +453,7 @@ class NodeEditor:
         except Exception:
             return 4, traceback.format_exc()
         return 1,
+
     def _compile_child_tools_id_to_list(self):
         pass
 
@@ -458,12 +461,12 @@ class NodeEditor:
         # Update node graph bounding box to restrict right click menu only shows when cursor is inside of it
         _current_tab_id = self.current_tab_id
         self.node_editor_bb[0] = (dpg.get_item_pos(_current_tab_id)[0] + 8,
-                                                 dpg.get_item_pos(_current_tab_id)[1] + 30)
+                                  dpg.get_item_pos(_current_tab_id)[1] + 30)
         self.node_editor_bb[1] = (dpg.get_item_pos('__details_panel')[0] - 2,
-                                                 dpg.get_viewport_height() - 47)
+                                  dpg.get_viewport_height() - 47)
 
     def callback_compile_current_node_graph(self, sender):
-        cache_file_path = r'G:\gitlab\cts_riotuniversaltool\build\cache.rtool'
+        cache_file_path = CACHE_DIR + '\\' + __name__ + '.rtool'
         self.current_node_editor_instance.callback_tool_save(sender,
                                                              app_data={'file_path_name': cache_file_path})
         data_dict = json_load_from_file(cache_file_path)

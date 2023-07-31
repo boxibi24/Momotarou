@@ -6,6 +6,7 @@ from logging import Logger, Formatter, Handler
 from logging.handlers import QueueHandler, QueueListener
 from multiprocessing import Queue
 from ui.NodeEditor.main_ui import initialize_node_editor_project, setup_dpg_font, initialize_dpg
+from core.executor import setup_executor_logger
 import dearpygui.demo as demo
 
 APPLICATION_NAME = 'NodeEditor'
@@ -63,6 +64,12 @@ def get_arg():
 
 
 def setup_logger(is_debug_mode: bool) -> tuple[Logger, Queue]:
+    logger, logger_queue = _setup_main_logger(is_debug_mode)
+    setup_executor_logger(logger_queue, is_debug_mode)
+    return logger, logger_queue
+
+
+def _setup_main_logger(is_debug_mode: bool) -> tuple[Logger, Queue]:
     logger_name = APPLICATION_NAME
     logger = logging.getLogger(logger_name)
     logging_formatter = _get_logging_formatter(logger_name)

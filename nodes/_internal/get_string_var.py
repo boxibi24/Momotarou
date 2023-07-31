@@ -1,5 +1,5 @@
 from ui.NodeEditor.classes.node import BaseNode
-from core.enum_type import NodeTypeFlag, OutputPinType
+from core.enum_types import NodeTypeFlag, OutputPinType
 
 
 class Node(BaseNode):
@@ -17,6 +17,7 @@ class Node(BaseNode):
 
     @staticmethod
     def run(internal_data_dict):
+        print(f'var internal value: {internal_data_dict}')
         var_value = internal_data_dict.get('var_value', None)
         if var_value is None:
             return 8

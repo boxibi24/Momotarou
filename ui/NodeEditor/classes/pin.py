@@ -1,4 +1,4 @@
-from core.enum_type import InputPinType, OutputPinType
+from core.enum_types import InputPinType, OutputPinType
 from misc.color import teal, pink, orange, white, green, darkpink, darkred, brown
 from ui.NodeEditor.utils import generate_uuid
 import dearpygui.dearpygui as dpg

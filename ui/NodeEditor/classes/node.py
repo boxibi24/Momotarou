@@ -1,6 +1,6 @@
 from collections import OrderedDict
 
-from core.enum_type import NodeTypeFlag, PinMetaType
+from core.enum_types import NodeTypeFlag, PinMetaType
 from ui.NodeEditor.utils import dpg_set_value, dpg_get_value
 from ui.NodeEditor.classes.pin import *
 
@@ -296,7 +296,7 @@ class BaseNode:
                         'uuid': out_exec_pin.pin_tag,
                         'pin_instance': out_exec_pin,
                         'label': 'Exec Out',
-                        'meta_type': 'FlowOut',
+                        'meta_type': PinMetaType.FlowOut,
                         'type': out_exec_pin.pin_type
                     }))
 
@@ -394,7 +394,7 @@ class BaseNode:
 
     def update_internal_input_data(self):
         for pin_info in self._pin_list:
-            if pin_info['meta_type'] == 'DataIn':
+            if pin_info['meta_type'] == PinMetaType.DataIn:
                 pin_value = dpg.get_value(pin_info['pin_instance'].value_tag)
                 if pin_value is not None:
                     self._internal_data.update({pin_info['label']: pin_value})
@@ -402,7 +402,7 @@ class BaseNode:
     def compute_internal_output_data(self):
         # First update the input values
         for pin_info in self._pin_list:
-            if pin_info['meta_type'] == 'DataIn' and \
+            if pin_info['meta_type'] == PinMetaType.DataIn and \
                 pin_info['pin_instance'].connected_link_list:
                 queried_value = self.query_input_value(pin_info['pin_instance'].connected_link_list[0])
                 # In case of custom pin, skip pin value data query
@@ -423,7 +423,7 @@ class BaseNode:
 
     def update_output_pin_value(self):
         for pin_info in self._pin_list:
-            if pin_info['meta_type'] == 'DataOut':
+            if pin_info['meta_type'] == PinMetaType.DataOut:
                 for key, value in self._internal_data.items():
                     if key == pin_info['label']:
                         dpg_set_value(pin_info['pin_instance'].value_tag, value)

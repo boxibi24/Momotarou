@@ -1,7 +1,7 @@
 import dearpygui.dearpygui as dpg
 from collections import OrderedDict
 from copy import deepcopy
-from core.enum_type import InputPinType
+from core.enum_types import InputPinType
 from ui.NodeEditor.utils import generate_uuid, add_user_input_box
 from ui.NodeEditor.item_right_click_menus import variable_right_click_menu, event_right_click_menu
 from ui.NodeEditor.input_handler import delete_selected_node

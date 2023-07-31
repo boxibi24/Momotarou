@@ -1,6 +1,6 @@
 # Default import modules for standard nodes
 from ui.NodeEditor.classes.node import BaseNode
-from core.enum_type import NodeTypeFlag, InputPinType, OutputPinType
+from core.enum_types import NodeTypeFlag, InputPinType, OutputPinType
 
 # Import necessary modules to be used in run()
 

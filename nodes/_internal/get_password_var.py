@@ -1,5 +1,5 @@
 from ui.NodeEditor.classes.node import BaseNode
-from core.enum_type import NodeTypeFlag, OutputPinType
+from core.enum_types import NodeTypeFlag, OutputPinType
 
 
 class Node(BaseNode):

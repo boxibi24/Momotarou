@@ -175,7 +175,6 @@ class ToolsViewer:
         dpg.set_primary_window(self.tools_viewer_tag + 'Window', True)
 
     def trigger_event(self, sender, app_data, user_data):
-        self.exec_flag = True
         self._requested_exec_node_tag = user_data
 
     def worker(self, input_queue: Queue, logging_queue: Queue):
@@ -189,8 +188,6 @@ class ToolsViewer:
     def execute_event(self, event, logger: logging.Logger):
         event_node_tag = event
         logger.info(f'**** Exec event : {event_node_tag}')
-        # Reset exec state
-        self.exec_flag = False
         # Dirty mark and propagate any exposed input nodes
         for key, value in self.node_dict.items():
             if value['is_exposed']:

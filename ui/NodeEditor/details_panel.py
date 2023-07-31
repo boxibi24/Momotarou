@@ -1,7 +1,7 @@
 import dearpygui.dearpygui as dpg
 from copy import deepcopy
 from ui.NodeEditor.utils import add_user_input_box, dpg_set_value
-from core.enum_type import NodeTypeFlag
+from core.enum_types import NodeTypeFlag
 
 
 class DetailPanel:
