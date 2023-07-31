@@ -4,7 +4,7 @@ from ui.NodeEditor.utils import *
 from core.enum_types import InputPinType, OutputPinType
 from ui.NodeEditor.node_utils import *
 from multiprocessing import Queue
-from core.utils import create_queueHandler_logger
+from core.utils import create_queueHandler_logger, extract_var_name_from_node_info
 
 
 class DPGNodeEditor:
@@ -177,8 +177,6 @@ class DPGNodeEditor:
             setting_dict=self._setting_dict,
             pos=[0, 0],
             label=var_label,
-            internal_data={'var_value': self._vars_dict[var_tag]['value'] if var_tag else None,
-                           'default_var_value': self._vars_dict[var_tag]['default_value']} if var_tag else None,
             import_path=node_module.import_path
         )
         return intermediate_node
@@ -257,7 +255,7 @@ class DPGNodeEditor:
         """
         if not self._node_dict.get('nodes', None):
             self._node_dict['nodes'] = []
-        self._node_dict['nodes'].append(OrderedDict({
+        self._node_dict['nodes'].append(({
             'uuid': node.node_tag,
             'label': node.node_label,
             'node_instance': node,
@@ -279,17 +277,11 @@ class DPGNodeEditor:
         :param app_data: DPG item's data
         :return:
         """
-        # Callback action name
         action = dpg.get_item_label(sender)
-        # app_data is the chosen file path
         file_path = app_data['file_path_name']
-        # Refresh and cleanup data
         self._refresh_node_editor_data()
-        # Construct export dict
         tobe_exported_dict = self._construct_export_dict()
-        # Save constructed dict to file
         return_message = save_dict_to_json(tobe_exported_dict, file_path)
-        # Log
         log_on_return_message(logger=self.logger, action=action,
                               return_message=return_message)
 
@@ -301,17 +293,21 @@ class DPGNodeEditor:
         """
 
         reset_var_values_to_none(self._vars_dict)
+        self._clean_up_nodes_and_update_pins_values()
+        self._refresh_event_order_in_node_dict()
 
-        # Cleanup nodes
-        if self._node_dict.get('nodes', None) is not None:
-            for node_info in self._node_dict['nodes']:
-                # Update the is exposed status of the nodes and the pins value
-                update_pin_values_in_node_dict(node_info)
-                # Clean up non-primitive value from node internal data
-                node_instance = node_info['node_instance']
-                eliminate_non_primitive_internal_node_data(node_instance)
+    def _clean_up_nodes_and_update_pins_values(self):
+        for node_info in self._node_dict['nodes']:
+            # Update the is exposed status of the nodes and the pins value
+            update_pins_values_in_node_dict(node_info)
+            # Clean up non-primitive value from node internal data
+            eliminate_non_primitive_internal_node_data(node_info['node_instance'])
 
-        # Reorder the node_dict to reflect the current ordering of events
+    def _refresh_event_order_in_node_dict(self):
+        """
+        Reorder the node_dict to reflect the current ordering of events
+        :return:
+        """
         # Incrementally match event nodes with _event_dict and move_to_end till the event_dict exhausts
         for _event_tag in self._event_dict.keys():
             _index = 0
@@ -472,6 +468,11 @@ class DPGNodeEditor:
                                                                                      split_event_name_from_node_label(
                                                                                          _node_label)),
                                                                                  instant_add=True)
+        elif node_module.node_type & NodeTypeFlag.Variable:
+            added_node = self.add_node_from_module(node_module, reconstruct_node_pos_from_imported_info(node_info),
+                                                   override_label=node_info['label'],
+                                                   var_tag=self._get_var_tag_from_var_name(
+                                                       extract_var_name_from_node_info(node_info)))
         else:
             added_node = self.add_node_from_module(node_module, reconstruct_node_pos_from_imported_info(node_info))
         return added_node
@@ -486,6 +487,11 @@ class DPGNodeEditor:
         """
         node_category = get_node_category_from_import_path(import_path)
         return self.parent_instance.menu_construct_dict[node_category][import_path]
+
+    def _get_var_tag_from_var_name(self, var_name: str) -> str:
+        for var_tag, var_info in self._vars_dict.items():
+            if var_info['name'][0] == var_name:
+                return var_tag
 
     def _batch_import_link(self, link_list: list, pin_mapping_dict: dict):
         """
@@ -538,25 +544,13 @@ class DPGNodeEditor:
         :return: can these two pins link
         :rtype: bool
         """
-        if not link_info.source_pin_info.pin_type:
-            self.logger.warning("Could not get source pin type")
-            return False
-        elif not link_info.destination_pin_info.pin_type:
-            self.logger.warning("Could not get target pin type")
-            return False
-        elif not (link_info.source_pin_info.pin_type == link_info.destination_pin_info.pin_type or
-                  link_info.destination_pin_info.pin_type == InputPinType.WildCard):
+        if not (link_info.source_pin_info.pin_type == link_info.destination_pin_info.pin_type or
+                link_info.destination_pin_info.pin_type == InputPinType.WildCard):
             self.logger.warning("Cannot connect pins with different types")
             return False
         # Cannot connect exec pin to wildcard pins also
         elif link_info.source_pin_info.pin_type == OutputPinType.Exec and link_info.destination_pin_info.pin_type == InputPinType.WildCard:
-            self.logger.warning("Cannot connect exec pins to wildcards")
-            return False
-        elif not link_info.source_pin_info.pin_instance:
-            self.logger.warning("Cannot find source pin instance from node dict")
-            return False
-        elif not link_info.source_pin_info.pin_instance:
-            self.logger.warning("Cannot find target pin instance from node dict")
+            self.logger.warning("Cannot connect exec pin to wildcard")
             return False
         else:
             return True
@@ -597,7 +591,7 @@ class DPGNodeEditor:
 
     def _create_data_link_if_not_duplicate(self, link_info):
         if not is_link_duplicate_in_check_list(link_info, self.data_link_list):
-            return create_link_object_from_link_info_if_node_unconnected(link_info)
+            return create_link_object_from_link_info(link_info)
         else:
             return None
 

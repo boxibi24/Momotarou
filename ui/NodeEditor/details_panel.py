@@ -1,6 +1,7 @@
 import dearpygui.dearpygui as dpg
 from copy import deepcopy
-from ui.NodeEditor.utils import add_user_input_box, dpg_set_value
+from ui.NodeEditor.utils import add_user_input_box
+from core.utils import dpg_set_value
 from core.enum_types import NodeTypeFlag
 
 
@@ -61,13 +62,13 @@ class DetailPanel:
                 # dpg.add_separator(parent=self._window_id)
                 dpg.add_text(default_value=f'Name: {node.node_label}')
                 dpg.add_text(default_value=f'Tag: {node.node_tag}')
-                dpg.add_text(default_value=f'Internal data: {node.internal_data}')
-                dpg.add_text(default_value=f'Succeeding links: {node.succeeding_data_link_list}')
-                dpg.add_separator()
-                # Do not show event nodes flags since it does not change
-                if not node.node_type & NodeTypeFlag.Event:
-                    dpg.add_text(default_value=f'Is Dirty: {node.is_dirty}')
-                    dpg.add_text(default_value=f'Is Executed: {node.is_executed}')
+                # dpg.add_text(default_value=f'Internal data: {node.internal_data}')
+                # dpg.add_text(default_value=f'Succeeding links: {node.succeeding_data_link_list}')
+                # dpg.add_separator()
+                # # Do not show event nodes flags since it does not change
+                # if not node.node_type & NodeTypeFlag.Event:
+                #     dpg.add_text(default_value=f'Is Dirty: {node.is_dirty}')
+                #     dpg.add_text(default_value=f'Is Executed: {node.is_executed}')
 
         _current_node_editor_instance.logger.debug('**** Details Panel refreshed to show node detail ****')
 

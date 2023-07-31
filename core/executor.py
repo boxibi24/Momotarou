@@ -1,9 +1,8 @@
 import logging
 from time import perf_counter
-from core.enum_types import NodeTypeFlag, PinMetaType
-from core.utils import create_queueHandler_logger, extract_var_name_from_node_info
+from core.enum_types import NodeTypeFlag, PinMetaType, OutputPinType
+from core.utils import create_queueHandler_logger
 from core.data_loader import nodes_data, events_data, vars_data
-from pprint import pprint
 import dearpygui.dearpygui as dpg
 
 logger = logging.getLogger('')
@@ -17,8 +16,6 @@ def setup_executor_logger(logger_queue, debug_mode: bool):
 
 
 def execute_event(event_node_tag: str, ) -> tuple[int, str]:
-    print('vars data')
-    pprint(vars_data)
     # Perform initial cleanup
     preprocess_execute_event()
     # Start the debug timer
@@ -120,15 +117,18 @@ def forward_propagate_flow(current_node_tag: str, anchors: list):
                     next_node_tag = pin_info['connected_to_node']
                 break
     # If current node is a Set variable value type, then mark all of its get nodes to dirty
-    if 'Set ' in current_node_info['label']:
-        _var_name = extract_var_name_from_node_info(current_node_info)
-        # If found declared var, set all its Get nodes to dirty
-        if _var_name in vars_data.keys():
-            logger.debug(f'Set {_var_name} triggered all Get {_var_name} nodes dirty propagation!')
-            for node_tag, node_info in nodes_data.values():
-                if 'Get ' + _var_name == node_info['label']:
-                    dirty_propagate(node_tag)
-
+    # if 'Set ' in current_node_info['label']:
+    #     _var_name = extract_var_name_from_node_info(current_node_info)
+    #     # If found declared var, set all its Get nodes to dirty
+    #     if _var_name in vars_data.keys():
+    #         logger.debug(f'Set {_var_name} triggered all Get {_var_name} nodes dirty propagation!')
+    #         for node_tag, node_info in nodes_data.values():
+    #             if 'Get ' + _var_name == node_info['label']:
+    #                 dirty_propagate(node_tag)
+    if current_node_info['type'] == NodeTypeFlag.SetVariable:
+        for node_tag, node_info in nodes_data.items():
+            if node_info['internal_data'].get('var_name', '') == current_node_info['internal_data']['var_name']:
+                dirty_propagate(node_tag)
     # Store anchors point if current node is sequential nodes
     if current_node_info['type'] == NodeTypeFlag.Sequential:
         if current_node_info['label'] == 'Sequence':
@@ -156,13 +156,13 @@ def compute_node(node_tag: str):
     current_node_info = nodes_data[node_tag]
     # Blueprint nodes still need to be executed even if it's clean
     if not current_node_info['is_dirty'] and (
-        current_node_info['type'] & NodeTypeFlag.Blueprint or current_node_info['type'] & NodeTypeFlag.Sequential):
+        current_node_info['type'] == NodeTypeFlag.Blueprint or current_node_info['type'] == NodeTypeFlag.Sequential):
         compute_internal_output_data(node_tag)
     # If found var set nodes, trigger dirty propagation to all of its Get nodes
-    if current_node_info['type'] & NodeTypeFlag.Blueprint and 'Set ' in current_node_info['label']:
-        for node_get in nodes_data.values():
-            if node_get['label'] == 'Get ' + node_get['label'].split(' ')[1]:
-                node_get.is_dirty = True
+    # if current_node_info['type'] == NodeTypeFlag.SetVariable:
+    #     for node_tag, node_info in nodes_data.items():
+    #         if node_info['internal_data'].get('var_name', '') == current_node_info['internal_data']['var_name']:
+    #             dirty_propagate(node_tag)
     # If the nodes (Blueprint is also Pure) is dirty, perform computing output values from inputs
     if current_node_info['is_dirty'] and current_node_info['type'] & NodeTypeFlag.Pure:
         for pin_info in current_node_info['pins']:
@@ -172,15 +172,16 @@ def compute_node(node_tag: str):
                 pre_node_tag = pin_info['connected_to_node']
                 pre_node_info = nodes_data[pre_node_tag]
                 # Recursively compute every dirty Pure nodes
-                if pre_node_info['is_dirty'] and pre_node_info['type'] == NodeTypeFlag.Pure:
-                    compute_node(pre_node_info)
+                if pre_node_info['is_dirty'] and (
+                    pre_node_info['type'] == NodeTypeFlag.Pure or pre_node_info['type'] == NodeTypeFlag.GetVariable):
+                    compute_node(pre_node_tag)
 
                 # Recursively compute dirty Blueprint nodes even if it's executed
                 elif pre_node_info['is_dirty'] and \
                     (pre_node_info['type'] & NodeTypeFlag.Blueprint or
                      pre_node_info['type'] & NodeTypeFlag.Sequential) and \
                     pre_node_info['is_executed']:
-                    compute_node(pre_node_info)
+                    compute_node(pre_node_tag)
 
                 # Skip computing for dirty Blueprint un-executed nodes (avoid premature execution)
                 elif pre_node_info['is_dirty'] and \
@@ -208,7 +209,7 @@ def compute_node(node_tag: str):
         t1_start = 0
         if is_debug_mode:
             t1_start = perf_counter()
-        # After getting the clean inputs, perform computing outputs values for this node
+        # After getting the clean inputs, perform computing outputs values for this node\
         compute_internal_output_data(node_tag)
         # Debug timer stops
         if is_debug_mode:
@@ -222,12 +223,11 @@ def compute_node(node_tag: str):
 
 
 def compute_internal_output_data(node_tag: str):
-    print(f'computing internal data for node: {node_tag}')
-    node_data = nodes_data.get(node_tag, None)
-    if node_data is None:
-        logger.error(f'Could not find node_data for {node_data}')
+    node_info = nodes_data.get(node_tag, None)
+    if node_info is None:
+        logger.error(f'Could not find node_data for {node_info}')
         return -1
-    for pin_info in node_data['pins']:
+    for pin_info in node_info['pins']:
         if pin_info['meta_type'] == PinMetaType.DataIn and pin_info['is_connected']:
             # Get preceding pin value and assign it to current one
             preceding_node_info = nodes_data.get(pin_info['connected_to_node'], None)
@@ -248,47 +248,48 @@ def compute_internal_output_data(node_tag: str):
             else:
                 pin_info['value'] = connected_pin_value
     # Update internal input data
-    internal_data = {}
-    for pin_info in node_data['pins']:
+    for pin_info in node_info['pins']:
         if pin_info['meta_type'] == PinMetaType.DataIn:
-            internal_data.update({pin_info['label']: pin_info['value']})
-    node_data['internal_data'] = internal_data
+            node_info['internal_data'].update({pin_info['label']: pin_info['value']})
+    # # Update vars data if exposed
+    # if node_info['type'] == NodeTypeFlag.GetVariable and vars_data[extract_var_name_from_node_info(node_info)]['is_exposed']:
+    #     node_info['internal_data']['default_var_value'] = \
+    #         vars_data[extract_var_name_from_node_info(node_info)]['value'][0]
     # Compute output pin values
-    Run = node_data['run']
-    print(node_data['internal_data'])
-    Run(node_data['internal_data'])
+    Run = node_info['run']
+    Run(node_info['internal_data'])
     # Update the output pins' value with fresh internal data
-    for pin_info in node_data['pins']:
+    for pin_info in node_info['pins']:
         if pin_info['meta_type'] == PinMetaType.DataOut:
-            for key, value in node_data['internal_data'].items():
+            for key, value in node_info['internal_data'].items():
                 if key == pin_info['label']:
                     pin_info['value'] = value
                     break
     # After computing for all outputs, mark this node as clean
-    node_data['is_dirty'] = False
+    node_info['is_dirty'] = False
     # Update back to the master node dict
-    nodes_data.update({node_tag: node_data})
-    logger.debug(f'Internal input data for node {node_data} has been computed')
-    logger.debug(node_data['internal_data'])
+    nodes_data.update({node_tag: node_info})
+    logger.debug(f'Internal input data for node {node_info} has been computed')
+    logger.debug(node_info['internal_data'])
 
 
-def dirty_propagate(current_node_tag: str):
-    current_node_info = nodes_data.get(current_node_tag, None)
+def dirty_propagate(node_tag: str):
+    current_node_info = nodes_data.get(node_tag, None)
     if current_node_info is None:
-        logger.error(f'Could not find node_info for {current_node_tag}')
+        logger.error(f'Could not find node_info for {node_tag}')
         return -1
     if current_node_info['is_dirty']:
-        logger.debug(f'Node {current_node_tag} is already dirty so no propagation needed!')
+        logger.debug(f'Node {node_tag} is already dirty so no propagation needed!')
         return 0
     # Mark current node to 'dirty'
     current_node_info['is_dirty'] = True
     # Propagate to any connected following node to 'dirty' as well
     for pin_info in current_node_info['pins']:
         # if pin type is exec, skip
-        if pin_info['pin_type'] == 5:
+        if pin_info['type'] == OutputPinType.Exec:
             continue
         # if pin is not connected, skip
         if pin_info.get('is_connected', False) is False:
             continue
         # propagate to the connected node
-        dirty_propagate(pin_info['connect_to_node'])
+        dirty_propagate(pin_info['connected_to_node'])

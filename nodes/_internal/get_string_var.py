@@ -17,7 +17,6 @@ class Node(BaseNode):
 
     @staticmethod
     def run(internal_data_dict):
-        print(f'var internal value: {internal_data_dict}')
         var_value = internal_data_dict.get('var_value', None)
         if var_value is None:
             return 8

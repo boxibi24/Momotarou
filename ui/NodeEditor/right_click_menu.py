@@ -71,7 +71,7 @@ class RightClickMenu:
                             if node_category == '_internal':
                                 continue
                             dpg.add_separator()
-                            dpg.add_text(default_value=node_category, filter_key=node_category, color=(221, 84, 255, 255))
+                            dpg.add_text(default_value=node_category.replace('_', ' ').title(), filter_key=node_category, color=(221, 84, 255, 255))
                             dpg.add_separator()
                             for node_name, node_module in node_module_dict.items():
                                 node = node_module.python_module.Node(

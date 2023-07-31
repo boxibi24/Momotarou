@@ -2,7 +2,7 @@ from pprint import pprint
 from core.enum_types import PinMetaType, NodeTypeFlag
 from importlib import import_module
 from copy import deepcopy
-from core.utils import extract_var_name_from_node_info
+from core.utils import extract_var_name_from_node_info, dpg_get_value
 
 nodes_data = {}
 vars_data = {}
@@ -13,6 +13,7 @@ flow_link_list = []
 
 
 def refresh_core_data_with_json_dict(json_dict: dict):
+    _clear_all_data()
     _load_json_node_dict(json_dict)
     _load_events_data(json_dict)
     _load_data_link_list(json_dict)
@@ -20,6 +21,16 @@ def refresh_core_data_with_json_dict(json_dict: dict):
     _load_vars_data(json_dict)
     _load_nodes_data(json_dict)
     return 1, ''
+
+
+def _clear_all_data():
+    global nodes_data, vars_data, events_data, node_list, data_link_list, flow_link_list
+    nodes_data.clear()
+    vars_data.clear()
+    events_data.clear()
+    node_list.clear()
+    data_link_list.clear()
+    flow_link_list.clear()
 
 
 def _load_json_node_dict(json_dict: dict):
@@ -70,9 +81,9 @@ def _load_nodes_data(json_dict: dict):
 
 def _propagate_construct_nodes(node_index: int):
     _propagate_preceding_nodes_connection_info(node_index)
-    following_node_index = _get_following_exec_node_and_update_connection_data(node_index)
-    if following_node_index:
-        _propagate_preceding_nodes_connection_info(following_node_index)
+    following_node_index_list = _get_following_exec_node_and_update_connection_data(node_index)
+    for following_node_index in following_node_index_list:
+        _propagate_construct_nodes(following_node_index)
 
 
 def _propagate_preceding_nodes_connection_info(node_index: int):
@@ -81,7 +92,7 @@ def _propagate_preceding_nodes_connection_info(node_index: int):
             continue
         preceding_node_index, preceding_pin_index = _get_source_node_and_pin_index_dataLinked_to_pin(
             _get_pin_info_in_node_list(node_index, pin_index))
-        if not preceding_node_index:
+        if preceding_node_index == -1:
             _set_pin_unconnected(node_index, pin_index)
             continue
         _update_connected_data_to_pins_couple(node_index, preceding_node_index, pin_index, preceding_pin_index)
@@ -100,7 +111,7 @@ def _is_data_input_pin_type(pin_type: PinMetaType) -> bool:
 def _get_source_node_and_pin_index_dataLinked_to_pin(pin_info: dict) -> tuple[int, int]:
     data_link = _get_data_link_connected_to_destination_pin(pin_info['uuid'])
     if not data_link:
-        return 0, 0
+        return -1, -1
     source_node_index, source_pin_index = _get_source_node_index_in_data_link(data_link)
     if source_node_index is None:
         raise Exception(f'Could not find source node info from {data_link}')
@@ -194,29 +205,32 @@ def _update_standard_node_internal_data(internal_data_reference: dict, pin_list:
 
 
 def _update_var_node_internal_data(internal_data_reference: dict, var_name: str):
-    pprint(vars_data)
-    print(f'var name is :  {var_name}')
-    internal_data_reference.update({'var_value': vars_data[var_name]['value'],
-                                    'default_value': vars_data[var_name]['default_value']})
+    var_info = vars_data[var_name]
+    internal_data_reference.update({'var_value': var_info['value'],
+                                    'default_var_value': var_info['default_value'],
+                                    'var_name': var_name})
+    if var_info['is_exposed'][0]:
+        internal_data_reference['var_value'][0] = dpg_get_value(var_info['user_input_box_id'])
 
 
-def _get_following_exec_node_and_update_connection_data(node_index: int) -> int:
+def _get_following_exec_node_and_update_connection_data(node_index: int) -> list[int]:
+    following_node_index_list = []
     for pin_index, pin_info in enumerate(_get_pin_list_of_node(node_index)):
         if pin_info['meta_type'] != PinMetaType.FlowOut:
             continue
         following_node_index, following_pin_index = _get_destination_node_and_pin_index_flowLinked_to_pin(pin_info)
-        if not following_node_index:
+        if following_node_index == -1:
             _set_pin_unconnected(node_index, pin_index)
             continue
         _update_pin_connected_to_following_node(pin_info, _get_node_uuid_from_index(following_node_index))
-        return following_node_index
-    return 0
+        following_node_index_list.append(following_node_index)
+    return following_node_index_list
 
 
 def _get_destination_node_and_pin_index_flowLinked_to_pin(pin_info: dict) -> tuple[int, int]:
     flow_link = _get_flow_link_connected_to_source_pin(pin_info['uuid'])
-    if not flow_link:
-        return 0, 0
+    if flow_link is None:
+        return -1, -1
     destination_node_index, destination_pin_index = _get_destination_node_index_in_flow_link(flow_link)
     if not destination_node_index:
         raise Exception(f'Could not find destination node info from {flow_link}')

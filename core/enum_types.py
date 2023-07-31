@@ -9,7 +9,7 @@ class NodeTypeFlag(IntFlag):
     Event = 1 << 3
     Blueprint = Pure | Exec
     Variable = 1 << 4
-    SetVariable = Variable | Exec
+    SetVariable = Variable | Blueprint
     GetVariable = Variable | Pure
 
 

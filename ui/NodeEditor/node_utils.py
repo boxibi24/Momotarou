@@ -1,7 +1,8 @@
 import dearpygui.dearpygui as dpg
 from core.enum_types import NodeTypeFlag
 from ui.NodeEditor.utils import sort_data_link_dict, sort_flow_link_dict, \
-    dpg_get_value, dpg_set_value, json_write_to_file
+    json_write_to_file
+from core.utils import dpg_set_value, dpg_get_value
 import traceback
 from ui.NodeEditor.classes.link import Link, LinkInfo
 from ui.NodeEditor.classes.pin import PinInfo
@@ -132,7 +133,7 @@ def update_data_links_to_export_dict(data_link_list: list, export_dict: dict):
     export_dict.update({'data_links': _simplified_data_link_list})
 
 
-def update_pin_values_in_node_dict(node_info):
+def update_pins_values_in_node_dict(node_info):
     """
     Update current pin values to node dict
 
@@ -276,6 +277,13 @@ def split_event_name_from_node_label(node_label: str):
     return ' '.join(node_label.split(' ')[1:])
 
 
+def create_link_object_from_link_info_if_node_unconnected(link_info: LinkInfo):
+    if not link_info.source_pin_info.pin_instance.is_connected:
+        return create_link_object_from_link_info(link_info)
+    else:
+        return None
+
+
 def create_link_object_from_link_info(link_info: LinkInfo):
     link = Link(link_info.source_pin_info.parent_node_tag,
                 link_info.source_pin_info.parent_node_instance,
@@ -303,7 +311,6 @@ def _reflect_new_link_on_source_pin(link: Link):
 def _reflect_new_link_on_destination_pin(link: Link):
     link.destination_pin_instance.is_connected = True
     link.destination_pin_instance.connected_link_list.append(link)
-
 
 
 def find_pin_and_construct_pin_info_in_node_list(pin_tag: str, node_list: list):
@@ -334,13 +341,6 @@ def is_link_duplicate_in_check_list(link_info: LinkInfo, check_list: list) -> bo
         if link_info.destination_pin_info.pin_instance == node_link.destination_pin_instance:
             return True
     return False
-
-
-def create_link_object_from_link_info_if_node_unconnected(link_info: LinkInfo):
-    if not link_info.source_pin_info.pin_instance.is_connected:
-        return create_link_object_from_link_info(link_info)
-    else:
-        return None
 
 
 def update_new_link_info(link, to_update_link_list, to_update_event_dict):

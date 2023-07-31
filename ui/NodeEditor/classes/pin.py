@@ -1,9 +1,7 @@
 from core.enum_types import InputPinType, OutputPinType
-from misc.color import teal, pink, orange, white, green, darkpink, darkred, brown
+from misc.color import teal, pink, orange, white, green, darkpink, darkred, brown, blue
 from ui.NodeEditor.utils import generate_uuid
 import dearpygui.dearpygui as dpg
-
-BLUE = (92, 108, 255, 255)
 
 
 class PinInfo:
@@ -142,7 +140,7 @@ class PinBase:
 
                 ):
                     dpg.add_text(default_value=self.label,
-                                 color=BLUE)
+                                 color=blue)
                     dpg.add_slider_int(tag=self.value_tag,
                                        default_value=self._default_data,
                                        width=self._input_window_width,
@@ -274,7 +272,7 @@ class PinBase:
                 ):
                     dpg.add_text(default_value=self.label,
                                  indent=self._input_window_width,
-                                 color=BLUE)
+                                 color=blue)
                     dpg.add_slider_int(tag=self.value_tag,
                                        default_value=self._default_data,
                                        width=self._input_window_width - 50,

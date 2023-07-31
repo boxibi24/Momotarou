@@ -1,3 +1,5 @@
+import os.path
+
 import dearpygui.dearpygui as dpg
 from collections import OrderedDict
 from uuid import uuid1
@@ -10,29 +12,6 @@ def generate_uuid() -> str:
     """
     # Use UUID1 because it is time based so no replication produced
     return uuid1().hex
-
-
-def dpg_set_value(tag: str, value):
-    """
-    Check if exist node with tag, then set the value
-    :param tag: tag to check
-    :param value: value to set
-    """
-
-    if dpg.does_item_exist(tag):
-        dpg.set_value(tag, value)
-
-
-def dpg_get_value(tag: str):
-    """
-    Get value from a node with tag
-    :param tag: tags of node to query value
-    :return: the value of node with tag
-    """
-    value = None
-    if dpg.does_item_exist(tag):
-        value = dpg.get_value(tag)
-    return value
 
 
 def callback_project_new_menu():
@@ -57,6 +36,7 @@ def callback_ng_file_save_menu():
 
 def callback_ng_file_import_menu():
     dpg.show_item('NG_file_import')
+
 
 def callback_drop_var(sender, app_data):
     var_name = app_data[0].get(app_data[1], None)[0]
@@ -339,3 +319,5 @@ def log_on_return_message(logger, action: str, return_message=(0, ''), **kwargs)
     elif return_code == 4:
         logger.info(f'{action} did not performed. Exception encountered')
         logger.error(message)
+
+

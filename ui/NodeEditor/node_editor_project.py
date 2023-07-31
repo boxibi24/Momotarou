@@ -19,6 +19,7 @@ from copy import deepcopy
 import traceback
 from core.utils import create_queueHandler_logger
 from core.data_loader import refresh_core_data_with_json_dict
+import misc.color as color
 
 INTERNAL_NODE_CATEGORY = '_internal'
 CACHE_DIR = tempfile.gettempdir()
@@ -79,22 +80,22 @@ class NodeEditor:
         _menu_construct_dict = OrderedDict([])
         # Default menu if none is applied
         if node_menu_dict is None:
-            self._node_menu_dict = OrderedDict({
-                '_internal': '_internal',
-                'Process Node': 'process_node',
-                'Output Node': 'output_node',
-                'Exec Node': 'exec_node',
-                'Math Node': 'math_node',
-                'Flow Control': 'flow_control_node',
-                'Perforce Node': 'perforce_node'
-            })
+            _node_menu_dict = [
+                '_internal',
+                'process_node',
+                'output_node',
+                'exec_node',
+                'math_node',
+                'flow_control_node',
+                'perforce_node'
+            ]
             self.menu_construct_dict = OrderedDict([])
             # Add right-click-menu items defined
-            for tree_node_info in self._node_menu_dict.items():
+            for node_category in _node_menu_dict:
                 # Store paths of written nodes
                 node_sources_path = os.path.join(
                     node_dir,
-                    tree_node_info[1],
+                    node_category,
                     '*.py'
                 )
                 # Get path of included node_sources_path files
@@ -118,7 +119,6 @@ class NodeEditor:
                     # import the module
                     module = import_module(import_path)
                     if module:
-                        node_category = tree_node_info[1]
                         if self.menu_construct_dict.get(node_category, None) is None:
                             node_module_item = OrderedDict([])
                             node_module_item.update(
@@ -140,7 +140,7 @@ class NodeEditor:
         ):
             with dpg.table(header_row=True, resizable=True, reorderable=False, borders_outerH=False,
                            borders_outerV=False, borders_innerV=False, borders_innerH=False):
-                dpg.add_table_column(label='My Project', width_fixed=True, init_width_or_weight=300)
+                dpg.add_table_column(label='MyRUTProject', width_fixed=True, init_width_or_weight=300)
                 dpg.add_table_column(label='Event Graph')
                 dpg.add_table_column(label='Details', width_fixed=True,
                                      init_width_or_weight=300)
@@ -434,7 +434,14 @@ class NodeEditor:
         pass
 
     def callback_project_new(self, sender, app_data):
-        pass
+        file_path = app_data['file_path_name']
+        print(dpg.get_file_dialog_info(sender))
+        if os.path.exists(file_path):
+            with dpg.group():
+                dpg.push_container_stack('project_new')
+                dpg.add_text(parent='project_new', default_value='Project existed, please rename', color=color.darkred)
+            dpg.show_item('project_new')
+
 
     def callback_project_open(self, sender, app_data):
         pass

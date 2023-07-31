@@ -1,5 +1,4 @@
 import dearpygui.dearpygui as dpg
-from ui.NodeEditor.classes.pin import PinInfo
 
 
 class LinkInfo:

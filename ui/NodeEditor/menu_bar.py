@@ -2,13 +2,14 @@ import dearpygui.dearpygui as dpg
 import datetime
 from ui.NodeEditor.utils import callback_ng_file_open_menu, callback_ng_file_import_menu, callback_ng_file_save_menu, \
     callback_project_save_menu, callback_project_open_menu, callback_project_new_menu
+import os
 
 
 def initialize_file_dialog(node_editor):
     # Menu bar setup
     # Open project dialog
     with dpg.file_dialog(
-        directory_selector=False,
+        directory_selector=True,
         show=False,
         modal=True,
         height=int(dpg.get_viewport_height() / 2),
@@ -16,11 +17,10 @@ def initialize_file_dialog(node_editor):
         callback=callback_file_dialog,
         id='project_new',
         label='New Project',
-        user_data=node_editor
+        user_data=node_editor,
+        default_filename='MyRUTProject'
     ):
-        dpg.add_file_extension('.rproject')
-        dpg.add_file_extension('', color=(150, 255, 150, 255))
-
+        pass
     # Save project dialog
     datetime_now = datetime.datetime.now()
     with dpg.file_dialog(
@@ -33,7 +33,8 @@ def initialize_file_dialog(node_editor):
         callback=callback_file_dialog,
         id='project_open',
         label='Open Project',
-        user_data=node_editor
+        user_data=node_editor,
+        cancel_callback=callback_cancel_file_dialog
     ):
         dpg.add_file_extension('.rproject')
         dpg.add_file_extension('', color=(150, 255, 150, 255))
@@ -49,7 +50,8 @@ def initialize_file_dialog(node_editor):
         callback=callback_file_dialog,
         id='project_save',
         label='Save Project',
-        user_data=node_editor
+        user_data=node_editor,
+        cancel_callback=callback_cancel_file_dialog
     ):
         dpg.add_file_extension('.rproject')
         dpg.add_file_extension('', color=(150, 255, 150, 255))
@@ -64,7 +66,8 @@ def initialize_file_dialog(node_editor):
         callback=callback_file_dialog,
         id='NG_file_open',
         label='Open Node Graph in new tab',
-        user_data=node_editor
+        user_data=node_editor,
+        cancel_callback=callback_cancel_file_dialog
     ):
         dpg.add_file_extension('.rtool')
         dpg.add_file_extension('', color=(150, 255, 150, 255))
@@ -81,7 +84,8 @@ def initialize_file_dialog(node_editor):
         callback=callback_file_dialog,
         id='NG_file_save',
         label='Save current tab as',
-        user_data=node_editor
+        user_data=node_editor,
+        cancel_callback=callback_cancel_file_dialog
     ):
         dpg.add_file_extension('.rtool')
         dpg.add_file_extension('', color=(150, 255, 150, 255))
@@ -97,7 +101,8 @@ def initialize_file_dialog(node_editor):
         callback=callback_file_dialog,
         id='NG_file_import',
         label='Import node graph to current tab',
-        user_data=node_editor
+        user_data=node_editor,
+        cancel_callback=callback_cancel_file_dialog
     ):
         dpg.add_file_extension('.rtool')
         dpg.add_file_extension('', color=(150, 255, 150, 255))
@@ -116,6 +121,10 @@ def callback_file_dialog(sender, app_data, user_data):
         user_data.current_node_editor_instance.callback_file_open(sender, app_data)
     elif sender == 'NG_file_import':
         user_data.current_node_editor_instance.callback_file_import(sender, app_data)
+
+
+def callback_cancel_file_dialog():
+    pass
 
 
 def initialize_menu_bar(node_editor_project: object):

@@ -16,10 +16,5 @@ class Node(BaseNode):
 
     @staticmethod
     def run(internal_data_dict):
-        var_value = internal_data_dict.get('var_value', None)
-        if var_value is None:
-            # KeyError could not find var_value in internal_data_dict
-            return 8
-        else:
-            internal_data_dict['var_value'][0] = internal_data_dict['String in']
-            internal_data_dict['String out'] = internal_data_dict['String in']
+        internal_data_dict['var_value'][0] = internal_data_dict['String in']
+        internal_data_dict['String out'] = internal_data_dict['String in']
