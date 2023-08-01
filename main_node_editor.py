@@ -7,22 +7,24 @@ from logging.handlers import QueueHandler, QueueListener
 from multiprocessing import Queue
 from ui.NodeEditor.main_ui import initialize_node_editor_project, setup_dpg_font, initialize_dpg
 from core.executor import setup_executor_logger
+from core.utils import json_load_from_file_path
 import dearpygui.demo as demo
 
 APPLICATION_NAME = 'NodeEditor'
 
 
 def main():
-    setting_file_path, is_debug_mode = parse_argument()
+    setting_file_path, packages_file_path, is_debug_mode = parse_argument()
     logger, logger_queue = setup_logger(is_debug_mode)
     logger.info("***** Load Config *****")
-    setting_dict = load_setting_file(setting_file_path)
+    setting_dict = json_load_from_file_path(setting_file_path)
+    packages_list = json_load_from_file_path(packages_file_path)['packages']
     logger.info('**** DearPyGui Setup *****')
     initialize_dpg(editor_width=setting_dict['editor_width'], editor_height=setting_dict['editor_height'])
     setup_dpg_font()
     # demo.show_demo()
     logger.info('**** Initialize Node Editor Project *****')
-    initialize_node_editor_project(setting_dict, logger_queue, is_debug_mode)
+    initialize_node_editor_project(setting_dict, packages_list, logger_queue, is_debug_mode)
     logger.info('**** DearPyGui Terminated! *****')
 
 
@@ -34,9 +36,10 @@ def parse_argument():
     """
     args = get_arg()
     setting_file_path = args.setting
+    packages_file_path = args.packages
     is_debug_mode = args.is_debug_mode
 
-    return setting_file_path, is_debug_mode
+    return setting_file_path, packages_file_path, is_debug_mode
 
 
 def get_arg():
@@ -53,6 +56,13 @@ def get_arg():
         default=os.path.abspath(
             os.path.join(os.path.dirname(__file__),
                          f'Config/{APPLICATION_NAME}.cfg')),
+    )
+    parser.add_argument(
+        "--packages",
+        type=str,
+        default=os.path.abspath(
+            os.path.join(os.path.dirname(__file__),
+                         f'Config/NodePackages.cfg')),
     )
     parser.add_argument(
         "--is_debug_mode",
@@ -139,10 +149,6 @@ def _construct_and_add_queue_handler_to_logger(logger: Logger, *args: Handler):
     return logger_queue
 
 
-def load_setting_file(file_path: str) -> dict:
-    with open(file_path) as fp:
-        setting_dict = json.load(fp)
-    return setting_dict
 
 
 if __name__ == '__main__':

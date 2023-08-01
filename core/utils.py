@@ -1,3 +1,4 @@
+import json
 import logging
 from logging.handlers import QueueHandler
 from multiprocessing import Queue
@@ -43,3 +44,17 @@ def dpg_get_value(tag: str):
     if dpg.does_item_exist(tag):
         value = dpg.get_value(tag)
     return value
+
+
+def json_load_from_file_path(file_path):
+    with open(file_path, 'r') as fp:
+        try:
+            return_dict = json.load(fp)
+            return return_dict
+        except FileNotFoundError:
+            return None
+
+
+def json_write_to_file_path(file_path, value):
+    with open(file_path, 'w') as fp:
+        json.dump(value, fp, indent=4)

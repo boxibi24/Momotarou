@@ -1,8 +1,7 @@
 import dearpygui.dearpygui as dpg
 from core.enum_types import NodeTypeFlag
-from ui.NodeEditor.utils import sort_data_link_dict, sort_flow_link_dict, \
-    json_write_to_file
-from core.utils import dpg_set_value, dpg_get_value
+from ui.NodeEditor.utils import sort_data_link_dict, sort_flow_link_dict
+from core.utils import dpg_set_value, dpg_get_value, json_write_to_file_path
 import traceback
 from ui.NodeEditor.classes.link import Link, LinkInfo
 from ui.NodeEditor.classes.pin import PinInfo
@@ -200,7 +199,7 @@ def save_dict_to_json(in_dict, file_path) -> tuple:
     :return: return message
     """
     try:
-        json_write_to_file(file_path=file_path, value=in_dict)
+        json_write_to_file_path(file_path=file_path, value=in_dict)
     except Exception:
         return 4, traceback.format_exc()
     else:

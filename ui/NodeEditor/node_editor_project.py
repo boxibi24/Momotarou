@@ -1,7 +1,7 @@
 import dearpygui.dearpygui as dpg
 from multiprocessing import Queue
-from ui.NodeEditor.utils import generate_uuid, json_write_to_file, log_on_return_message, \
-    json_load_from_file, extract_project_name_from_folder_path, warn_duplicate_and_retry_new_project_dialog
+from ui.NodeEditor.utils import generate_uuid, log_on_return_message, warn_duplicate_and_retry_new_project_dialog, \
+    construct_tool_path_from_tools_path_and_tool_name, convert_python_path_to_import_path
 from ui.NodeEditor.input_handler import add_keyboard_handler_registry, add_mouse_handler_registry, event_handler
 from ui.NodeEditor.right_click_menu import RightClickMenu
 from ui.NodeEditor.splitter import Splitter
@@ -13,16 +13,17 @@ from ui.NodeEditor.node_utils import construct_var_node_label, construct_module_
 from collections import OrderedDict
 import os
 from pathlib import Path
-import platform
+import shutil
 from importlib import import_module
 from copy import deepcopy
 import traceback
-from core.utils import create_queueHandler_logger
+from core.utils import create_queueHandler_logger, json_load_from_file_path, json_write_to_file_path
 from core.data_loader import refresh_core_data_with_json_dict
 
 INTERNAL_NODE_CATEGORY = '_internal'
 CACHE_DIR = Path(os.getenv('LOCALAPPDATA')) / "RUT" / "NodeEditor"
 TOOLS_PATH = CACHE_DIR / 'tools'
+EVENT_IMPORT_PATH = ''
 
 
 class NodeEditor:
@@ -50,12 +51,12 @@ class NodeEditor:
         self,
         setting_dict=None,
         node_dir=Path('nodes'),
-        node_menu_dict=None,
+        node_menu_list=None,
         use_debug_print=False,
         logging_queue=Queue()
     ):
         # ------ FLAGS --------
-        # self._refresh_trigger_flag = False
+        self._init_flag = True
         # ------ SETTINGS ------
         self._var_drop_popup_id = -1
         self._use_debug_print = use_debug_print
@@ -65,70 +66,60 @@ class NodeEditor:
             self._setting_dict = setting_dict
 
         # ------ ATTRIBUTES -----
+        self.current_tab_id = None
+        self.menu_construct_dict = None
         self.current_node_editor_instance = None
         self._requested_exec_node_tag = None
         self._node_editor_tab_dict = OrderedDict([])
         # Tuple to store current node editor boundaries position
         self._node_editor_bb = [(), ()]
-        self.project_folder_path = self._create_cache_project_folder()
         self.project_name = 'MyRUTProject'
 
         # ------- LOGGING ______
         self.logging_queue = logging_queue
         self.logger = create_queueHandler_logger(__name__, logging_queue, self._use_debug_print)
 
-        self.logger.info('***** Loading Master Node Editor *****')
-
-        _menu_construct_dict = OrderedDict([])
-        # Default menu if none is applied
-        if node_menu_dict is None:
-            _node_menu_dict = [
-                '_internal',
-                'process_node',
-                'output_node',
-                'exec_node',
-                'math_node',
-                'flow_control_node',
-                'perforce_node'
-            ]
-            self.menu_construct_dict = OrderedDict([])
-            # Add right-click-menu items defined
-            for node_category in _node_menu_dict:
-                node_sources_path = node_dir / node_category
-                # Get path of included node_sources_path files
-                for node_source in node_sources_path.glob('*.py'):
-                    # split up files names and import them
-                    import_path = os.path.splitext(
-                        os.path.normpath(node_source)
-                    )[0]
-                    if platform.system() == 'Windows':
-                        import_path = import_path.replace('\\', '.')
-                    else:
-                        import_path = import_path.replace('/', '.')
-                    import_path = import_path.split('.')
-                    import_path = '.'.join(import_path[-3:])
-
-                    # Exclude __init__ import
-                    if import_path.endswith('__init__'):
-                        continue
-
-                    # import the module
-                    module = import_module(import_path)
-                    if module:
-                        if self.menu_construct_dict.get(node_category, None) is None:
-                            node_module_item = OrderedDict([])
-                            node_module_item.update(
-                                {import_path: NodeModule(module, import_path, module.Node.node_type)})
-                            if 'event' in import_path:
-                                self.EVENT_IMPORT_PATH = import_path
-                            self.menu_construct_dict.update({node_category: node_module_item})
-                        else:
-                            self.menu_construct_dict[node_category].update(
-                                {import_path: NodeModule(module, import_path, module.Node.node_type)})
-                    else:
-                        self.logger.critical(f"Could not import module {import_path}")
-
+        self.construct_node_menu(node_menu_list, node_dir)
         # Main viewport
+        self._init_main_viewport()
+        # Add handler registry
+        self._add_handler_registry()
+        # Cache this project to local appdata
+        self.project_folder_path = self._create_cache_project_folder()
+        # Initialization done
+        self._init_flag = False
+        self.logger.info('**** Loaded main viewport')
+
+    def construct_node_menu(self, node_menu_list: list, node_dir: Path):
+        if node_menu_list is None:
+            node_menu_list = [
+                '_internal',
+            ]
+        self.menu_construct_dict = OrderedDict([])
+        for node_category in node_menu_list:
+            node_sources_path = node_dir / node_category
+            for node_source in node_sources_path.glob('*.py'):
+                import_path = convert_python_path_to_import_path(node_source)
+                # Exclude __init__ import
+                if import_path.endswith('__init__'):
+                    continue
+                self._import_node_module(node_category, import_path)
+
+    def _import_node_module(self, node_category: str, import_path: str):
+        module = import_module(import_path)
+        if self.menu_construct_dict.get(node_category, None) is None:
+            node_module_item = OrderedDict([])
+            node_module_item.update(
+                {import_path: NodeModule(module, import_path, module.Node.node_type)})
+            if 'event' in import_path:
+                global EVENT_IMPORT_PATH
+                EVENT_IMPORT_PATH = import_path
+            self.menu_construct_dict.update({node_category: node_module_item})
+        else:
+            self.menu_construct_dict[node_category].update(
+                {import_path: NodeModule(module, import_path, module.Node.node_type)})
+
+    def _init_main_viewport(self):
         with dpg.child_window(
             tag=self.node_editor_tag,
             label=self.node_editor_label,
@@ -142,33 +133,17 @@ class NodeEditor:
                 dpg.add_table_column(label='Details', width_fixed=True,
                                      init_width_or_weight=300)
                 with dpg.table_row():
+                    # Splitter
                     self.splitter_panel = Splitter(parent_instance=self)
+                    # Node Graph
                     with dpg.tab_bar(reorderable=True, callback=self.callback_tab_bar_change) as self._tab_bar_id:
-                        _tab_name = 'Default'
-                        _tab_id = dpg.add_tab(label=_tab_name, parent=self._tab_bar_id,
-                                              closable=True, payload_type='__var',
-                                              drop_callback=self.var_drop_callback)
-                        self.current_tab_id = _tab_id
-                        # Right click context menu for tab
-                        with dpg.item_handler_registry() as item_handler_id:
-                            dpg.add_item_clicked_handler(button=dpg.mvMouseButton_Right,
-                                                         callback=tab_right_click_menu,
-                                                         user_data=([_tab_name], self._node_editor_tab_dict))
-                        dpg.bind_item_handler_registry(_tab_id, dpg.last_container())
-                        new_node_editor = DPGNodeEditor(parent_tab=_tab_id,
-                                                        parent_instance=self,
-                                                        setting_dict=self._setting_dict,
-                                                        use_debug_print=self._use_debug_print,
-                                                        logging_queue=logging_queue)
-                        new_node_editor.item_registry_dict.update({'tab_registry': item_handler_id})
-                        self._node_editor_tab_dict.update({_tab_name:
-                                                               {'node_editor_instance': new_node_editor,
-                                                                'id': _tab_id
-                                                                }})
-                        self.current_node_editor_instance = new_node_editor
+                        self.current_tab_id, self.current_node_editor_instance = \
+                            self._callback_on_name_new_tab('', app_data='Default', user_data=(0, self._tab_bar_id))
+
                         dpg.add_tab_button(label='+', callback=self._add_node_graph_tab_ask_name,
                                            user_data=self._tab_bar_id,
                                            no_reorder=True, trailing=True)
+                    # Detail panel
                     self.detail_panel = DetailPanel(parent_instance=self)
             # Initialize right click menu
             self.right_click_menu = RightClickMenu(parent_inst=self,
@@ -176,26 +151,6 @@ class NodeEditor:
                                                    setting_dict=self._setting_dict,
                                                    use_debug_print=self._use_debug_print,
                                                    logging_queue=self.logging_queue)
-
-            # Add handler registry
-            self._add_handler_registry()
-
-    def _callback_show_right_click_menu(self):
-        if not dpg.get_selected_nodes(self.current_node_editor_instance.id):
-            self.right_click_menu.show = True
-
-    def _add_handler_registry(self):
-        """
-        Add all input handler registry and their callback
-        """
-        add_keyboard_handler_registry(self)
-        add_mouse_handler_registry(self)
-
-        for handler in dpg.get_item_children("__node_editor_keyboard_handler", 1):
-            dpg.set_item_callback(handler, event_handler)
-
-        for handler in dpg.get_item_children("__node_editor_mouse_handler", 1):
-            dpg.set_item_callback(handler, event_handler)
 
     def _add_node_graph_tab_ask_name(self, sender, app_data, user_data, is_retry=False):
         parent = user_data
@@ -212,7 +167,8 @@ class NodeEditor:
 
     def _callback_on_name_new_tab(self, sender, app_data, user_data):
         # delete the modal window
-        dpg.delete_item(user_data[0])
+        if user_data[0]:
+            dpg.delete_item(user_data[0])
         new_tab_name = app_data
         parent = user_data[1]
         if self._node_editor_tab_dict.get(new_tab_name, None) is not None:  # Tab name existed
@@ -231,51 +187,57 @@ class NodeEditor:
                                         use_debug_print=self._use_debug_print,
                                         logging_queue=self.logging_queue)
         new_node_editor.item_registry_dict.update({'tab_registry': item_handler_id})
-        self._node_editor_tab_dict.update({new_tab_name:
-                                               {'node_editor_instance': new_node_editor,
-                                                'id': new_tab_id
-                                                }})
+        self._node_editor_tab_dict.update({new_tab_name: {'node_editor_instance': new_node_editor,
+                                                          'id': new_tab_id
+                                                          }})
+        return new_tab_id, new_node_editor
+
+    def _add_handler_registry(self):
+        """
+        Add all input handler registry and their callback
+        """
+        add_keyboard_handler_registry(self)
+        add_mouse_handler_registry(self)
+
+        for handler in dpg.get_item_children("__node_editor_keyboard_handler", 1):
+            dpg.set_item_callback(handler, event_handler)
+
+        for handler in dpg.get_item_children("__node_editor_mouse_handler", 1):
+            dpg.set_item_callback(handler, event_handler)
 
     def callback_tab_bar_change(self, sender, app_data):
-        _old_node_editor_instance = self.current_node_editor_instance
-        _old_tab_name = dpg.get_item_label(self.current_tab_id)
-        _selected_tab = dpg.get_item_label(app_data)
+        self.update_current_tab_id_and_instance(app_data)
+        self.detail_panel.refresh_ui()
+        self.refresh_splitter_data()
+        self.clean_old_node_graph_registry_item()
+
+    def update_current_tab_id_and_instance(self, tab_id: int):
+        _selected_tab = dpg.get_item_label(tab_id)
         # Refresh the dict first in case user closes the tab
         self.refresh_node_editor_dict()
         try:
             self.current_node_editor_instance = self._node_editor_tab_dict[_selected_tab]['node_editor_instance']
-            self.current_tab_id = app_data
+            self.current_tab_id = tab_id
         except KeyError:
             self.logger.exception('Could not query current node editor instance:')
             return -1
-        # Also do a refresh of detail_panel
-        self.detail_panel.refresh_ui()
-        # Also do a refresh of splitter, assigning new dict will trigger its UI refresh methods
-        self.splitter_panel.event_dict = self.current_node_editor_instance.event_dict
-        self.splitter_panel.var_dict = self.current_node_editor_instance.splitter_var_dict
-        self.splitter_panel.exposed_var_dict = deepcopy(self.current_node_editor_instance.var_dict)
-
-        # If tab not deleted, delete the orphaned registry from old node graph
-        # since all selectable-headers will be refreshed
-        if self._node_editor_tab_dict.get(_old_tab_name, None) is not None:
-            for item, registry_id in _old_node_editor_instance.item_registry_dict.items():
-                # skip tab registry
-                if item == 'tab_registry':
-                    continue
-                dpg.delete_item(registry_id)
-            # Clear every register except for tab registry id
-            _tab_register_id = _old_node_editor_instance.item_registry_dict['tab_registry']
-            _old_node_editor_instance.item_registry_dict.clear()
-            _old_node_editor_instance.item_registry_dict.update({'tab_registry': _tab_register_id})
 
     def refresh_node_editor_dict(self):
         self._check_all_tabs_and_trigger_deletion_if_found_closed()
         self._reflect_current_order_to_tab_dict()
 
+    def _reflect_current_order_to_tab_dict(self):
+        sorted_tab_list = self._get_tab_list_with_order()
+        self._refresh_tab_dict_with_new_order_from_list(sorted_tab_list)
+
+    def _refresh_tab_dict_with_new_order_from_list(self, new_order: list):
+        for tab_name in new_order:
+            self._node_editor_tab_dict.move_to_end(tab_name)
+
     def _check_all_tabs_and_trigger_deletion_if_found_closed(self):
         tuple_list = list(self._node_editor_tab_dict.items())
         for tab_name, tab_info in tuple_list:
-            if not dpg.is_item_visible(tab_info['id']):
+            if not dpg.is_item_visible(tab_info['id']) and self._init_flag is False:
                 self._delete_tab(tab_info, tab_name)
 
     def _delete_tab(self, tab_info, tab_name):
@@ -292,13 +254,24 @@ class NodeEditor:
         dpg.delete_item(tab_info['id'])
         self.logger.info(f'****Deleted tab {tab_name}****')
 
-    def _reflect_current_order_to_tab_dict(self):
-        sorted_tab_list = self._get_tab_list_with_order()
-        self._refresh_tab_dict_with_new_order_from_list(sorted_tab_list)
+    def refresh_splitter_data(self):
+        self.splitter_panel.event_dict = self.current_node_editor_instance.event_dict
+        self.splitter_panel.var_dict = self.current_node_editor_instance.splitter_var_dict
+        self.splitter_panel.exposed_var_dict = deepcopy(self.current_node_editor_instance.var_dict)
 
-    def _refresh_tab_dict_with_new_order_from_list(self, new_order: list):
-        for tab_name in new_order:
-            self._node_editor_tab_dict.move_to_end(tab_name)
+    def clean_old_node_graph_registry_item(self):
+        _old_node_editor_instance = self.current_node_editor_instance
+        _old_tab_name = dpg.get_item_label(self.current_tab_id)
+        if self._node_editor_tab_dict.get(_old_tab_name, None) is not None:
+            for item, registry_id in _old_node_editor_instance.item_registry_dict.items():
+                # skip tab registry
+                if item == 'tab_registry':
+                    continue
+                dpg.delete_item(registry_id)
+            # Clear every register except for tab registry id
+            _tab_register_id = _old_node_editor_instance.item_registry_dict['tab_registry']
+            _old_node_editor_instance.item_registry_dict.clear()
+            _old_node_editor_instance.item_registry_dict.update({'tab_registry': _tab_register_id})
 
     def _get_tab_list_with_order(self) -> list:
         converter = {}
@@ -311,7 +284,7 @@ class NodeEditor:
 
         pos = [dpg.get_item_rect_min(item) for item in dpg.get_item_children(self._tab_bar_id, 1) if
                dpg.get_item_label(item) != '+']
-        sortedPos = sorted(pos, key=lambda pos: pos[0])
+        sortedPos = sorted(pos, key=lambda position: pos[0])
 
         for item in sortedPos:
             tab_name_list_with_order.append(converter[tuple(item)])
@@ -412,7 +385,7 @@ class NodeEditor:
 
     def _get_event_module(self):
         _internal_module_dict = self._get_internal_modules_dict()
-        event_module = _internal_module_dict[self.EVENT_IMPORT_PATH]
+        event_module = _internal_module_dict[EVENT_IMPORT_PATH]
         return event_module
 
     def _get_internal_modules_dict(self):
@@ -424,20 +397,20 @@ class NodeEditor:
             return -1
 
     def callback_project_new(self, sender, app_data):
-        folder_path = app_data['file_path_name']
-        if os.path.exists(folder_path):
+        project_path = Path(app_data['file_path_name'])
+        if os.path.exists(project_path):
             warn_duplicate_and_retry_new_project_dialog()
             return 0
-        self._update_project_name(extract_project_name_from_folder_path(folder_path))
-        self._create_project_folder(folder_path)
+        self._update_project_name(project_path.name)
+        self._create_project_folder(project_path)
 
     def _update_project_name(self, new_project_name: str):
         self.project_name = new_project_name
         dpg.configure_item(self.splitter_column, label=new_project_name)
 
     def _create_cache_project_folder(self):
-        if CACHE_DIR.exists():
-            CACHE_DIR.rmdir()
+        if CACHE_DIR.parent.exists():
+            shutil.rmtree(CACHE_DIR.parent)
         CACHE_DIR.parent.mkdir()
         CACHE_DIR.mkdir()
         self._create_project_folder(CACHE_DIR)
@@ -445,18 +418,20 @@ class NodeEditor:
 
     def _create_project_folder(self, folder_path: Path):
         self.project_folder_path = folder_path
-        self._project_save_to_file()
+        self._project_save_to_folder()
 
     def callback_project_open(self, sender, app_data):
         pass
 
     def callback_project_save(self, sender, app_data):
-        file_path = app_data['file_path_name']
+        project_path = Path(app_data['file_path_name'])
+        self.project_folder_path = project_path.parent
+        self.project_name = project_path.name
         action = dpg.get_item_label(sender)
-        return_message = self._project_save_to_file()
+        return_message = self._project_save_to_folder()
         log_on_return_message(self.logger, action, return_message)
 
-    def _project_save_to_file(self):
+    def _project_save_to_folder(self):
         try:
             self.refresh_node_editor_dict()
             self._construct_project_folder()
@@ -465,12 +440,35 @@ class NodeEditor:
         return 1,
 
     def _construct_project_folder(self):
+        self._construct_tools_folder()
+        self._save_project_file()
+
+    def _construct_tools_folder(self):
+        self._create_tools_path_if_not_existed()
+        for child_node_graph_name, child_node_graph_info in self._node_editor_tab_dict.items():
+            child_node_graph_path = self._get_tool_path_from_tool_name(child_node_graph_name)
+            child_node_graph_info['node_editor_instance'].callback_tool_save('NG_file_save',
+                                                                             {'file_path_name': child_node_graph_path})
+
+    def _create_tools_path_if_not_existed(self):
         tools_path = self.project_folder_path / 'tools'
+        if not tools_path.parent.exists():
+            tools_path.parent.mkdir()
         if not tools_path.exists():
             tools_path.mkdir()
-        for child_node_graph_name, child_node_graph_info in self._node_editor_tab_dict.items():
-            child_node_graph_info['node_editor_instance'].callback_tool_save('NG_file_save',
-                                                                             tools_path / (child_node_graph_name + '.rtool'))
+
+    def _get_tool_path_from_tool_name(self, tool_name: str) -> str:
+        tools_path = self.project_folder_path / 'tools'
+        return construct_tool_path_from_tools_path_and_tool_name(tools_path, tool_name)
+
+    def _save_project_file(self):
+        tools_path = Path('tools')
+        tool_list = []
+        for tool_name in self._node_editor_tab_dict.keys():
+            tool_path = construct_tool_path_from_tools_path_and_tool_name(tools_path, tool_name)
+            tool_list.append((tool_name, tool_path))
+        project_file_path = self.project_folder_path / (self.project_name + '.rproject')
+        json_write_to_file_path(project_file_path, OrderedDict(tool_list))
 
     def _compile_child_tools_id_to_list(self):
         pass
@@ -487,5 +485,5 @@ class NodeEditor:
         cache_file_path = CACHE_DIR / (__name__ + '.rtool')
         self.current_node_editor_instance.callback_tool_save(sender,
                                                              app_data={'file_path_name': cache_file_path})
-        data_dict = json_load_from_file(cache_file_path)
+        data_dict = json_load_from_file_path(cache_file_path)
         refresh_core_data_with_json_dict(data_dict)

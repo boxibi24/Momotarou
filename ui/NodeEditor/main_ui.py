@@ -33,15 +33,15 @@ def setup_dpg_font():
     dpg.bind_font(default_font)
 
 
-def initialize_node_editor_project(setting_dict: dict, logger_queue: Queue, is_debug_mode: bool):
-    node_editor_project: NodeEditor = _initialize_primary_window_as_node_graph(setting_dict, logger_queue,
+def initialize_node_editor_project(setting_dict: dict, packages_list: list, logger_queue: Queue, is_debug_mode: bool):
+    node_editor_project: NodeEditor = _initialize_primary_window_as_node_graph(setting_dict, packages_list, logger_queue,
                                                                                is_debug_mode)
     render_dpg_frame(node_editor_project)
 
     _on_close_project(node_editor_project)
 
 
-def _initialize_primary_window_as_node_graph(setting_dict: dict, logger_queue: Queue,
+def _initialize_primary_window_as_node_graph(setting_dict: dict, packages_list: list, logger_queue: Queue,
                                              is_debug_mode: bool) -> NodeEditor:
     with dpg.window(
         width=1280,
@@ -50,7 +50,8 @@ def _initialize_primary_window_as_node_graph(setting_dict: dict, logger_queue: Q
         menubar=True,
         no_scrollbar=True
     ):
-        node_editor_project = NodeEditor(setting_dict=setting_dict, use_debug_print=is_debug_mode,
+        node_editor_project = NodeEditor(setting_dict=setting_dict, node_menu_list=packages_list,
+                                         use_debug_print=is_debug_mode,
                                          logging_queue=logger_queue)
 
         initialize_file_dialog(node_editor_project)

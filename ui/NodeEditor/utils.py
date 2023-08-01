@@ -1,10 +1,10 @@
-import os.path
-
+from pathlib import Path
 import dearpygui.dearpygui as dpg
 from collections import OrderedDict
 from uuid import uuid1
-import json
 import misc.color as color
+import os
+import platform
 
 
 def generate_uuid() -> str:
@@ -288,20 +288,6 @@ def add_user_input_box(var_type, callback=None, default_value=None,
         return _user_input_box
 
 
-def json_write_to_file(file_path, value):
-    with open(file_path, 'w') as fp:
-        json.dump(value, fp, indent=4)
-
-
-def json_load_from_file(file_path):
-    with open(file_path, 'r') as fp:
-        try:
-            return_dict = json.load(fp)
-            return return_dict
-        except FileNotFoundError:
-            return None
-
-
 def log_on_return_message(logger, action: str, return_message=(0, ''), **kwargs):
     return_code = return_message[0]
     message = return_message[1]
@@ -322,11 +308,24 @@ def log_on_return_message(logger, action: str, return_message=(0, ''), **kwargs)
         logger.error(message)
 
 
-def extract_project_name_from_folder_path(folder_path: str) -> str:
-    return folder_path.split('\\')[-1]
-
-
 def warn_duplicate_and_retry_new_project_dialog():
     with dpg.window(popup=True, on_close=lambda: dpg.show_item('project_new')):
         dpg.add_text(parent='project_new', default_value='Project existed, please rename', color=color.darkred)
 
+
+def construct_tool_path_from_tools_path_and_tool_name(tools_path: Path, tool_name: str) -> str:
+    return (tools_path / (tool_name + '.rtool')).as_posix()
+
+
+def convert_python_path_to_import_path(python_path: Path) -> str:
+    # split up files names and import them
+    import_path = os.path.splitext(
+        os.path.normpath(python_path)
+    )[0]
+    if platform.system() == 'Windows':
+        import_path = import_path.replace('\\', '.')
+    else:
+        import_path = import_path.replace('/', '.')
+    import_path = import_path.split('.')
+    import_path = '.'.join(import_path[-3:])
+    return import_path

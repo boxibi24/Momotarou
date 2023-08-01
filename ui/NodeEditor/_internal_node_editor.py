@@ -4,7 +4,7 @@ from ui.NodeEditor.utils import *
 from core.enum_types import InputPinType, OutputPinType
 from ui.NodeEditor.node_utils import *
 from multiprocessing import Queue
-from core.utils import create_queueHandler_logger, extract_var_name_from_node_info
+from core.utils import create_queueHandler_logger, extract_var_name_from_node_info, json_load_from_file_path
 
 
 class DPGNodeEditor:
@@ -277,7 +277,10 @@ class DPGNodeEditor:
         :param app_data: DPG item's data
         :return:
         """
-        action = dpg.get_item_label(sender)
+        try:
+            action = dpg.get_item_label(sender)
+        except SystemError:
+            action = 'Tool Save'
         file_path = app_data['file_path_name']
         self._refresh_node_editor_data()
         tobe_exported_dict = self._construct_export_dict()
@@ -393,7 +396,7 @@ class DPGNodeEditor:
         :return:
         """
         # Read JSON
-        imported_dict = json_load_from_file(file_path)
+        imported_dict = json_load_from_file_path(file_path)
         if imported_dict is None:
             return 0, 'Could not load Json file!'
         # prepare a pin_mapping dict that lets functions know which pins linked together
