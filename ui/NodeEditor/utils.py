@@ -15,16 +15,12 @@ def generate_uuid() -> str:
     return uuid1().hex
 
 
-def callback_project_new_menu():
-    dpg.show_item('project_new')
+def callback_project_save_as():
+    dpg.show_item('project_save_as')
 
 
 def callback_project_open_menu():
     dpg.show_item('project_open')
-
-
-def callback_project_save_menu():
-    dpg.show_item('project_save')
 
 
 def callback_ng_file_open_menu():
@@ -309,8 +305,8 @@ def log_on_return_message(logger, action: str, return_message=(0, ''), **kwargs)
 
 
 def warn_duplicate_and_retry_new_project_dialog():
-    with dpg.window(popup=True, on_close=lambda: dpg.show_item('project_new')):
-        dpg.add_text(parent='project_new', default_value='Project existed, please rename', color=color.darkred)
+    dpg.add_text(parent='project_save_as', default_value='Project existed, please rename', color=color.darkred)
+    dpg.show_item('project_save_as')
 
 
 def construct_tool_path_from_tools_path_and_tool_name(tools_path: Path, tool_name: str) -> str:
@@ -329,3 +325,15 @@ def convert_python_path_to_import_path(python_path: Path) -> str:
     import_path = import_path.split('.')
     import_path = '.'.join(import_path[-3:])
     return import_path
+
+
+def convert_relative_path_to_absolute_path(relative_path: str) -> Path:
+    return Path(relative_path).absolute()
+
+
+def is_string_contains_special_characters(check_string: str) -> bool:
+    special_chars_list = ['*', '/', '\\']
+    for special_char in special_chars_list:
+        if special_char in check_string:
+            return True
+    return False

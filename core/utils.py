@@ -46,15 +46,15 @@ def dpg_get_value(tag: str):
     return value
 
 
-def json_load_from_file_path(file_path):
+def json_load_from_file_path(file_path) -> dict:
     with open(file_path, 'r') as fp:
         try:
             return_dict = json.load(fp)
             return return_dict
         except FileNotFoundError:
-            return None
+            return {}
 
 
-def json_write_to_file_path(file_path, value):
+def json_write_to_file_path(file_path, value: dict):
     with open(file_path, 'w') as fp:
         json.dump(value, fp, indent=4)

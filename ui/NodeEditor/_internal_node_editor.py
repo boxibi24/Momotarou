@@ -348,7 +348,7 @@ class DPGNodeEditor:
         # Add var dict
         export_dict.update({'vars': self._vars_dict})
 
-    def callback_file_open(self, sender, app_data):
+    def callback_tool_open(self, sender, app_data):
         """
         Callback to open an RTool file as a new node graph
 
@@ -357,9 +357,11 @@ class DPGNodeEditor:
         """
 
         # First clear out everything from the current node graph
-        self.clear_all_data()
-        # Then perform file JSON import
-        self.callback_file_import(sender, app_data)
+        # self.clear_all_data()
+        # Add new tab
+        self.parent_instance.add_node_graph_tab_ask_name('', '', is_open_tool=True, import_path=app_data)
+        # # # Then perform file JSON import
+        # self.callback_tool_import(sender, app_data)
 
     def clear_all_data(self):
         """
@@ -376,7 +378,14 @@ class DPGNodeEditor:
 
         self.logger.info('**** Cleared current node graph ****')
 
-    def callback_file_import(self, sender, app_data):
+    def return_current_node_editor_and_set_it_to_newly_added_tab(self):
+        tab_name_list = list(self.parent_instance.node_editor_tab_dict.keys())
+        stored_node_editor_instance = self.parent_instance.current_node_editor_instance
+        self.parent_instance.current_node_editor_instance = \
+            self.parent_instance.node_editor_tab_dict[tab_name_list[-1]]['node_editor_instance']
+        return stored_node_editor_instance
+
+    def callback_tool_import(self, sender, app_data):
         """
         Callback to perform RTool import to current node graph
 
@@ -384,11 +393,15 @@ class DPGNodeEditor:
         :param app_data: DPG item's data
         :return:
         """
+        try:
+            action = dpg.get_item_label(sender)
+        except SystemError:
+            action = 'Tool Import'
         _file_path = app_data['file_path_name']
-        return_message = self._file_import(_file_path)
-        log_on_return_message(self.logger, action=dpg.get_item_label(sender), return_message=return_message)
+        return_message = self._tool_import(_file_path)
+        log_on_return_message(self.logger, action, return_message)
 
-    def _file_import(self, file_path):  # Import means to append the existing node graph
+    def _tool_import(self, file_path):  # Import means to append the existing node graph
         """
         Rtool import to current node graph
 

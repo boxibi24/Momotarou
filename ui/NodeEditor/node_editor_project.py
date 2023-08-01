@@ -1,7 +1,8 @@
 import dearpygui.dearpygui as dpg
 from multiprocessing import Queue
 from ui.NodeEditor.utils import generate_uuid, log_on_return_message, warn_duplicate_and_retry_new_project_dialog, \
-    construct_tool_path_from_tools_path_and_tool_name, convert_python_path_to_import_path
+    construct_tool_path_from_tools_path_and_tool_name, convert_python_path_to_import_path, callback_project_save_as, \
+    convert_relative_path_to_absolute_path, is_string_contains_special_characters
 from ui.NodeEditor.input_handler import add_keyboard_handler_registry, add_mouse_handler_registry, event_handler
 from ui.NodeEditor.right_click_menu import RightClickMenu
 from ui.NodeEditor.splitter import Splitter
@@ -46,6 +47,10 @@ class NodeEditor:
     @node_editor_bb.setter
     def node_editor_bb(self, value: list[tuple]):
         self._node_editor_bb = value
+
+    @property
+    def node_editor_tab_dict(self) -> OrderedDict:
+        return self._node_editor_tab_dict
 
     def __init__(
         self,
@@ -136,12 +141,11 @@ class NodeEditor:
                     # Splitter
                     self.splitter_panel = Splitter(parent_instance=self)
                     # Node Graph
-                    with dpg.tab_bar(reorderable=True, callback=self.callback_tab_bar_change) as self._tab_bar_id:
+                    with dpg.tab_bar(reorderable=True, callback=self.callback_tab_bar_change) as self.tab_bar_id:
                         self.current_tab_id, self.current_node_editor_instance = \
-                            self._callback_on_name_new_tab('', app_data='Default', user_data=(0, self._tab_bar_id))
+                            self.callback_add_tab('', app_data='Default', user_data=(0, self.tab_bar_id))
 
-                        dpg.add_tab_button(label='+', callback=self._add_node_graph_tab_ask_name,
-                                           user_data=self._tab_bar_id,
+                        dpg.add_tab_button(label='+', callback=self.add_node_graph_tab_ask_name,
                                            no_reorder=True, trailing=True)
                     # Detail panel
                     self.detail_panel = DetailPanel(parent_instance=self)
@@ -152,28 +156,38 @@ class NodeEditor:
                                                    use_debug_print=self._use_debug_print,
                                                    logging_queue=self.logging_queue)
 
-    def _add_node_graph_tab_ask_name(self, sender, app_data, user_data, is_retry=False):
-        parent = user_data
+    def add_node_graph_tab_ask_name(self, sender, app_data, is_retry=False,
+                                    is_open_tool=False, import_path=None):
         _mid_widget_pos = [int(dpg.get_viewport_width() / 2.5), int(dpg.get_viewport_height() / 2.5)]
         with dpg.window(label='New tab',
                         pos=_mid_widget_pos, min_size=[10, 10], no_resize=True) as _modal_window:
             with dpg.group(horizontal=True):
                 dpg.add_text("Name your new tab: ")
-                dpg.add_input_text(width=200, callback=self._callback_on_name_new_tab,
-                                   on_enter=True, user_data=(_modal_window, parent),
-                                   hint='Input and press "Enter" to apply')
+                if is_open_tool:
+                    dpg.add_input_text(width=200, callback=self.callback_add_tab_and_import_tool,
+                                       on_enter=True, user_data=(_modal_window, import_path),
+                                       hint='Input and press "Enter" to apply')
+                else:
+                    dpg.add_input_text(width=200, callback=self.callback_add_tab,
+                                       on_enter=True, user_data=_modal_window,
+                                       hint='Input and press "Enter" to apply')
             if is_retry:
-                dpg.add_text('Name existed, please retry another name!', color=(204, 51, 0, 255))
+                dpg.add_text('Name existed or contains special characters, please retry another name!',
+                             color=(204, 51, 0, 255))
 
-    def _callback_on_name_new_tab(self, sender, app_data, user_data):
+    def callback_add_tab(self, sender, app_data, user_data):
         # delete the modal window
-        if user_data[0]:
-            dpg.delete_item(user_data[0])
+        if user_data:
+            dpg.delete_item(user_data)
         new_tab_name = app_data
-        parent = user_data[1]
-        if self._node_editor_tab_dict.get(new_tab_name, None) is not None:  # Tab name existed
-            return self._add_node_graph_tab_ask_name(sender, app_data, user_data=parent, is_retry=True)
-        new_tab_id = dpg.add_tab(label=new_tab_name, parent=parent,
+        return self._init_new_tab(new_tab_name)
+
+    def _init_new_tab(self, new_tab_name: str, is_open_tool=False, tool_import_path=''):
+        if self._node_editor_tab_dict.get(new_tab_name, None) is not None or \
+            is_string_contains_special_characters(new_tab_name):
+            return self.add_node_graph_tab_ask_name('', new_tab_name, is_retry=True,
+                                                    is_open_tool=is_open_tool, import_path=tool_import_path)
+        new_tab_id = dpg.add_tab(label=new_tab_name, parent=self.tab_bar_id,
                                  closable=True, payload_type='__var', drop_callback=self.var_drop_callback)
         # Right click context menu for tab
         with dpg.item_handler_registry() as item_handler_id:
@@ -191,6 +205,25 @@ class NodeEditor:
                                                           'id': new_tab_id
                                                           }})
         return new_tab_id, new_node_editor
+
+    def callback_add_tab_and_import_tool(self, sender, app_data, user_data):
+        # delete the modal window
+        if user_data[0]:
+            dpg.delete_item(user_data[0])
+        new_tab_name = app_data
+        tool_import_path = user_data[1]
+        try:
+            new_tab_id, new_node_editor = self._init_new_tab(new_tab_name, is_open_tool=True, tool_import_path=tool_import_path)
+            self._cache_current_node_editor_and_import_tool_to_new_tab(new_node_editor, tool_import_path)
+        except Exception:
+            pass
+
+    def _cache_current_node_editor_and_import_tool_to_new_tab(self, new_node_editor_instance, tool_import_path: dict):
+        _cache_node_editor_instance = self.current_node_editor_instance
+        self.current_node_editor_instance = new_node_editor_instance
+        new_node_editor_instance.callback_tool_import('NG_file_open', tool_import_path)
+        self.current_node_editor_instance = _cache_node_editor_instance
+        self.refresh_splitter_data()
 
     def _add_handler_registry(self):
         """
@@ -276,13 +309,13 @@ class NodeEditor:
     def _get_tab_list_with_order(self) -> list:
         converter = {}
         tab_name_list_with_order = []
-        for item in dpg.get_item_children(self._tab_bar_id, 1):
+        for item in dpg.get_item_children(self.tab_bar_id, 1):
             # Skip add button
             if dpg.get_item_label(item) == '+':
                 continue
             converter[tuple(dpg.get_item_rect_min(item))] = dpg.get_item_label(item)
 
-        pos = [dpg.get_item_rect_min(item) for item in dpg.get_item_children(self._tab_bar_id, 1) if
+        pos = [dpg.get_item_rect_min(item) for item in dpg.get_item_children(self.tab_bar_id, 1) if
                dpg.get_item_label(item) != '+']
         sortedPos = sorted(pos, key=lambda position: pos[0])
 
@@ -396,48 +429,79 @@ class NodeEditor:
             self.logger.exception('Could not query _internal modules:')
             return -1
 
-    def callback_project_new(self, sender, app_data):
-        project_path = Path(app_data['file_path_name'])
-        if os.path.exists(project_path):
-            warn_duplicate_and_retry_new_project_dialog()
-            return 0
-        self._update_project_name(project_path.name)
-        self._create_project_folder(project_path)
-
-    def _update_project_name(self, new_project_name: str):
-        self.project_name = new_project_name
-        dpg.configure_item(self.splitter_column, label=new_project_name)
-
     def _create_cache_project_folder(self):
         if CACHE_DIR.parent.exists():
             shutil.rmtree(CACHE_DIR.parent)
         CACHE_DIR.parent.mkdir()
         CACHE_DIR.mkdir()
-        self._create_project_folder(CACHE_DIR)
+        self._project_save_to_folder()
         return CACHE_DIR
 
-    def _create_project_folder(self, folder_path: Path):
-        self.project_folder_path = folder_path
+    def callback_project_save_as(self, sender, app_data):
+        project_path = Path(app_data['file_path_name'])
+        if os.path.exists(project_path):
+            warn_duplicate_and_retry_new_project_dialog()
+            return 0
+        self._update_project_data(project_path)
         self._project_save_to_folder()
 
-    def callback_project_open(self, sender, app_data):
-        pass
+    def _update_project_data(self, project_path: Path):
+        self._update_project_name(project_path.name)
+        self.project_folder_path = project_path
 
-    def callback_project_save(self, sender, app_data):
-        project_path = Path(app_data['file_path_name'])
-        self.project_folder_path = project_path.parent
-        self.project_name = project_path.name
+    def _update_project_name(self, new_project_name: str):
+        self.project_name = new_project_name
+        dpg.configure_item(self.splitter_column, label=new_project_name)
+
+    def callback_project_open(self, sender, app_data):
+        project_file_path = Path(app_data['file_path_name'])
+        action = dpg.get_item_label(sender)
+        return_message = self._open_new_project(project_file_path)
+        log_on_return_message(self.logger, action, return_message)
+
+    def _open_new_project(self, project_file_path: Path) -> tuple[int, object]:
+        self._clean_current_project()
+        self._batch_import_tools_to_project(project_file_path)
+        self._update_project_data(project_file_path.parent)
+        return 1, ''
+
+    def _clean_current_project(self):
+        tuple_list = list(self._node_editor_tab_dict.items())
+        for tab_name, tab_info in tuple_list:
+            self._delete_tab(tab_info, tab_name)
+
+    def _batch_import_tools_to_project(self, project_file_path: Path):
+        project_dict = json_load_from_file_path(project_file_path)
+        i = 0
+        _first_imported_node_editor_instance = None
+        _first_tab_id = 0
+        for tool_name, tool_path in project_dict.items():
+            self.callback_add_tab('project_open', tool_name, (0, self.tab_bar_id))
+            if i == 0:
+                _first_imported_node_editor_instance = self._node_editor_tab_dict[tool_name]['node_editor_instance']
+                _first_tab_id = self._node_editor_tab_dict[tool_name]['id']
+            self.current_node_editor_instance = self._node_editor_tab_dict[tool_name]['node_editor_instance']
+            self.current_node_editor_instance.callback_tool_import('project_open', {
+                'file_path_name': project_file_path.parent / tool_path})
+            i += 1
+        self.current_node_editor_instance = _first_imported_node_editor_instance
+        self.current_tab_id = _first_tab_id
+
+    def callback_project_save(self, sender):
+        # If project is still temp, prompt to save project as another location
+        if self.project_folder_path == CACHE_DIR:
+            return callback_project_save_as()
         action = dpg.get_item_label(sender)
         return_message = self._project_save_to_folder()
         log_on_return_message(self.logger, action, return_message)
 
-    def _project_save_to_folder(self):
+    def _project_save_to_folder(self) -> tuple[int, object]:
         try:
             self.refresh_node_editor_dict()
             self._construct_project_folder()
         except Exception:
             return 4, traceback.format_exc()
-        return 1,
+        return 1, ''
 
     def _construct_project_folder(self):
         self._construct_tools_folder()
@@ -447,7 +511,7 @@ class NodeEditor:
         self._create_tools_path_if_not_existed()
         for child_node_graph_name, child_node_graph_info in self._node_editor_tab_dict.items():
             child_node_graph_path = self._get_tool_path_from_tool_name(child_node_graph_name)
-            child_node_graph_info['node_editor_instance'].callback_tool_save('NG_file_save',
+            child_node_graph_info['node_editor_instance'].callback_tool_save('',
                                                                              {'file_path_name': child_node_graph_path})
 
     def _create_tools_path_if_not_existed(self):
@@ -469,9 +533,6 @@ class NodeEditor:
             tool_list.append((tool_name, tool_path))
         project_file_path = self.project_folder_path / (self.project_name + '.rproject')
         json_write_to_file_path(project_file_path, OrderedDict(tool_list))
-
-    def _compile_child_tools_id_to_list(self):
-        pass
 
     def refresh_node_graph_bounding_box(self):
         # Update node graph bounding box to restrict right click menu only shows when cursor is inside of it
