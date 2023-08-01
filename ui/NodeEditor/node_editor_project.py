@@ -1,6 +1,7 @@
 import dearpygui.dearpygui as dpg
 from multiprocessing import Queue
-from ui.NodeEditor.utils import generate_uuid, json_write_to_file, log_on_return_message, json_load_from_file
+from ui.NodeEditor.utils import generate_uuid, json_write_to_file, log_on_return_message, \
+    json_load_from_file, extract_project_name_from_folder_path, warn_duplicate_and_retry_new_project_dialog
 from ui.NodeEditor.input_handler import add_keyboard_handler_registry, add_mouse_handler_registry, event_handler
 from ui.NodeEditor.right_click_menu import RightClickMenu
 from ui.NodeEditor.splitter import Splitter
@@ -11,18 +12,17 @@ from ui.NodeEditor.classes.node import NodeModule
 from ui.NodeEditor.node_utils import construct_var_node_label, construct_module_name_from_var_action_and_type
 from collections import OrderedDict
 import os
+from pathlib import Path
 import platform
-import tempfile
-from glob import glob
 from importlib import import_module
 from copy import deepcopy
 import traceback
 from core.utils import create_queueHandler_logger
 from core.data_loader import refresh_core_data_with_json_dict
-import misc.color as color
 
 INTERNAL_NODE_CATEGORY = '_internal'
-CACHE_DIR = tempfile.gettempdir()
+CACHE_DIR = Path(os.getenv('LOCALAPPDATA')) / "RUT" / "NodeEditor"
+TOOLS_PATH = CACHE_DIR / 'tools'
 
 
 class NodeEditor:
@@ -49,7 +49,7 @@ class NodeEditor:
     def __init__(
         self,
         setting_dict=None,
-        node_dir='nodes',
+        node_dir=Path('nodes'),
         node_menu_dict=None,
         use_debug_print=False,
         logging_queue=Queue()
@@ -70,6 +70,8 @@ class NodeEditor:
         self._node_editor_tab_dict = OrderedDict([])
         # Tuple to store current node editor boundaries position
         self._node_editor_bb = [(), ()]
+        self.project_folder_path = self._create_cache_project_folder()
+        self.project_name = 'MyRUTProject'
 
         # ------- LOGGING ______
         self.logging_queue = logging_queue
@@ -92,15 +94,9 @@ class NodeEditor:
             self.menu_construct_dict = OrderedDict([])
             # Add right-click-menu items defined
             for node_category in _node_menu_dict:
-                # Store paths of written nodes
-                node_sources_path = os.path.join(
-                    node_dir,
-                    node_category,
-                    '*.py'
-                )
+                node_sources_path = node_dir / node_category
                 # Get path of included node_sources_path files
-                node_sources = glob(node_sources_path)
-                for node_source in node_sources:
+                for node_source in node_sources_path.glob('*.py'):
                     # split up files names and import them
                     import_path = os.path.splitext(
                         os.path.normpath(node_source)
@@ -140,7 +136,8 @@ class NodeEditor:
         ):
             with dpg.table(header_row=True, resizable=True, reorderable=False, borders_outerH=False,
                            borders_outerV=False, borders_innerV=False, borders_innerH=False):
-                dpg.add_table_column(label='MyRUTProject', width_fixed=True, init_width_or_weight=300)
+                self.splitter_column = dpg.add_table_column(label=self.project_name, width_fixed=True,
+                                                            init_width_or_weight=300)
                 dpg.add_table_column(label='Event Graph')
                 dpg.add_table_column(label='Details', width_fixed=True,
                                      init_width_or_weight=300)
@@ -426,22 +423,29 @@ class NodeEditor:
             self.logger.exception('Could not query _internal modules:')
             return -1
 
-    def _construct_project_dict(self) -> OrderedDict:
-        # project_dict = OrderedDict([])
-        # self._compile_child_tools_id_to_list()
-        # self._node_editor_tab_dict
-        # return project_dict
-        pass
-
     def callback_project_new(self, sender, app_data):
-        file_path = app_data['file_path_name']
-        print(dpg.get_file_dialog_info(sender))
-        if os.path.exists(file_path):
-            with dpg.group():
-                dpg.push_container_stack('project_new')
-                dpg.add_text(parent='project_new', default_value='Project existed, please rename', color=color.darkred)
-            dpg.show_item('project_new')
+        folder_path = app_data['file_path_name']
+        if os.path.exists(folder_path):
+            warn_duplicate_and_retry_new_project_dialog()
+            return 0
+        self._update_project_name(extract_project_name_from_folder_path(folder_path))
+        self._create_project_folder(folder_path)
 
+    def _update_project_name(self, new_project_name: str):
+        self.project_name = new_project_name
+        dpg.configure_item(self.splitter_column, label=new_project_name)
+
+    def _create_cache_project_folder(self):
+        if CACHE_DIR.exists():
+            CACHE_DIR.rmdir()
+        CACHE_DIR.parent.mkdir()
+        CACHE_DIR.mkdir()
+        self._create_project_folder(CACHE_DIR)
+        return CACHE_DIR
+
+    def _create_project_folder(self, folder_path: Path):
+        self.project_folder_path = folder_path
+        self._project_save_to_file()
 
     def callback_project_open(self, sender, app_data):
         pass
@@ -449,17 +453,24 @@ class NodeEditor:
     def callback_project_save(self, sender, app_data):
         file_path = app_data['file_path_name']
         action = dpg.get_item_label(sender)
-        return_message = self._project_save_to_file(file_path)
+        return_message = self._project_save_to_file()
         log_on_return_message(self.logger, action, return_message)
 
-    def _project_save_to_file(self, file_path):
+    def _project_save_to_file(self):
         try:
             self.refresh_node_editor_dict()
-            project_dict = self._construct_project_dict()
-            json_write_to_file(file_path, project_dict)
+            self._construct_project_folder()
         except Exception:
             return 4, traceback.format_exc()
         return 1,
+
+    def _construct_project_folder(self):
+        tools_path = self.project_folder_path / 'tools'
+        if not tools_path.exists():
+            tools_path.mkdir()
+        for child_node_graph_name, child_node_graph_info in self._node_editor_tab_dict.items():
+            child_node_graph_info['node_editor_instance'].callback_tool_save('NG_file_save',
+                                                                             tools_path / (child_node_graph_name + '.rtool'))
 
     def _compile_child_tools_id_to_list(self):
         pass
@@ -473,7 +484,7 @@ class NodeEditor:
                                   dpg.get_viewport_height() - 47)
 
     def callback_compile_current_node_graph(self, sender):
-        cache_file_path = CACHE_DIR + '\\' + __name__ + '.rtool'
+        cache_file_path = CACHE_DIR / (__name__ + '.rtool')
         self.current_node_editor_instance.callback_tool_save(sender,
                                                              app_data={'file_path_name': cache_file_path})
         data_dict = json_load_from_file(cache_file_path)

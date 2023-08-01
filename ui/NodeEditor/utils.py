@@ -4,6 +4,7 @@ import dearpygui.dearpygui as dpg
 from collections import OrderedDict
 from uuid import uuid1
 import json
+import misc.color as color
 
 
 def generate_uuid() -> str:
@@ -320,4 +321,12 @@ def log_on_return_message(logger, action: str, return_message=(0, ''), **kwargs)
         logger.info(f'{action} did not performed. Exception encountered')
         logger.error(message)
 
+
+def extract_project_name_from_folder_path(folder_path: str) -> str:
+    return folder_path.split('\\')[-1]
+
+
+def warn_duplicate_and_retry_new_project_dialog():
+    with dpg.window(popup=True, on_close=lambda: dpg.show_item('project_new')):
+        dpg.add_text(parent='project_new', default_value='Project existed, please rename', color=color.darkred)
 
