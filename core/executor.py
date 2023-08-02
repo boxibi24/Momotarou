@@ -62,7 +62,9 @@ def flow_control_redirect(anchors: list):
         return 0
     for anchor in anchors:
         if anchor['this_node_label'] == 'Do N':
-            _set_do_n_index_value(anchor['this_node_tag'], anchor['index'])
+            _set_for_loop_index_value(anchor['this_node_tag'], anchor['index'])
+        elif anchor['this_node_label'] == 'For each loop':
+            _set_for_each_index_and_element(anchor['this_node_tag'], anchor['index'])
         sub_anchors = []
         if sub_anchors:
             sub_anchors.clear()
@@ -71,15 +73,37 @@ def flow_control_redirect(anchors: list):
             flow_control_redirect(sub_anchors)
 
 
-def _set_do_n_index_value(node_tag: str, value: int):
-    pin_info = _find_index_pin_info_in_do_n_node(node_tag)
+def _set_for_each_index_and_element(node_tag: str, index: int):
+    if not _is_completed_body(node_tag, index):
+        _set_for_loop_index_value(node_tag, index)
+        _set_for_loop_element_value(node_tag, index)
+
+
+def _is_completed_body(node_tag: str, index: int) -> bool:
+    return index > len(nodes_data[node_tag]['internal_data']['String Array']) - 1
+
+
+def _set_for_loop_index_value(node_tag: str, value: int):
+    pin_info = _find_index_pin_info_in_for_loop_node(node_tag)
     pin_info['value'] = value
     dirty_propagate(node_tag)
 
 
-def _find_index_pin_info_in_do_n_node(node_tag) -> dict:
+def _find_index_pin_info_in_for_loop_node(node_tag) -> dict:
     for pin_info in nodes_data[node_tag]['pins']:
-        if pin_info['label'] == 'Index':
+        if 'Index' in pin_info['label']:
+            return pin_info
+
+
+def _set_for_loop_element_value(node_tag: str, element_index: int):
+    pin_info = _find_element_pin_info_for_each_node(node_tag)
+    pin_info['value'] = nodes_data[node_tag]['internal_data']['String Array'][element_index]
+    dirty_propagate(node_tag)
+
+
+def _find_element_pin_info_for_each_node(node_tag: str) -> dict:
+    for pin_info in nodes_data[node_tag]['pins']:
+        if pin_info['label'] == 'Array Str Element':
             return pin_info
 
 
@@ -241,6 +265,20 @@ def update_anchors(current_node_info: dict, current_node_tag: str, anchors: list
                                     'this_node_tag': current_node_tag,
                                     'this_node_label': current_node_info['label']})
                 break
+    elif current_node_info['label'] == 'For each loop':
+        iteration_num = len(current_node_info['internal_data']['String Array'])
+        for pin_info in current_node_info['pins']:
+            if pin_info['label'] == 'Loop Body' and pin_info['is_connected']:
+                for i in range(iteration_num):
+                    anchors.append({'next_node_tag': pin_info['connected_to_node'],
+                                    'index': i,
+                                    'this_node_tag': current_node_tag,
+                                    'this_node_label': current_node_info['label']})
+            elif pin_info['label'] == 'Completed' and pin_info['is_connected']:
+                anchors.append({'next_node_tag': pin_info['connected_to_node'],
+                                'this_node_tag': current_node_tag,
+                                'index': iteration_num,
+                                'this_node_label': current_node_info['label']})
 
 
 def _get_next_node_tag(current_node_info: dict) -> str:
