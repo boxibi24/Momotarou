@@ -69,8 +69,10 @@ def render_dpg_frame(node_editor_project: NodeEditor):
 
 
 def _on_close_project(node_editor_project: NodeEditor):
-    # Stop logging queue listener
     for node in node_editor_project.current_node_editor_instance.node_instance_dict.values():
         node.on_node_deletion()
-    node_editor_project.terminate_flag = True
+    node_editor_project.thread_pool.close()
+    node_editor_project.thread_pool.join()
     dpg.destroy_context()
+
+

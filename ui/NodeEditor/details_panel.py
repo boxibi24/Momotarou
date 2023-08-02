@@ -124,8 +124,8 @@ class DetailPanel:
             dpg.add_text(default_value=f'Name: {var_name}')
             dpg.add_text(default_value=f'Tag: {user_data}')
             dpg.add_text(default_value=f'Type: {var_type}')
-            dpg.add_text(default_value=f'Value: {var_value}')
-            dpg.add_text(default_value=f'Default Value: {default_var_value}')
+            if var_type in ['String', 'Int', 'Float', 'MultilineString', 'Password', 'Bool']:
+                dpg.add_text(default_value=f'Default Value: {default_var_value}')
             dpg.add_text(default_value=f'Is exposed for user input?: {var_is_exposed_value}')
 
         _current_node_editor_instance.logger.debug('**** Details Panel refreshed to show var detail ****')

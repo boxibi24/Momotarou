@@ -5,6 +5,8 @@ import logging
 from logging import Logger, Formatter, Handler
 from logging.handlers import QueueHandler, QueueListener
 from multiprocessing import Queue
+from typing import Tuple
+
 from ui.NodeEditor.main_ui import initialize_node_editor_project, setup_dpg_font, initialize_dpg
 from core.executor import setup_executor_logger
 from core.utils import json_load_from_file_path
@@ -15,7 +17,7 @@ APPLICATION_NAME = 'NodeEditor'
 
 def main():
     setting_file_path, packages_file_path, is_debug_mode = parse_argument()
-    logger, logger_queue = setup_logger(is_debug_mode)
+    logger, logger_queue, queue_listener = setup_logger(is_debug_mode)
     logger.info("***** Load Config *****")
     setting_dict = json_load_from_file_path(setting_file_path)
     packages_list = json_load_from_file_path(packages_file_path)['packages']
@@ -26,6 +28,7 @@ def main():
     logger.info('**** Initialize Node Editor Project *****')
     initialize_node_editor_project(setting_dict, packages_list, logger_queue, is_debug_mode)
     logger.info('**** DearPyGui Terminated! *****')
+    _on_terminate_project(queue_listener)
 
 
 def parse_argument():
@@ -73,22 +76,22 @@ def get_arg():
     return args
 
 
-def setup_logger(is_debug_mode: bool) -> tuple[Logger, Queue]:
-    logger, logger_queue = _setup_main_logger(is_debug_mode)
+def setup_logger(is_debug_mode: bool) -> tuple[Logger, Queue, QueueListener]:
+    logger, logger_queue, queue_listener = _setup_main_logger(is_debug_mode)
     setup_executor_logger(logger_queue, is_debug_mode)
-    return logger, logger_queue
+    return logger, logger_queue, queue_listener
 
 
-def _setup_main_logger(is_debug_mode: bool) -> tuple[Logger, Queue]:
+def _setup_main_logger(is_debug_mode: bool) -> tuple[Logger, Queue, QueueListener]:
     logger_name = APPLICATION_NAME
     logger = logging.getLogger(logger_name)
     logging_formatter = _get_logging_formatter(logger_name)
     _set_logger_level_on_debug_mode(logger, is_debug_mode)
     file_handler = _setup_file_handler(logger_name, logging_formatter)
     stream_handler = _setup_stream_handler(logging_formatter)
-    logger_queue = _construct_and_add_queue_handler_to_logger(logger, file_handler, stream_handler)
+    logger_queue, queue_listener = _construct_and_add_queue_handler_to_logger(logger, file_handler, stream_handler)
 
-    return logger, logger_queue
+    return logger, logger_queue, queue_listener
 
 
 def _get_logging_formatter(config_file_name: str) -> Formatter:
@@ -140,15 +143,17 @@ def _setup_stream_handler(handler_formatter: Formatter) -> Handler:
     return streamHandler
 
 
-def _construct_and_add_queue_handler_to_logger(logger: Logger, *args: Handler):
+def _construct_and_add_queue_handler_to_logger(logger: Logger, *args: Handler) -> Tuple[Queue, QueueListener]:
     logger_queue = Queue()
     ql = QueueListener(logger_queue, *args, respect_handler_level=True)
     ql.start()
     qh = QueueHandler(logger_queue)
     logger.addHandler(qh)
-    return logger_queue
+    return logger_queue, ql
 
 
+def _on_terminate_project(queue_listener: QueueListener):
+    queue_listener.stop()
 
 
 if __name__ == '__main__':

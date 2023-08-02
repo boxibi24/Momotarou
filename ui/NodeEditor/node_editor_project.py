@@ -1,8 +1,9 @@
 import dearpygui.dearpygui as dpg
 from multiprocessing import Queue
+from multiprocessing.pool import ThreadPool
 from ui.NodeEditor.utils import generate_uuid, log_on_return_message, warn_duplicate_and_retry_new_project_dialog, \
     construct_tool_path_from_tools_path_and_tool_name, convert_python_path_to_import_path, callback_project_save_as, \
-    convert_relative_path_to_absolute_path, is_string_contains_special_characters
+    is_string_contains_special_characters
 from ui.NodeEditor.input_handler import add_keyboard_handler_registry, add_mouse_handler_registry, event_handler
 from ui.NodeEditor.right_click_menu import RightClickMenu
 from ui.NodeEditor.splitter import Splitter
@@ -10,7 +11,7 @@ from ui.NodeEditor.details_panel import DetailPanel
 from ui.NodeEditor._internal_node_editor import DPGNodeEditor
 from ui.NodeEditor.item_right_click_menus import tab_right_click_menu
 from ui.NodeEditor.classes.node import NodeModule
-from ui.NodeEditor.node_utils import construct_var_node_label, construct_module_name_from_var_action_and_type
+from ui.NodeEditor.node_utils import construct_var_node_label, construct_module_name_from_var_action_and_type, worker
 from collections import OrderedDict
 import os
 from pathlib import Path
@@ -91,6 +92,8 @@ class NodeEditor:
         self._add_handler_registry()
         # Cache this project to local appdata
         self.project_folder_path = self._create_cache_project_folder()
+        # Thread pool
+        self.thread_pool = ThreadPool()
         # Initialization done
         self._init_flag = False
         self.logger.info('**** Loaded main viewport')
@@ -548,3 +551,7 @@ class NodeEditor:
                                                              app_data={'file_path_name': cache_file_path})
         data_dict = json_load_from_file_path(cache_file_path)
         refresh_core_data_with_json_dict(data_dict)
+
+    def subprocess_execution_event(self, event_tag):
+        self.thread_pool.apply_async(worker, (event_tag,))
+

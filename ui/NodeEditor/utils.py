@@ -327,10 +327,6 @@ def convert_python_path_to_import_path(python_path: Path) -> str:
     return import_path
 
 
-def convert_relative_path_to_absolute_path(relative_path: str) -> Path:
-    return Path(relative_path).absolute()
-
-
 def is_string_contains_special_characters(check_string: str) -> bool:
     special_chars_list = ['*', '/', '\\']
     for special_char in special_chars_list:

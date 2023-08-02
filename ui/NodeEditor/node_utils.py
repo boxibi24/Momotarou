@@ -5,6 +5,8 @@ from core.utils import dpg_set_value, dpg_get_value, json_write_to_file_path
 import traceback
 from ui.NodeEditor.classes.link import Link, LinkInfo
 from ui.NodeEditor.classes.pin import PinInfo
+import subprocess
+import sys
 
 
 def delete_selected_node(node_editor, node_id=None):
@@ -377,3 +379,8 @@ def create_list_from_dict_values(in_dict: dict):
     for node in in_dict.values():
         _node_list.append(node)
     return _node_list
+
+
+def worker(event_tag: str):
+    proc = subprocess.Popen([sys.executable, './core/executor.py', '-event', f'{event_tag}'], stdout=subprocess.PIPE)
+    print(proc.stdout.readline())
