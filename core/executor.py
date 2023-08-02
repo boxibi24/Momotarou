@@ -5,6 +5,7 @@ from core.utils import create_queueHandler_logger, start_timer, stop_timer_and_g
 from core.data_loader import nodes_data, events_data, vars_data
 import dearpygui.dearpygui as dpg
 from core.enum_types import PinMetaType, NodeTypeFlag
+from pprint import pprint
 
 logger = logging.getLogger('')
 is_debug_mode = False
@@ -60,19 +61,33 @@ def flow_control_redirect(anchors: list):
     if not anchors:
         return 0
     for anchor in anchors:
+        if anchor['this_node_label'] == 'Do N':
+            _set_do_n_index_value(anchor['this_node_tag'], anchor['index'])
         sub_anchors = []
         if sub_anchors:
             sub_anchors.clear()
-        forward_propagate_flow(anchor, sub_anchors)
+        forward_propagate_flow(anchor['next_node_tag'], sub_anchors)
         if sub_anchors:
             flow_control_redirect(sub_anchors)
+
+
+def _set_do_n_index_value(node_tag: str, value: int):
+    pin_info = _find_index_pin_info_in_do_n_node(node_tag)
+    pin_info['value'] = value
+    dirty_propagate(node_tag)
+
+
+def _find_index_pin_info_in_do_n_node(node_tag) -> dict:
+    for pin_info in nodes_data[node_tag]['pins']:
+        if pin_info['label'] == 'Index':
+            return pin_info
 
 
 def forward_propagate_flow(current_node_tag: str, anchors: list):
     compute_node_with_timer(current_node_tag)
     current_node_info = nodes_data[current_node_tag]
     if current_node_info['type'] == NodeTypeFlag.Sequential:
-        update_anchors(current_node_info, anchors)
+        update_anchors(current_node_info, current_node_tag, anchors)
     next_node_tag = _get_next_node_tag(current_node_info)
     if next_node_tag:
         forward_propagate_flow(next_node_tag, anchors)
@@ -209,17 +224,22 @@ def _is_clean_unexecuted_blueprint_node(node_info: dict) -> bool:
         not node_info['is_executed']
 
 
-def update_anchors(current_node_info: dict, anchors: list):
+def update_anchors(current_node_info: dict, current_node_tag: str, anchors: list):
     if current_node_info['label'] == 'Sequence':
         for pin_info in current_node_info['pins']:
             if pin_info['meta_type'] == PinMetaType.FlowOut and pin_info['is_connected']:
-                anchors.append(pin_info['connected_to_node'])
+                anchors.append({'next_node_tag': pin_info['connected_to_node'],
+                                'this_node_tag': current_node_tag,
+                                'this_node_label': current_node_info['label']})
     elif current_node_info['label'] == 'Do N':
         iteration_num = current_node_info['internal_data']['N']
         for pin_info in current_node_info['pins']:
             if pin_info['meta_type'] == PinMetaType.FlowOut and pin_info['is_connected']:
                 for i in range(iteration_num):
-                    anchors.append(pin_info['connected_to_node'])
+                    anchors.append({'next_node_tag': pin_info['connected_to_node'],
+                                    'index': i,
+                                    'this_node_tag': current_node_tag,
+                                    'this_node_label': current_node_info['label']})
                 break
 
 
