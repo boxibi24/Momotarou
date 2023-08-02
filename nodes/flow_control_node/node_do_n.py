@@ -12,7 +12,8 @@ class Node(BaseNode):
     pin_dict = {
         'Enter': InputPinType.Exec,
         'N': InputPinType.Int,
-        'Exit': OutputPinType.Exec
+        'Exit': OutputPinType.Exec,
+        'Index': OutputPinType.Int
     }
 
     @staticmethod

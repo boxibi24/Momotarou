@@ -2,6 +2,7 @@ from core.enum_types import PinMetaType, NodeTypeFlag
 from importlib import import_module
 from copy import deepcopy
 from core.utils import extract_var_name_from_node_info, dpg_get_value
+from pprint import pprint
 
 nodes_data = {}
 vars_data = {}
@@ -18,7 +19,7 @@ def refresh_core_data_with_json_dict(json_dict: dict):
     _load_data_link_list(json_dict)
     _load_flow_link_list(json_dict)
     _load_vars_data(json_dict)
-    _load_nodes_data(json_dict)
+    _load_nodes_data()
     return 1, ''
 
 
@@ -71,7 +72,7 @@ def _restructure_imported_vars_data(json_dict: dict) -> dict:
     return restructured_vars_dict
 
 
-def _load_nodes_data(json_dict: dict):
+def _load_nodes_data():
     for first_exec_node_tag in list(events_data.values()):
         for node_index, node_info in enumerate(node_list):
             if node_info['uuid'] == first_exec_node_tag:
@@ -231,7 +232,7 @@ def _get_destination_node_and_pin_index_flowLinked_to_pin(pin_info: dict) -> tup
     if flow_link is None:
         return -1, -1
     destination_node_index, destination_pin_index = _get_destination_node_index_in_flow_link(flow_link)
-    if not destination_node_index:
+    if destination_node_index is None:
         raise Exception(f'Could not find destination node info from {flow_link}')
     return destination_node_index, destination_pin_index
 

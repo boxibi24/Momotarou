@@ -11,16 +11,20 @@ class Node(BaseNode):
     node_label = 'Perforce Sync'
     node_type = NodeTypeFlag.Blueprint
     pin_dict = {
-        'P4 Inst': InputPinType.PerforceInstance
+        'P4 Inst': InputPinType.PerforceInstance,
+        'Sync path': InputPinType.String
     }
 
     @staticmethod
     def run(internal_data_dict):
         p4 = internal_data_dict.get('P4 Inst', None)
         if p4 is None:
-            return -1
+            return 0
         try:
-            p4.run('sync')
-            print(p4)
+            sync_path = internal_data_dict['Sync path']
+            if sync_path:
+                p4.run(f'sync {sync_path}')
+            else:
+                p4.run('sync')
         except P4Exception as e:
-            print(e)
+            return 4, e

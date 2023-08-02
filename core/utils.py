@@ -3,8 +3,11 @@ import logging
 from logging.handlers import QueueHandler
 from multiprocessing import Queue
 from logging import Logger
+from time import perf_counter
 
 from dearpygui import dearpygui as dpg
+
+timer_registry = [0]
 
 
 def create_queueHandler_logger(logger_name: str, queue: Queue, is_debug_mode: bool) -> Logger:
@@ -58,3 +61,13 @@ def json_load_from_file_path(file_path) -> dict:
 def json_write_to_file_path(file_path, value: dict):
     with open(file_path, 'w') as fp:
         json.dump(value, fp, indent=4)
+
+
+def start_timer():
+    global timer_registry
+    timer_registry[0] = perf_counter()
+
+
+def stop_timer_and_get_elapsed_time() -> float:
+    start_time = timer_registry[0]
+    return perf_counter() - start_time

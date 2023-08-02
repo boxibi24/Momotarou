@@ -25,6 +25,7 @@ class InputPinType(IntEnum):
     Bool = auto()
     MultilineString = auto()
     PerforceInstance = auto()
+    StringArray = auto()
 
 
 class OutputPinType(IntEnum):
@@ -39,6 +40,8 @@ class OutputPinType(IntEnum):
     Bool = auto()
     MultilineString = auto()
     PerforceInstance = auto()
+    StringArray = auto()
+
 
 class PinMetaType(IntEnum):
     DataIn = auto()

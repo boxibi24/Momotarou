@@ -379,8 +379,3 @@ def create_list_from_dict_values(in_dict: dict):
     for node in in_dict.values():
         _node_list.append(node)
     return _node_list
-
-
-def worker(event_tag: str):
-    proc = subprocess.Popen([sys.executable, './core/executor.py', '-event', f'{event_tag}'], stdout=subprocess.PIPE)
-    print(proc.stdout.readline())

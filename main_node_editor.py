@@ -89,6 +89,7 @@ def _setup_main_logger(is_debug_mode: bool) -> tuple[Logger, Queue, QueueListene
     _set_logger_level_on_debug_mode(logger, is_debug_mode)
     file_handler = _setup_file_handler(logger_name, logging_formatter)
     stream_handler = _setup_stream_handler(logging_formatter)
+    _set_handler_level_on_debug_mode(is_debug_mode, file_handler, stream_handler)
     logger_queue, queue_listener = _construct_and_add_queue_handler_to_logger(logger, file_handler, stream_handler)
 
     return logger, logger_queue, queue_listener
@@ -141,6 +142,15 @@ def _setup_stream_handler(handler_formatter: Formatter) -> Handler:
     streamHandler.setLevel(logging.INFO)
     streamHandler.setFormatter(handler_formatter)
     return streamHandler
+
+
+def _set_handler_level_on_debug_mode(is_debug_mode: bool, *args: Handler):
+    if is_debug_mode:
+        for handler in args:
+            handler.setLevel(logging.DEBUG)
+    else:
+        for handler in args:
+            handler.setLevel(logging.INFO)
 
 
 def _construct_and_add_queue_handler_to_logger(logger: Logger, *args: Handler) -> Tuple[Queue, QueueListener]:

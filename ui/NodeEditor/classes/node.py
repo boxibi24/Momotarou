@@ -32,6 +32,8 @@ def get_pin_class(pin_type):
         return PinWildCard
     elif pin_type == InputPinType.PerforceInstance:
         return PerforceInstancePin
+    elif pin_type == InputPinType.StringArray:
+        return PinStringArray
     else:
         return PinBase
 

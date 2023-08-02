@@ -644,3 +644,24 @@ class PerforceInstancePin(PinBase):
         super().__init__(parent, attribute_type, pin_type, pin_shape, input_window_width, label, enable_input, callback,
                          pin_tag, show_data, default_data, user_data)
         self.CreatePin()
+
+
+class PinStringArray(PinBase):
+
+    def __init__(self,
+                 parent,
+                 attribute_type,
+                 pin_type,
+                 pin_shape=dpg.mvNode_PinShape_Quad,
+                 input_window_width=240,
+                 label='String array',
+                 enable_input=False,
+                 callback=None,
+                 pin_tag=None,
+                 show_data=True,
+                 default_data=None,
+                 user_data=None
+                 ):
+        super().__init__(parent, attribute_type, pin_type, pin_shape, input_window_width, label, enable_input, callback,
+                         pin_tag, show_data, default_data, user_data)
+        self.CreatePin()

@@ -4,6 +4,7 @@ from ui.NodeEditor.menu_bar import initialize_file_dialog, initialize_menu_bar
 from core.executor import setup_executor_logger
 from multiprocessing import Queue
 import os
+from pathlib import Path
 
 
 def initialize_dpg(editor_width: int, editor_height: int):
@@ -34,7 +35,8 @@ def setup_dpg_font():
 
 
 def initialize_node_editor_project(setting_dict: dict, packages_list: list, logger_queue: Queue, is_debug_mode: bool):
-    node_editor_project: NodeEditor = _initialize_primary_window_as_node_graph(setting_dict, packages_list, logger_queue,
+    node_editor_project: NodeEditor = _initialize_primary_window_as_node_graph(setting_dict, packages_list,
+                                                                               logger_queue,
                                                                                is_debug_mode)
     render_dpg_frame(node_editor_project)
 
@@ -58,14 +60,19 @@ def _initialize_primary_window_as_node_graph(setting_dict: dict, packages_list: 
         initialize_menu_bar(node_editor_project)
     dpg.set_primary_window('Main_Window', True)
     dpg.show_viewport()
-    setup_executor_logger(logger_queue, is_debug_mode)
     return node_editor_project
 
 
 def render_dpg_frame(node_editor_project: NodeEditor):
     while dpg.is_dearpygui_running():
         node_editor_project.refresh_node_graph_bounding_box()
+        _update_log_window()
         dpg.render_dearpygui_frame()
+
+
+def _update_log_window():
+    with open(Path(__file__).parent.parent.parent / 'Logs' / 'NodeEditor.log', 'r') as f:
+        dpg.configure_item('log', default_value=f.read())
 
 
 def _on_close_project(node_editor_project: NodeEditor):
@@ -74,5 +81,3 @@ def _on_close_project(node_editor_project: NodeEditor):
     node_editor_project.thread_pool.close()
     node_editor_project.thread_pool.join()
     dpg.destroy_context()
-
-

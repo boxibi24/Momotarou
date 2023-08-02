@@ -17,5 +17,4 @@ class Node(BaseNode):
     @staticmethod
     def run(internal_data_dict):
         internal_data_dict.update({'String': internal_data_dict.get('Wildcard', '')})
-        a = internal_data_dict.get('Wildcard', None)
         print(internal_data_dict['String'])

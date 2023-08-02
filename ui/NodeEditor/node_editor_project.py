@@ -11,7 +11,7 @@ from ui.NodeEditor.details_panel import DetailPanel
 from ui.NodeEditor._internal_node_editor import DPGNodeEditor
 from ui.NodeEditor.item_right_click_menus import tab_right_click_menu
 from ui.NodeEditor.classes.node import NodeModule
-from ui.NodeEditor.node_utils import construct_var_node_label, construct_module_name_from_var_action_and_type, worker
+from ui.NodeEditor.node_utils import construct_var_node_label, construct_module_name_from_var_action_and_type
 from collections import OrderedDict
 import os
 from pathlib import Path
@@ -21,6 +21,7 @@ from copy import deepcopy
 import traceback
 from core.utils import create_queueHandler_logger, json_load_from_file_path, json_write_to_file_path
 from core.data_loader import refresh_core_data_with_json_dict
+from core.executor import execute_event
 
 INTERNAL_NODE_CATEGORY = '_internal'
 CACHE_DIR = Path(os.getenv('LOCALAPPDATA')) / "RUT" / "NodeEditor"
@@ -150,7 +151,6 @@ class NodeEditor:
 
                         dpg.add_tab_button(label='+', callback=self.add_node_graph_tab_ask_name,
                                            no_reorder=True, trailing=True)
-                    # Detail panel
                     self.detail_panel = DetailPanel(parent_instance=self)
             # Initialize right click menu
             self.right_click_menu = RightClickMenu(parent_inst=self,
@@ -158,6 +158,15 @@ class NodeEditor:
                                                    setting_dict=self._setting_dict,
                                                    use_debug_print=self._use_debug_print,
                                                    logging_queue=self.logging_queue)
+        with dpg.window(
+            label='Output Log',
+            horizontal_scrollbar=True,
+            no_close=True,
+            show=False,
+            height=300,
+            width=500
+        ) as self.output_log_id:
+            self.log_output_window_id = dpg.add_text(tag='log')
 
     def add_node_graph_tab_ask_name(self, sender, app_data, is_retry=False,
                                     is_open_tool=False, import_path=None):
@@ -216,7 +225,8 @@ class NodeEditor:
         new_tab_name = app_data
         tool_import_path = user_data[1]
         try:
-            new_tab_id, new_node_editor = self._init_new_tab(new_tab_name, is_open_tool=True, tool_import_path=tool_import_path)
+            new_tab_id, new_node_editor = self._init_new_tab(new_tab_name, is_open_tool=True,
+                                                             tool_import_path=tool_import_path)
             self._cache_current_node_editor_and_import_tool_to_new_tab(new_node_editor, tool_import_path)
         except Exception:
             pass
@@ -553,5 +563,14 @@ class NodeEditor:
         refresh_core_data_with_json_dict(data_dict)
 
     def subprocess_execution_event(self, event_tag):
-        self.thread_pool.apply_async(worker, (event_tag,))
+        # self._pop_output_log_window()
+        # self.thread_pool.apply_async(execute_event, (event_tag,))
+        execute_event(event_tag)
 
+    def _pop_output_log_window(self):
+        dpg.configure_item(self.output_log_id, show=True)
+        # self._snap_log_output_track_to_latest_text()
+
+    # def _snap_log_output_track_to_latest_text(self):
+    #     dpg.configure_item(self.log_output_window_id, tracked=True, track_offset=1.0)
+    #     dpg.configure_item(self.log_output_window_id, tracked=False)

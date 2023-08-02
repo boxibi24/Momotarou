@@ -1,7 +1,6 @@
 from ui.NodeEditor.classes.node import BaseNode
 from core.enum_types import NodeTypeFlag, InputPinType, OutputPinType
-from copy import deepcopy
-from P4 import P4, P4Exception
+from P4 import P4
 
 
 class Node(BaseNode):
@@ -16,6 +15,7 @@ class Node(BaseNode):
         'Password': InputPinType.Password,
         'Port': InputPinType.String,
         'Charset': InputPinType.String,
+        'Client': InputPinType.String,
         'P4 Inst': OutputPinType.PerforceInstance
     }
 
@@ -23,9 +23,10 @@ class Node(BaseNode):
     def run(internal_data_dict):
 
         p4 = P4()
-        p4.user = internal_data_dict.get('User', None)
-        p4.password = internal_data_dict.get('Password', None)
-        p4.port = internal_data_dict.get('Port')
-        p4.charset = internal_data_dict.get('Charset')
+        p4.user = internal_data_dict['User']
+        p4.password = internal_data_dict['Password']
+        p4.port = internal_data_dict['Port']
+        p4.charset = internal_data_dict['Charset']
+        p4.client = internal_data_dict['client']
 
         internal_data_dict.update({'P4 Inst': p4})
