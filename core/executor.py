@@ -289,6 +289,7 @@ def _get_next_node_tag(current_node_info: dict) -> str:
         next_node_tag = _get_next_node_tag_from_blueprint_node(current_node_info)
     if current_node_info['type'] == NodeTypeFlag.SetVariable:
         _dirty_propagate_all_get_var_nodes(current_node_info)
+        next_node_tag = _get_next_node_tag_from_blueprint_node(current_node_info)
     return next_node_tag
 
 

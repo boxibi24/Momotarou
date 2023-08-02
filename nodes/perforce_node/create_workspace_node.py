@@ -42,6 +42,7 @@ class Node(BaseNode):
                          }
         try:
             p4.save_client(client_config)
+            print(p4)
         except P4Exception as e:
             return 4, e
         internal_data_dict['P4 Inst Out'] = p4

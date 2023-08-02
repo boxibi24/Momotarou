@@ -11,16 +11,18 @@ class Node(BaseNode):
     node_label = 'Perforce Connect'
     node_type = NodeTypeFlag.Blueprint
     pin_dict = {
-        'P4 Inst': InputPinType.PerforceInstance
+        'P4 Inst': InputPinType.PerforceInstance,
+        'Successful connection?': OutputPinType.Bool
     }
 
     @staticmethod
     def run(internal_data_dict):
-        p4 = internal_data_dict.get('P4 Inst', None)
-        if p4 is None:
-            return -1
+        p4 = internal_data_dict['P4 Inst']
         try:
             p4.connect()
-            print(p4)
         except P4Exception as e:
-            print(e)
+            return 4, e
+        if p4.connected():
+            internal_data_dict['Successful connection?'] = True
+        else:
+            internal_data_dict['Successful connection?'] = False

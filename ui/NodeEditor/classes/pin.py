@@ -246,7 +246,8 @@ class PinBase:
                     attribute_type=self.attribute_type,
                     shape=self._pin_shape
                 ):
-                    dpg.add_text(default_value=self.label)
+                    dpg.add_text(default_value=self.label,
+                                 color=pink)
                     dpg.add_input_text(tag=self.value_tag,
                                        width=self._input_window_width,
                                        callback=self._callback,

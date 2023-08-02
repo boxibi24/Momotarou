@@ -550,10 +550,13 @@ class NodeEditor:
     def refresh_node_graph_bounding_box(self):
         # Update node graph bounding box to restrict right click menu only shows when cursor is inside of it
         _current_tab_id = self.current_tab_id
-        self.node_editor_bb[0] = (dpg.get_item_pos(_current_tab_id)[0] + 8,
-                                  dpg.get_item_pos(_current_tab_id)[1] + 30)
-        self.node_editor_bb[1] = (dpg.get_item_pos('__details_panel')[0] - 2,
-                                  dpg.get_viewport_height() - 47)
+        try:
+            self.node_editor_bb[0] = (dpg.get_item_pos(_current_tab_id)[0] + 8,
+                                      dpg.get_item_pos(_current_tab_id)[1] + 30)
+            self.node_editor_bb[1] = (dpg.get_item_pos('__details_panel')[0] - 2,
+                                      dpg.get_viewport_height() - 47)
+        except SystemError:
+            pass
 
     def callback_compile_current_node_graph(self, sender):
         cache_file_path = CACHE_DIR / (__name__ + '.rtool')
@@ -563,7 +566,7 @@ class NodeEditor:
         refresh_core_data_with_json_dict(data_dict)
 
     def subprocess_execution_event(self, event_tag):
-        # self._pop_output_log_window()
+        self._pop_output_log_window()
         # self.thread_pool.apply_async(execute_event, (event_tag,))
         execute_event(event_tag)
 

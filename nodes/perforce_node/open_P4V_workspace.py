@@ -1,6 +1,6 @@
 from ui.NodeEditor.classes.node import BaseNode
 from core.enum_types import NodeTypeFlag, InputPinType
-from subprocess import Popen
+import subprocess
 
 
 class Node(BaseNode):
@@ -17,10 +17,5 @@ class Node(BaseNode):
     @staticmethod
     def run(internal_data_dict):
         p4 = internal_data_dict.get('P4 Inst', None)
-        print(p4.user)
-        print(p4.client)
-        print(p4.password)
-        print(p4.charset)
-        print(p4.port)
-
-        # sp = Popen()
+        subprocess.run(f'echo Virtuos@NATT11|p4 -u {p4.user} -p {p4.port} login', shell=True)
+        subprocess.Popen(f'p4v -c {p4.client} -u {p4.user} -C {p4.charset} -p {p4.port}', shell=True)

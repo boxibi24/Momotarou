@@ -21,6 +21,5 @@ class Node(BaseNode):
             return -1
         try:
             p4.disconnect()
-            print(p4)
         except P4Exception as e:
-            print(e)
+            return 4, e

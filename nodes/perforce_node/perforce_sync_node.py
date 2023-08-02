@@ -23,7 +23,7 @@ class Node(BaseNode):
         try:
             sync_path = internal_data_dict['Sync path']
             if sync_path:
-                p4.run(f'sync {sync_path}')
+                p4.run('sync', sync_path)
             else:
                 p4.run('sync')
         except P4Exception as e:

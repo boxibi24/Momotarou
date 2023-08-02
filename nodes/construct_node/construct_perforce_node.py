@@ -27,6 +27,6 @@ class Node(BaseNode):
         p4.password = internal_data_dict['Password']
         p4.port = internal_data_dict['Port']
         p4.charset = internal_data_dict['Charset']
-        p4.client = internal_data_dict['client']
+        p4.client = internal_data_dict['Client']
 
-        internal_data_dict.update({'P4 Inst': p4})
+        internal_data_dict['P4 Inst'] = p4
