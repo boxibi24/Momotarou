@@ -742,7 +742,7 @@ class DPGNodeEditor:
         self.logger.debug(f'splitter_var_dict:  {self._splitter_var_dict}')
         return 0
 
-    def register_var_user_input_box(self, var_tag, user_box_id):
+    def register_var_user_input_box(self, var_tag: str, user_box_id: int):
         """
         Callback function upon enabling variable's exposed for user input flag
         """

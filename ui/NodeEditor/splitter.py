@@ -2,7 +2,7 @@ import dearpygui.dearpygui as dpg
 from collections import OrderedDict
 from copy import deepcopy
 from core.enum_types import InputPinType
-from core.utils import generate_uuid, add_user_input_box
+from core.utils import generate_uuid, add_user_input_box, get_var_default_value_on_type
 from ui.NodeEditor.item_right_click_menus import variable_right_click_menu, event_right_click_menu
 from ui.NodeEditor.input_handler import delete_selected_node
 from ui.NodeEditor.node_utils import create_list_from_dict_values
@@ -493,16 +493,7 @@ class Splitter:
         self._combo_dict[_var_tag][1][0] = _new_var_type
         # Need to refresh the child Node Graph's var value & default value also
         _current_node_editor_instance.var_dict[_var_tag]['value'][0] = None
-        default_var_value = None
-        # set default var value based on value type
-        if _new_var_type in ['String', 'MultilineString', 'Password']:
-            default_var_value = ''
-        elif _new_var_type == 'Int':
-            default_var_value = 0
-        elif _new_var_type == 'Float':
-            default_var_value = 0.0
-        elif _new_var_type == 'Bool':
-            default_var_value = False
+        default_var_value = get_var_default_value_on_type(_new_var_type)
         _current_node_editor_instance.var_dict[_var_tag]['default_value'][0] = default_var_value
         # Refresh the exposed variable window
         self.exposed_var_dict = deepcopy(_current_node_editor_instance.var_dict)

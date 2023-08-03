@@ -106,7 +106,7 @@ class DetailPanel:
             dpg.add_text(default_value=f'Type: {var_type}')
             if var_type in ['String', 'Int', 'Float', 'MultilineString', 'Password', 'Bool']:
                 dpg.add_text(default_value=f'Default Value: {default_var_value}')
-            dpg.add_text(default_value=f'Is exposed for user input?: {var_is_exposed_value}')
+                dpg.add_text(default_value=f'Is exposed for user input?: {var_is_exposed_value}')
 
     def callback_default_var_value_update(self, sender, app_data, user_data):
         _current_node_editor_instance = self._parent_instance.current_node_editor_instance

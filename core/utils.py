@@ -90,113 +90,67 @@ def generate_uuid() -> str:
 
 def add_user_input_box(var_type, callback=None, default_value=None,
                        user_data=None, text='', add_separator=False, width=None):
+    _user_input_box = None
+    if text:
+        dpg.add_text(text)
+    if default_value is None:
+        _default_value = get_var_default_value_on_type(var_type)
+    else:
+        _default_value = default_value
+    if width is None:
+        _width = 200
+    else:
+        _width = width
     if var_type == 'String':
-        if text:
-            dpg.add_text(text)
-        if default_value is None:
-            _default_value = ''
-        else:
-            _default_value = default_value
-        if width is None:
-            _width = 200
-        else:
-            _width = width
         _user_input_box = dpg.add_input_text(on_enter=True, default_value=_default_value,
                                              callback=callback,
                                              user_data=user_data,
                                              hint='one line text',
                                              width=_width)
-        if add_separator:
-            dpg.add_separator()
-        return _user_input_box
     elif var_type == 'Int':
-        if text:
-            dpg.add_text(text)
-        if default_value is None:
-            _default_value = 0
-        else:
-            _default_value = default_value
-        if width is None:
-            _width = 200
-        else:
-            _width = width
         _user_input_box = dpg.add_input_int(on_enter=True, default_value=_default_value,
                                             callback=callback,
                                             user_data=user_data,
                                             width=_width)
-        if add_separator:
-            dpg.add_separator()
-        return _user_input_box
+
     elif var_type == 'Float':
-        if text:
-            dpg.add_text(text)
-        if default_value is None:
-            _default_value = 0.0
-        else:
-            _default_value = default_value
-        if width is None:
-            _width = 200
-        else:
-            _width = width
         _user_input_box = dpg.add_input_float(on_enter=True, default_value=_default_value,
                                               callback=callback,
                                               user_data=user_data,
                                               width=_width)
-        if add_separator:
-            dpg.add_separator()
-        return _user_input_box
     elif var_type == 'MultilineString':
-        if text:
-            dpg.add_text(text)
-        if default_value is None:
-            _default_value = ''
-        else:
-            _default_value = default_value
-        if width is None:
-            _width = 400
-        else:
-            _width = width
         _user_input_box = dpg.add_input_text(on_enter=True, multiline=True,
                                              default_value=_default_value,
                                              callback=callback,
                                              user_data=user_data,
                                              width=_width)
-        if add_separator:
-            dpg.add_separator()
-        return _user_input_box
     elif var_type == 'Password':
-        if text:
-            dpg.add_text(text)
-        if default_value is None:
-            _default_value = ''
-        else:
-            _default_value = default_value
-        if width is None:
-            _width = 200
-        else:
-            _width = width
         _user_input_box = dpg.add_input_text(on_enter=True, password=True,
                                              default_value=_default_value,
                                              callback=callback,
                                              user_data=user_data,
                                              hint='password',
                                              width=_width)
-        if add_separator:
-            dpg.add_separator()
-        return _user_input_box
     elif var_type == 'Bool':
-        if text:
-            dpg.add_text(text)
-        if default_value is None:
-            _default_value = False
-        else:
-            _default_value = default_value
         _user_input_box = dpg.add_checkbox(callback=callback,
                                            default_value=_default_value,
                                            user_data=user_data)
-        if add_separator:
-            dpg.add_separator()
-        return _user_input_box
+    if add_separator:
+        dpg.add_separator()
+    return _user_input_box
+
+
+def get_var_default_value_on_type(var_type: str):
+    if var_type in ['String', 'MultilineString', 'Password']:
+        return ''
+    elif var_type == 'Int':
+        return 0
+    elif var_type == 'Float':
+        return 0.0
+    elif var_type == 'Bool':
+        return False
+    else:
+        return None
 
 
 def log_on_return_message(logger, action: str, return_message=(0, ''), **kwargs):
