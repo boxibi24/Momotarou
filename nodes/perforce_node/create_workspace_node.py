@@ -2,6 +2,7 @@ from ui.NodeEditor.classes.node import BaseNode
 from core.enum_types import NodeTypeFlag, InputPinType, OutputPinType
 from P4 import P4, P4Exception
 import os
+from random import randint
 
 
 class Node(BaseNode):
@@ -26,7 +27,6 @@ class Node(BaseNode):
         p4 = internal_data_dict.get('P4 Inst', None)
         if p4 is None:
             return 0, ''
-        # client_name = internal_data_dict.get('Project Name', '') + '_' + p4.user + '_' + os.environ.get('COMPUTERNAME', 'NullPCName')
         client_config = {'Backup': 'enable',
                          'Client': p4.client,
                          'Description': 'Created by {}.\n'.format(p4.user),
@@ -42,7 +42,6 @@ class Node(BaseNode):
                          }
         try:
             p4.save_client(client_config)
-            print(p4)
         except P4Exception as e:
             return 4, e
         internal_data_dict['P4 Inst Out'] = p4

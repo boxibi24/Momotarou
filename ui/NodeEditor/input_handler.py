@@ -55,7 +55,7 @@ def event_handler(sender, app_data, user_data):
 def mouse_left_click_handler(node_editor):
     selected_node = dpg.get_selected_nodes(node_editor.current_node_editor_instance.id)
     if selected_node:
-        node_editor.detail_panel.refresh_ui()
+        node_editor.detail_panel.refresh_ui_with_selected_node_info()
 
     if dpg.is_key_down(key=dpg.mvKey_Control) and dpg.is_key_down(key=dpg.mvKey_Shift):  # Ctrl + Shift pressed
         pass

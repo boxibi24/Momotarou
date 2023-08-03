@@ -1,6 +1,8 @@
 from ui.NodeEditor.classes.node import BaseNode
 from core.enum_types import NodeTypeFlag, InputPinType, OutputPinType
 from P4 import P4
+from random import randint
+import os
 
 
 class Node(BaseNode):
@@ -27,6 +29,8 @@ class Node(BaseNode):
         p4.password = internal_data_dict['Password']
         p4.port = internal_data_dict['Port']
         p4.charset = internal_data_dict['Charset']
-        p4.client = internal_data_dict['Client']
-
+        if internal_data_dict['Client'] == '':
+            p4.client = p4.user + '_' + os.environ['COMPUTERNAME'] + '_' + str(randint(100, 9999))
+        else:
+            p4.client = internal_data_dict['Client']
         internal_data_dict['P4 Inst'] = p4

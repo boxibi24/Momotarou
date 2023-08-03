@@ -1,11 +1,18 @@
 import json
 import logging
+import os
+import platform
 from logging.handlers import QueueHandler
 from multiprocessing import Queue
 from logging import Logger
+from pathlib import Path
 from time import perf_counter
+from uuid import uuid1
+from typing import Union
 
 from dearpygui import dearpygui as dpg
+
+from misc import color as color
 
 timer_registry = [0]
 
@@ -26,7 +33,7 @@ def extract_var_name_from_node_info(node_info: dict) -> str:
     return ' '.join(node_label.split(' ')[1:])
 
 
-def dpg_set_value(tag: str, value):
+def dpg_set_value(tag: Union[int, str], value):
     """
     Check if exist node with tag, then set the value
     :param tag: tag to check
@@ -71,3 +78,178 @@ def start_timer():
 def stop_timer_and_get_elapsed_time() -> float:
     start_time = timer_registry[0]
     return perf_counter() - start_time
+
+
+def generate_uuid() -> str:
+    """Generate a UUID1
+    :return: uuid1
+    """
+    # Use UUID1 because it is time based so no replication produced
+    return uuid1().hex
+
+
+def add_user_input_box(var_type, callback=None, default_value=None,
+                       user_data=None, text='', add_separator=False, width=None):
+    if var_type == 'String':
+        if text:
+            dpg.add_text(text)
+        if default_value is None:
+            _default_value = ''
+        else:
+            _default_value = default_value
+        if width is None:
+            _width = 200
+        else:
+            _width = width
+        _user_input_box = dpg.add_input_text(on_enter=True, default_value=_default_value,
+                                             callback=callback,
+                                             user_data=user_data,
+                                             hint='one line text',
+                                             width=_width)
+        if add_separator:
+            dpg.add_separator()
+        return _user_input_box
+    elif var_type == 'Int':
+        if text:
+            dpg.add_text(text)
+        if default_value is None:
+            _default_value = 0
+        else:
+            _default_value = default_value
+        if width is None:
+            _width = 200
+        else:
+            _width = width
+        _user_input_box = dpg.add_input_int(on_enter=True, default_value=_default_value,
+                                            callback=callback,
+                                            user_data=user_data,
+                                            width=_width)
+        if add_separator:
+            dpg.add_separator()
+        return _user_input_box
+    elif var_type == 'Float':
+        if text:
+            dpg.add_text(text)
+        if default_value is None:
+            _default_value = 0.0
+        else:
+            _default_value = default_value
+        if width is None:
+            _width = 200
+        else:
+            _width = width
+        _user_input_box = dpg.add_input_float(on_enter=True, default_value=_default_value,
+                                              callback=callback,
+                                              user_data=user_data,
+                                              width=_width)
+        if add_separator:
+            dpg.add_separator()
+        return _user_input_box
+    elif var_type == 'MultilineString':
+        if text:
+            dpg.add_text(text)
+        if default_value is None:
+            _default_value = ''
+        else:
+            _default_value = default_value
+        if width is None:
+            _width = 400
+        else:
+            _width = width
+        _user_input_box = dpg.add_input_text(on_enter=True, multiline=True,
+                                             default_value=_default_value,
+                                             callback=callback,
+                                             user_data=user_data,
+                                             width=_width)
+        if add_separator:
+            dpg.add_separator()
+        return _user_input_box
+    elif var_type == 'Password':
+        if text:
+            dpg.add_text(text)
+        if default_value is None:
+            _default_value = ''
+        else:
+            _default_value = default_value
+        if width is None:
+            _width = 200
+        else:
+            _width = width
+        _user_input_box = dpg.add_input_text(on_enter=True, password=True,
+                                             default_value=_default_value,
+                                             callback=callback,
+                                             user_data=user_data,
+                                             hint='password',
+                                             width=_width)
+        if add_separator:
+            dpg.add_separator()
+        return _user_input_box
+    elif var_type == 'Bool':
+        if text:
+            dpg.add_text(text)
+        if default_value is None:
+            _default_value = False
+        else:
+            _default_value = default_value
+        _user_input_box = dpg.add_checkbox(callback=callback,
+                                           default_value=_default_value,
+                                           user_data=user_data)
+        if add_separator:
+            dpg.add_separator()
+        return _user_input_box
+
+
+def log_on_return_message(logger, action: str, return_message=(0, ''), **kwargs):
+    return_code = return_message[0]
+    message = return_message[1]
+    if return_code == 0:
+        logger.info(f'{action} was skipped!')
+        if message:
+            logger.debug(message)
+    elif return_code == 1:
+        logger.info(f'{action} performed successfully')
+        if message:
+            logger.debug(message)
+    elif return_code == 2:
+        logger.info(f'{action} was performed partially')
+        if message:
+            logger.debug(message)
+    elif return_code == 3:
+        logger.info(f'{action} did not performed. Failure encountered. Please check the log for details')
+        if message:
+            logger.error(message)
+    elif return_code == 4:
+        logger.info(f'{action} did not performed. Exception encountered')
+        if message:
+            logger.error(message)
+
+
+def warn_duplicate_and_retry_new_project_dialog():
+    dpg.add_text(parent='project_save_as', default_value='Project existed, please rename', color=color.darkred)
+    dpg.show_item('project_save_as')
+
+
+def construct_tool_path_from_tools_path_and_tool_name(tools_path: Path, tool_name: str) -> str:
+    return (tools_path / (tool_name + '.rtool')).as_posix()
+
+
+def convert_python_path_to_import_path(python_path: Path) -> str:
+    # split up files names and import them
+    import_path = os.path.splitext(
+        os.path.normpath(python_path)
+    )[0]
+    if platform.system() == 'Windows':
+        import_path = import_path.replace('\\', '.')
+    else:
+        import_path = import_path.replace('/', '.')
+    import_path = import_path.split('.')
+    import_path = '.'.join(import_path[-3:])
+    return import_path
+
+
+def is_string_contains_special_characters(check_string: str) -> bool:
+    special_chars_list = ['*', '/', '\\']
+    for special_char in special_chars_list:
+        if special_char in check_string:
+            return True
+    return False

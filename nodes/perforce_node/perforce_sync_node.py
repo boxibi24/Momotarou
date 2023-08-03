@@ -25,6 +25,6 @@ class Node(BaseNode):
             if sync_path:
                 p4.run('sync', sync_path)
             else:
-                p4.run('sync')
+                p4.run_sync()
         except P4Exception as e:
             return 4, e

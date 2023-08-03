@@ -57,7 +57,7 @@ def callback_delete_event(sender, app_data, user_data):
 
     # Refresh all UI elements to reflect var deletion
     # First refresh detail panel
-    _master_node_editor_instance.detail_panel.refresh_ui()
+    _master_node_editor_instance.detail_panel.refresh_ui_with_selected_node_info()
     # Refresh splitter items already performed in the deletion function
     # Delete the registry of var selectable
     _current_node_editor_instance.delete_item_registry(_event_tag)
@@ -154,7 +154,7 @@ def delete_var_dict_entry(master_inst, var_tag):
 
     # Refresh all UI elements to reflect var deletion
     # First refresh detail panel
-    _master_node_editor_instance.detail_panel.refresh_ui()
+    _master_node_editor_instance.detail_panel.refresh_ui_with_selected_node_info()
     # Refresh splitter items
     _splitter_panel.var_dict = _current_node_editor_instance.splitter_var_dict
     # Exposed var dict needs deep-copying since it adds a splitter_id entry to the input dict

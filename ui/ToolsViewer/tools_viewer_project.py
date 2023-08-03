@@ -81,14 +81,13 @@ class ToolsViewer:
 
     def _import_tool_to_tab(self, tab_window_id: int, tool_relative_path: str):
         tool_abs_path = Path(__file__).parent / tool_relative_path
-        tool_data = json_load_from_file_path(Path(__file__).parent / tool_abs_path)
+        tool_data = json_load_from_file_path(tool_abs_path)
         self._add_user_input_boxes_to_tab_from_vars_data(tab_window_id, tool_data['vars'])
         self._add_event_buttons_to_tab_from_nodes_data(tab_window_id, tool_data['nodes'])
 
     def _add_user_input_boxes_to_tab_from_vars_data(self, tab_window_id: int, vars_data: dict):
-        # for var_info in vars_data.values():
         pass
-    
+
     def _add_event_buttons_to_tab_from_nodes_data(self, tab_window_id: int, nodes_data: dict):
         pass
 

@@ -4,7 +4,8 @@ from ui.NodeEditor.utils import *
 from core.enum_types import InputPinType, OutputPinType
 from ui.NodeEditor.node_utils import *
 from multiprocessing import Queue
-from core.utils import create_queueHandler_logger, extract_var_name_from_node_info, json_load_from_file_path
+from core.utils import create_queueHandler_logger, extract_var_name_from_node_info, json_load_from_file_path, \
+    generate_uuid, log_on_return_message
 
 
 class DPGNodeEditor:
@@ -63,7 +64,7 @@ class DPGNodeEditor:
 
     @property
     def var_dict(self) -> OrderedDict:
-        return self._vars_dict
+        return self._var_dict
 
     @property
     def splitter_var_dict(self) -> OrderedDict:
@@ -100,7 +101,7 @@ class DPGNodeEditor:
         # dict of events nodes for splitter entries
         self._event_dict = OrderedDict([])
         # dict of vars and its value stored in a list (make use of referencing_
-        self._vars_dict = OrderedDict([])
+        self._var_dict = OrderedDict([])
         # list of all item registries declared that will get deleted after the node graph termination
         self.item_registry_dict = {}
         self._id = dpg.add_node_editor(
@@ -295,7 +296,7 @@ class DPGNodeEditor:
         :return:
         """
 
-        reset_var_values_to_none(self._vars_dict)
+        reset_var_values_to_none(self._var_dict)
         self._clean_up_nodes_and_update_pins_values()
         self._refresh_event_order_in_node_dict()
 
@@ -346,7 +347,7 @@ class DPGNodeEditor:
         # Add the events list to dict
         export_dict['events'] = self.tobe_exported_event_dict
         # Add var dict
-        export_dict.update({'vars': self._vars_dict})
+        export_dict.update({'vars': self._var_dict})
 
     def callback_tool_open(self, sender, app_data):
         """
@@ -442,7 +443,7 @@ class DPGNodeEditor:
                                         default_is_exposed_flag=var_info['is_exposed'][0])
 
         # Refresh exposed var window since it does not update by itself
-        self.splitter_panel.exposed_var_dict = deepcopy(self._vars_dict)
+        self.splitter_panel.exposed_var_dict = deepcopy(self._var_dict)
 
     def _batch_import_node(self, node_info_list: list, pin_mapping: dict):
         """
@@ -505,7 +506,7 @@ class DPGNodeEditor:
         return self.parent_instance.menu_construct_dict[node_category][import_path]
 
     def _get_var_tag_from_var_name(self, var_name: str) -> str:
-        for var_tag, var_info in self._vars_dict.items():
+        for var_tag, var_info in self._var_dict.items():
             if var_info['name'][0] == var_name:
                 return var_tag
 
@@ -722,8 +723,8 @@ class DPGNodeEditor:
             var_type[0] in ['String', 'MultilineString', 'Password', 'Int', 'Float', 'Bool']:
             self.logger.critical(f'Could not retrieve default value for {var_name}')
             return 3
-        if self._vars_dict.get(var_tag, None) is None:
-            self._vars_dict.update({
+        if self._var_dict.get(var_tag, None) is None:
+            self._var_dict.update({
                 var_tag: {
                     'name': var_name,
                     'type': var_type,
@@ -733,11 +734,11 @@ class DPGNodeEditor:
                     'is_exposed': [default_is_exposed_flag if default_is_exposed_flag is not None else False]
                 }})
         else:  # Refresh UI
-            self._vars_dict[var_tag]['name'][0] = var_name[0]
-            self._vars_dict[var_tag]['type'][0] = var_type[0]
+            self._var_dict[var_tag]['name'][0] = var_name[0]
+            self._var_dict[var_tag]['type'][0] = var_type[0]
 
         self.logger.debug('**** Added new var entries ****')
-        self.logger.debug(f'var_dict: {self._vars_dict}')
+        self.logger.debug(f'var_dict: {self._var_dict}')
         self.logger.debug(f'splitter_var_dict:  {self._splitter_var_dict}')
         return 0
 
@@ -745,9 +746,9 @@ class DPGNodeEditor:
         """
         Callback function upon enabling variable's exposed for user input flag
         """
-        self._vars_dict[var_tag]['user_input_box_id'] = user_box_id
+        self._var_dict[var_tag]['user_input_box_id'] = user_box_id
         self.logger.debug(f'**** Register {var_tag} to take input from dpg item : {user_box_id} ****')
-        self.logger.debug(f'Current var dict of {var_tag}: {self._vars_dict[var_tag]}')
+        self.logger.debug(f'Current var dict of {var_tag}: {self._var_dict[var_tag]}')
 
     def delete_item_registry(self, item_name: str):
         """

@@ -1,9 +1,7 @@
 import dearpygui.dearpygui as dpg
 from multiprocessing import Queue
 from multiprocessing.pool import ThreadPool
-from ui.NodeEditor.utils import generate_uuid, log_on_return_message, warn_duplicate_and_retry_new_project_dialog, \
-    construct_tool_path_from_tools_path_and_tool_name, convert_python_path_to_import_path, callback_project_save_as, \
-    is_string_contains_special_characters
+from ui.NodeEditor.utils import callback_project_save_as
 from ui.NodeEditor.input_handler import add_keyboard_handler_registry, add_mouse_handler_registry, event_handler
 from ui.NodeEditor.right_click_menu import RightClickMenu
 from ui.NodeEditor.splitter import Splitter
@@ -19,7 +17,10 @@ import shutil
 from importlib import import_module
 from copy import deepcopy
 import traceback
-from core.utils import create_queueHandler_logger, json_load_from_file_path, json_write_to_file_path
+from core.utils import create_queueHandler_logger, json_load_from_file_path, json_write_to_file_path, generate_uuid, \
+    log_on_return_message, warn_duplicate_and_retry_new_project_dialog, \
+    construct_tool_path_from_tools_path_and_tool_name, convert_python_path_to_import_path, \
+    is_string_contains_special_characters
 from core.data_loader import refresh_core_data_with_json_dict
 from core.executor import execute_event
 
@@ -245,7 +246,7 @@ class NodeEditor:
 
     def callback_tab_bar_change(self, sender, app_data):
         self.update_current_tab_id_and_instance(app_data)
-        self.detail_panel.refresh_ui()
+        self.detail_panel.refresh_ui_with_selected_node_info()
         self.refresh_splitter_data()
         self.clean_old_node_graph_registry_item()
 

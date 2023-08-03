@@ -8,7 +8,7 @@ class Node(BaseNode):
 
     # Define class members
     ver = '0.0.1'
-    node_label = 'Perforce Connect'
+    node_label = 'Perforce login'
     node_type = NodeTypeFlag.Blueprint
     pin_dict = {
         'P4 Inst': InputPinType.PerforceInstance,
@@ -20,6 +20,7 @@ class Node(BaseNode):
         p4 = internal_data_dict['P4 Inst']
         try:
             p4.connect()
+            p4.run_login()
         except P4Exception as e:
             return 4, e
         if p4.connected():

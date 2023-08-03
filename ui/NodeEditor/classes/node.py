@@ -1,7 +1,7 @@
 from collections import OrderedDict
 
 from core.enum_types import NodeTypeFlag, PinMetaType
-from core.utils import dpg_set_value, dpg_get_value
+from core.utils import dpg_get_value
 from ui.NodeEditor.classes.pin import *
 
 
