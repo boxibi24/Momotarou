@@ -1,25 +1,27 @@
 import dearpygui.dearpygui as dpg
-import datetime
 from ui.NodeEditor.utils import callback_ng_file_open_menu, callback_ng_file_import_menu, callback_ng_file_save_menu,\
     callback_project_open_menu, callback_project_save_as
 
 
-def initialize_file_dialog(node_editor):
-    # Menu bar setup
+def initialize_file_dialog(node_editor_project):
+    """
+    File dialog setup
+    :param node_editor_project: Node editor instance
+    :return:
+    """
 
     # Open project dialog
-    datetime_now = datetime.datetime.now()
     with dpg.file_dialog(
         directory_selector=False,
         show=False,
         modal=True,
         height=int(dpg.get_viewport_height() / 2),
         width=int(dpg.get_viewport_width() / 2),
-        default_filename=datetime_now.strftime('%Y%m%d'),
+        default_filename='MyRUTProject',
         callback=callback_file_dialog,
         id='project_open',
         label='Open project',
-        user_data=node_editor,
+        user_data=node_editor_project,
         cancel_callback=callback_cancel_file_dialog
     ):
         dpg.add_file_extension('.rproject')
@@ -35,8 +37,8 @@ def initialize_file_dialog(node_editor):
         callback=callback_file_dialog,
         id='project_save_as',
         label='Save project as',
-        user_data=node_editor,
-        default_filename=node_editor.project_name,
+        user_data=node_editor_project,
+        default_filename=node_editor_project.project_name,
         cancel_callback=callback_cancel_file_dialog
     ):
         pass
@@ -51,25 +53,24 @@ def initialize_file_dialog(node_editor):
         callback=callback_file_dialog,
         id='NG_file_open',
         label='Open node graph in new tab',
-        user_data=node_editor,
+        user_data=node_editor_project,
         cancel_callback=callback_cancel_file_dialog
     ):
         dpg.add_file_extension('.rtool')
         dpg.add_file_extension('', color=(150, 255, 150, 255))
 
     # Export tool dialog
-    datetime_now = datetime.datetime.now()
     with dpg.file_dialog(
         directory_selector=False,
         show=False,
         modal=True,
         height=int(dpg.get_viewport_height() / 2),
         width=int(dpg.get_viewport_width() / 2),
-        default_filename=datetime_now.strftime('%Y%m%d'),
+        default_filename='MyRUTTool',
         callback=callback_file_dialog,
         id='NG_file_save',
         label='Save current tab as',
-        user_data=node_editor,
+        user_data=node_editor_project,
         cancel_callback=callback_cancel_file_dialog
     ):
         dpg.add_file_extension('.rtool')
@@ -86,7 +87,7 @@ def initialize_file_dialog(node_editor):
         callback=callback_file_dialog,
         id='NG_file_import',
         label='Import node graph to current tab',
-        user_data=node_editor,
+        user_data=node_editor_project,
         cancel_callback=callback_cancel_file_dialog
     ):
         dpg.add_file_extension('.rtool')

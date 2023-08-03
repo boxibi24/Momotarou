@@ -35,14 +35,6 @@ class NodeEditor:
     node_editor_tag = generate_uuid()
 
     @property
-    def requested_exec_node_tag(self) -> str:
-        return self._requested_exec_node_tag
-
-    @requested_exec_node_tag.setter
-    def requested_exec_node_tag(self, value: str):
-        self._requested_exec_node_tag = value
-
-    @property
     def node_editor_bb(self) -> list[tuple]:
         return self._node_editor_bb
 
@@ -64,9 +56,9 @@ class NodeEditor:
     ):
         # ------ FLAGS --------
         self._init_flag = True
+        self._use_debug_print = use_debug_print
         # ------ SETTINGS ------
         self._var_drop_popup_id = -1
-        self._use_debug_print = use_debug_print
         if setting_dict is None:
             self._setting_dict = {}
         else:
@@ -76,7 +68,6 @@ class NodeEditor:
         self.current_tab_id = None
         self.menu_construct_dict = None
         self.current_node_editor_instance = None
-        self._requested_exec_node_tag = None
         self._node_editor_tab_dict = OrderedDict([])
         # Tuple to store current node editor boundaries position
         self._node_editor_bb = [(), ()]
@@ -86,6 +77,7 @@ class NodeEditor:
         self.logging_queue = logging_queue
         self.logger = create_queueHandler_logger(__name__, logging_queue, self._use_debug_print)
 
+        # ------- INITIALIZATION ______
         self.construct_node_menu(node_menu_list, node_dir)
         # Main viewport
         self._init_main_viewport()

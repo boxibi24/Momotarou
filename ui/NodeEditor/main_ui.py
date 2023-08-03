@@ -1,7 +1,6 @@
 import dearpygui.dearpygui as dpg
 from ui.NodeEditor.node_editor_project import NodeEditor
 from ui.NodeEditor.menu_bar import initialize_file_dialog, initialize_menu_bar
-from core.executor import setup_executor_logger
 from multiprocessing import Queue
 import os
 from pathlib import Path
