@@ -1,0 +1,2 @@
+NODE_EDITOR_APP_NAME = 'NodeEditor'
+TOOLS_VIEWER_APP_NAME = 'ToolsViewer'
