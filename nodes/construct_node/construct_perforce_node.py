@@ -1,8 +1,13 @@
 from ui.NodeEditor.classes.node import BaseNode
 from core.enum_types import NodeTypeFlag, InputPinType, OutputPinType
-from P4 import P4
+from P4 import P4, TextProgress
 from random import randint
 import os
+
+
+class SyncProgress(TextProgress):
+    def done(self, fail):
+        print("sync with '%s"'' % fail)
 
 
 class Node(BaseNode):
@@ -24,7 +29,10 @@ class Node(BaseNode):
     @staticmethod
     def run(internal_data_dict):
 
+        progress_indicator = SyncProgress()
+
         p4 = P4()
+        p4.progress = progress_indicator
         p4.user = internal_data_dict['User']
         p4.password = internal_data_dict['Password']
         p4.port = internal_data_dict['Port']

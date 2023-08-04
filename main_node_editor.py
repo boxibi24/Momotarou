@@ -7,12 +7,10 @@ from logging.handlers import QueueHandler, QueueListener
 from multiprocessing import Queue
 from typing import Tuple
 
+from lib.constants import NODE_EDITOR_APP_NAME
 from ui.NodeEditor.main_ui import initialize_node_editor_project, setup_dpg_font, initialize_dpg
 from core.executor import setup_executor_logger
 from core.utils import json_load_from_file_path
-import dearpygui.demo as demo
-
-APPLICATION_NAME = 'NodeEditor'
 
 
 def main():
@@ -58,7 +56,7 @@ def get_arg():
         type=str,
         default=os.path.abspath(
             os.path.join(os.path.dirname(__file__),
-                         f'Config/{APPLICATION_NAME}.cfg')),
+                         f'Config/{NODE_EDITOR_APP_NAME}.cfg')),
     )
     parser.add_argument(
         "--packages",
@@ -83,7 +81,7 @@ def setup_logger(is_debug_mode: bool) -> tuple[Logger, Queue, QueueListener]:
 
 
 def _setup_main_logger(is_debug_mode: bool) -> tuple[Logger, Queue, QueueListener]:
-    logger_name = APPLICATION_NAME
+    logger_name = NODE_EDITOR_APP_NAME
     logger = logging.getLogger(logger_name)
     logging_formatter = _get_logging_formatter(logger_name)
     _set_logger_level_on_debug_mode(logger, is_debug_mode)

@@ -42,7 +42,7 @@ def initialize_tools_viewer_project(setting_dict: dict, packages_list: list, log
     _on_close_project(tools_viewer_project)
 
 
-def _initialize_primary_window_as_node_graph(setting_dict: dict, packages_list: list, logger_queue: Queue,
+def _initialize_primary_window_as_node_graph(setting_dict: dict, logger_queue: Queue,
                                              is_debug_mode: bool) -> ToolsViewer:
     with dpg.window(
         width=1280,

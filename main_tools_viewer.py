@@ -5,6 +5,8 @@ import json
 import logging
 from logging import Logger, Formatter, Handler
 from logging.handlers import QueueHandler, QueueListener
+
+from lib.constants import TOOLS_VIEWER_APP_NAME
 from ui.ToolsViewer.tools_viewer_project import ToolsViewer
 from multiprocessing import Process, Queue
 from typing import Tuple
@@ -12,8 +14,6 @@ import psutil
 from core.executor import setup_executor_logger
 from core.utils import json_load_from_file_path
 from ui.ToolsViewer.main_ui import initialize_dpg, setup_dpg_font, initialize_tools_viewer_project
-
-APPLICATION_NAME = 'ToolsViewer'
 
 
 def main():
@@ -183,7 +183,7 @@ def get_arg():
         type=str,
         default=os.path.abspath(
             os.path.join(os.path.dirname(__file__),
-                         f'Config/{APPLICATION_NAME}.cfg')),
+                         f'Config/{TOOLS_VIEWER_APP_NAME}.cfg')),
     )
     parser.add_argument(
         "--packages",
@@ -208,7 +208,7 @@ def setup_logger(is_debug_mode: bool) -> tuple[Logger, Queue, QueueListener]:
 
 
 def _setup_main_logger(is_debug_mode: bool) -> tuple[Logger, Queue, QueueListener]:
-    logger_name = APPLICATION_NAME
+    logger_name = TOOLS_VIEWER_APP_NAME
     logger = logging.getLogger(logger_name)
     logging_formatter = _get_logging_formatter(logger_name)
     _set_logger_level_on_debug_mode(logger, is_debug_mode)

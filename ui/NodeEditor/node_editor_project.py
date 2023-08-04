@@ -23,9 +23,11 @@ from core.utils import create_queueHandler_logger, json_load_from_file_path, jso
     is_string_contains_special_characters
 from core.data_loader import refresh_core_data_with_json_dict
 from core.executor import execute_event
+from lib.constants import NODE_EDITOR_APP_NAME
+
 
 INTERNAL_NODE_CATEGORY = '_internal'
-CACHE_DIR = Path(os.getenv('LOCALAPPDATA')) / "RUT" / "NodeEditor"
+CACHE_DIR = Path(os.getenv('LOCALAPPDATA')) / "RUT" / NODE_EDITOR_APP_NAME
 TOOLS_PATH = CACHE_DIR / 'tools'
 EVENT_IMPORT_PATH = ''
 

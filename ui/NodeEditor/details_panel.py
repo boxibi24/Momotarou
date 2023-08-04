@@ -111,7 +111,7 @@ class DetailPanel:
     def callback_default_var_value_update(self, sender, app_data, user_data):
         _current_node_editor_instance = self._parent_instance.current_node_editor_instance
         _var_tag = user_data
-        _current_node_editor_instance.var_dict[_var_tag]['value'][0] = app_data
+        _current_node_editor_instance.var_dict[_var_tag]['default_value'][0] = app_data
         _var_name = _current_node_editor_instance.var_dict[_var_tag]['name'][0]
         # Refresh self
         self.callback_show_var_detail('', '', user_data=_var_tag)
