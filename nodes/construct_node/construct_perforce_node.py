@@ -2,7 +2,7 @@ from ui.NodeEditor.classes.node import BaseNode
 from core.enum_types import NodeTypeFlag, InputPinType, OutputPinType
 from random import randint
 import os
-from lib.p4util import createP4Instance
+from lib.p4util import create_p4_inst
 
 
 class Node(BaseNode):
@@ -29,7 +29,7 @@ class Node(BaseNode):
         else:
             p4_client = internal_data_dict['Client']
 
-        p4 = createP4Instance(user=internal_data_dict['User'],
+        p4 = create_p4_inst(user=internal_data_dict['User'],
                               password=internal_data_dict['Password'],
                               port=internal_data_dict['Port'],
                               client=p4_client,
