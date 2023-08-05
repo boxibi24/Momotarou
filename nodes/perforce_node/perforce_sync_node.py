@@ -18,14 +18,12 @@ class Node(BaseNode):
 
     @staticmethod
     def run(internal_data_dict):
-        p4 = internal_data_dict.get('P4 Inst', None)
-        if p4 is None:
-            return 0
+        p4 = internal_data_dict['P4 Inst']
         try:
             sync_path = internal_data_dict['Sync path']
             if sync_path:
-                get_latest_rev(sync_path)
+                get_latest_rev(sync_path, p4)
             else:
-                get_latest_rev('//...')
+                get_latest_rev('', p4)
         except P4Exception as e:
             return 4, e
