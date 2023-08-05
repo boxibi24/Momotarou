@@ -1,5 +1,3 @@
-from __future__ import absolute_import, print_function
-
 import logging
 import stat
 import time
@@ -9,20 +7,26 @@ from datetime import datetime, timedelta
 import genericpath
 import os
 from pathlib import Path
-
+from core.utils import create_queueHandler_logger
 import P4
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-logging.basicConfig()
+
+class SyncProgress(P4.TextProgress):
+    def done(self, fail):
+        print("sync with '%s"'' % fail)
+
+
+logger = logging.getLogger()
+
+
+def setup_p4_logger(logger_queue, debug_mode: bool):
+    global logger
+    is_debug_mode = debug_mode
+    logger = create_queueHandler_logger(__name__, logger_queue, is_debug_mode)
 
 
 class CheckedOutException(Exception):
     pass
-
-
-def setLoggingLevel(level):
-    logger.setLevel(level)
 
 
 @contextlib.contextmanager
@@ -43,6 +47,48 @@ def p4Connect(p4inst):
         # Maintain the original connection state of p4inst
         if not connected:
             p4inst.disconnect()
+
+
+def createP4Instance(user: str, password: str, port: str, client: str, charset: str) -> P4.P4:
+    p4 = P4.P4()
+    p4.user = user
+    p4.password = password
+    p4.port = port
+    p4.charset = charset
+    p4.progress = SyncProgress()
+
+    return p4
+
+
+def p4_login(p4inst):
+    p4 = get_p4_inst(p4inst)
+    with p4Connect(p4) as p4:
+        p4.run_login()
+        if p4inst.connected():
+            return p4inst
+    raise P4.P4Exception('Could not login, wrong credential')
+
+
+def createP4Workspace(p4inst, client: str, user: str,
+                      root: os.PathLike, stream: str,
+                      options='noallwrite noclobber nocompress unlocked nomodtime rmdir',
+                      submit_option='revertunchanged'):
+
+    p4 = get_p4_inst(p4inst)
+    with p4Connect(p4) as p4:
+        client_config = {'Backup': 'enable',
+                         'Client': client,
+                         'Description': 'Created by {}.\n'.format(p4.user),
+                         'Host': os.environ.get('COMPUTERNAME', 'NullPCName'),
+                         'LineEnd': 'local',
+                         'Options': options,
+                         'Owner': user,
+                         'Root': root,
+                         'SubmitOptions': submit_option,
+                         'Type': 'writeable',
+                         'Stream': stream
+                         }
+        p4.save_client(client_config)
 
 
 def getP4inst(p4inst, **kwargs):
@@ -744,7 +790,7 @@ def delete_empty_changelists(p4c):
             p4c.run_change('-d', change['change'])
 
 
-def get_non_underscored_files(pattern, banned_strings=['/_'], p4inst=None):
+def get_non_underscored_files(pattern, banned_strings='/_', p4inst=None):
     """
     Finds all files given a pattern that do not contain any of the strings in "banned_strings".
     This can help speed up syncing for folders which have many files in "_working" folders
@@ -755,6 +801,7 @@ def get_non_underscored_files(pattern, banned_strings=['/_'], p4inst=None):
         pattern (basestring): a p4-compatible file pattern.
         banned_strings (list, optional): a list of strings that should be banned from
             the filepaths. Not case-sensitive.
+        p4inst: perforce instance
 
     Returns:
         list: a list of filepaths that match the pattern and do not have any of the
@@ -780,6 +827,8 @@ def sync_non_underscored_files(pattern, preview=False, p4inst=None):
 
     Args:
         pattern (basestring): a p4-compatible file pattern.
+        p4inst: perforce instance
+        preview: show preview only
     """
     file_list = get_non_underscored_files(pattern)
     if file_list:
@@ -803,14 +852,12 @@ def unsync_underscored_files(patterns, p4inst=None):
 
     Args:
         patterns (str, or list of strs): p4-compatible file pattern. Can be a list of patterns.
+        p4inst: Perforce instance
     """
     logger.info('Unsync underscored files')
 
     if not isinstance(patterns, list):
         patterns = [patterns]
-
-    if not p4inst:
-        p4c = getP4inst(p4inst)
 
     with p4Connect(p4inst) as p4:
         pattern_iterator = 1
@@ -850,7 +897,8 @@ is_valid_rev = isValidRevision
 move_outdated_files_to_new_cl = moveOutdatedFilesToNewChangeList
 p4_connect = p4Connect
 p4_edit_or_add = p4EditOrAdd
-set_log_lvl = setLoggingLevel
 split_rev = splitrev
 strip_rev = striprev
 update_cl_desc = updateChangelistDescription
+create_p4_inst = createP4Instance
+create_p4_workspace = createP4Workspace

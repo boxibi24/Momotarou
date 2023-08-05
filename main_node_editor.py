@@ -8,6 +8,7 @@ from multiprocessing import Queue
 from typing import Tuple
 
 from lib.constants import NODE_EDITOR_APP_NAME
+from lib.p4util import setup_p4_logger
 from ui.NodeEditor.main_ui import initialize_node_editor_project, setup_dpg_font, initialize_dpg
 from core.executor import setup_executor_logger
 from core.utils import json_load_from_file_path
@@ -77,6 +78,7 @@ def get_arg():
 def setup_logger(is_debug_mode: bool) -> tuple[Logger, Queue, QueueListener]:
     logger, logger_queue, queue_listener = _setup_main_logger(is_debug_mode)
     setup_executor_logger(logger_queue, is_debug_mode)
+    setup_p4_logger(logger_queue, is_debug_mode)
     return logger, logger_queue, queue_listener
 
 

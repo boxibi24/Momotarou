@@ -1,8 +1,8 @@
 from ui.NodeEditor.classes.node import BaseNode
 from core.enum_types import NodeTypeFlag, InputPinType, OutputPinType
-from P4 import P4, P4Exception
-import os
-from random import randint
+from P4 import P4Exception
+from lib.p4util import create_p4_workspace
+from traceback import format_exc
 
 
 class Node(BaseNode):
@@ -14,7 +14,6 @@ class Node(BaseNode):
     node_type = NodeTypeFlag.Blueprint
     pin_dict = {
         'P4 Inst': InputPinType.PerforceInstance,
-        # 'Project Name': InputPinType.String,
         'Options': InputPinType.String,
         'Submit Options': InputPinType.String,
         'P4ROOT': InputPinType.String,
@@ -24,24 +23,16 @@ class Node(BaseNode):
 
     @staticmethod
     def run(internal_data_dict):
-        p4 = internal_data_dict.get('P4 Inst', None)
-        if p4 is None:
-            return 0, ''
-        client_config = {'Backup': 'enable',
-                         'Client': p4.client,
-                         'Description': 'Created by {}.\n'.format(p4.user),
-                         'Host': os.environ.get('COMPUTERNAME', 'NullPCName'),
-                         'LineEnd': 'local',
-                         # 'Options': 'noallwrite noclobber nocompress unlocked nomodtime rmdir',
-                         'Options': internal_data_dict['Options'],
-                         'Owner': p4.user,
-                         'Root': internal_data_dict['P4ROOT'],
-                         'SubmitOptions': internal_data_dict['Submit Options'],
-                         'Type': 'writeable',
-                         'Stream': internal_data_dict['P4STREAM']
-                         }
+        p4 = internal_data_dict['P4 Inst']
         try:
-            p4.save_client(client_config)
-        except P4Exception as e:
-            return 4, e
+            create_p4_workspace(p4,
+                                client=p4.client,
+                                user=p4.user,
+                                root=internal_data_dict['P4ROOT'],
+                                stream=internal_data_dict['P4STREAM'],
+                                options=internal_data_dict['Options'],
+                                submit_option=internal_data_dict['Submit Options'])
+        except P4Exception:
+            return 4, format_exc()
         internal_data_dict['P4 Inst Out'] = p4
+        return 1, ''

@@ -34,7 +34,7 @@ def setup_dpg_font():
 
 
 def initialize_tools_viewer_project(setting_dict: dict, packages_list: list, logger_queue: Queue, is_debug_mode: bool):
-    tools_viewer_project: ToolsViewer = _initialize_primary_window_as_node_graph(setting_dict, packages_list,
+    tools_viewer_project: ToolsViewer = _initialize_primary_window_as_node_graph(setting_dict,
                                                                                  logger_queue,
                                                                                  is_debug_mode)
     render_dpg_frame()

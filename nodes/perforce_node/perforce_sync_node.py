@@ -1,8 +1,7 @@
 from ui.NodeEditor.classes.node import BaseNode
 from core.enum_types import NodeTypeFlag, InputPinType
 from P4 import P4Exception
-from lib.p4util import getLatestRevision
-
+from lib.p4util import get_latest_rev
 
 
 class Node(BaseNode):
@@ -25,8 +24,8 @@ class Node(BaseNode):
         try:
             sync_path = internal_data_dict['Sync path']
             if sync_path:
-                p4.run('sync', sync_path)
+                get_latest_rev(sync_path)
             else:
-                getLatestRevision()
+                get_latest_rev('//...')
         except P4Exception as e:
             return 4, e
