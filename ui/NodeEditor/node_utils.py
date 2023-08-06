@@ -5,8 +5,7 @@ from core.utils import dpg_set_value, dpg_get_value, json_write_to_file_path
 import traceback
 from ui.NodeEditor.classes.link import Link, LinkInfo
 from ui.NodeEditor.classes.pin import PinInfo
-import subprocess
-import sys
+from collections import OrderedDict
 
 
 def delete_selected_node(node_editor, node_id=None):
@@ -379,3 +378,58 @@ def create_list_from_dict_values(in_dict: dict):
     for node in in_dict.values():
         _node_list.append(node)
     return _node_list
+
+
+def auto_increment_matched_name_in_dpg_container(check_name: str, parent_id: int) -> str:
+    children_list: list = dpg.get_item_children(parent_id)[1]
+    not_match_any_flag = False
+    new_name = check_name
+    if children_list:
+        i = 0
+        while not not_match_any_flag:
+            if i != 0:
+                new_name = check_name + '_' + str(i)
+            for child_item in children_list:
+                if new_name == dpg.get_item_label(child_item):
+                    break
+                elif child_item == children_list[-1] and new_name != dpg.get_item_label(child_item):
+                    not_match_any_flag = True
+            i += 1
+    return new_name
+
+
+def apply_dict_order_on_source_and_destination_index(source_event_index: int,
+                                                     destination_event_index: int,
+                                                     dict_to_apply: OrderedDict):
+    temp_dict = OrderedDict(enumerate(dict_to_apply.keys()))
+
+    _push_up_order = False
+    _index_gap = 0
+    if source_event_index - destination_event_index < 0:  # push down the order
+        _index_gap = destination_event_index - source_event_index
+        _push_up_order = False
+    else:
+        _index_gap = source_event_index - destination_event_index
+        _push_up_order = True
+
+    if _push_up_order:
+        for i in range(destination_event_index + 1, len(temp_dict)):
+            if i - destination_event_index == _index_gap:
+                continue
+            dict_to_apply.move_to_end(key=temp_dict[i])
+    else:
+        for i in range(source_event_index, len(temp_dict)):
+            if 0 < i - source_event_index <= _index_gap:
+                continue
+            dict_to_apply.move_to_end(key=temp_dict[i])
+
+
+def get_index_in_dict_from_matched_tag_and_key(check_tag: str, check_dict: dict):
+    for _index, tag in enumerate(check_dict.keys()):
+        if check_tag == tag:
+            return _index
+    raise Exception(f'Could not find element in dict that matches tag: {check_tag}')
+
+
+def strip_node_type_from_node_label(node_label: str):
+    return ' '.join(node_label.split(' ')[1:])

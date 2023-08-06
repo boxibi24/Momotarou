@@ -1,11 +1,14 @@
 import dearpygui.dearpygui as dpg
 from collections import OrderedDict
 from copy import deepcopy
-from core.enum_types import InputPinType
+from core.enum_types import InputPinType, NodeTypeFlag
 from core.utils import generate_uuid, add_user_input_box, get_var_default_value_on_type
 from ui.NodeEditor.item_right_click_menus import variable_right_click_menu, event_right_click_menu
 from ui.NodeEditor.input_handler import delete_selected_node
-from ui.NodeEditor.node_utils import create_list_from_dict_values
+from ui.NodeEditor.node_utils import create_list_from_dict_values, auto_increment_matched_name_in_dpg_container, \
+    get_index_in_dict_from_matched_tag_and_key, apply_dict_order_on_source_and_destination_index, \
+    strip_node_type_from_node_label
+from pprint import pprint
 
 
 class Splitter:
@@ -113,29 +116,15 @@ class Splitter:
             self._parent_instance.logger.debug('**** Initialized Splitter ****')
 
     def event_graph_header_right_click_menu(self, sender, app_data, user_data, instant_add=False):
-        parent = self._event_graph_collapsing_header
         _current_node_editor_instance = self._parent_instance.current_node_editor_instance
-        # Try to generate a default name that does not match with any existing ones
-        children_list: list = dpg.get_item_children(parent)[1]
-        not_match_any_flag = False
         new_event_tag = '__event' + generate_uuid()
         override_pos = user_data[0]
-        default_name = user_data[1]
-        if children_list:
-            temp_name = default_name
-            i = 0
-            while not not_match_any_flag:
-                if i != 0:
-                    temp_name = default_name + '_' + str(i)
-                for child_item in children_list:
-                    if temp_name == dpg.get_item_label(child_item):
-                        break
-                    elif child_item == children_list[-1] and temp_name != dpg.get_item_label(child_item):
-                        not_match_any_flag = True
-                        default_name = temp_name
-                i += 1
+
+        non_matching_name = auto_increment_matched_name_in_dpg_container(user_data[1],
+                                                                         self._event_graph_collapsing_header)
+
         if instant_add:
-            added_node = self._parent_instance.current_editor_add_event_node(default_name, override_pos)
+            added_node = self._parent_instance.current_editor_add_event_node(non_matching_name, override_pos)
             return added_node
         else:
             with dpg.window(
@@ -150,7 +139,7 @@ class Splitter:
                 _selectable_id = dpg.add_selectable(label='Add',
                                                     tag=new_event_tag,
                                                     callback=self._parent_instance.callback_current_editor_add_node,
-                                                    user_data=('', default_name)
+                                                    user_data=('', non_matching_name)
                                                     )
 
     def variable_header_right_click_menu(self, sender, app_data, user_data):
@@ -169,15 +158,13 @@ class Splitter:
         """
         Refresh the Event Graph collapsing header on Splitter
         """
+
+        self.clear_old_splitter_dpg_item(self._old_event_dict)
+        self._add_event_splitter_items()
+
+    def _add_event_splitter_items(self):
         _current_node_editor_instance = self._parent_instance.current_node_editor_instance
         _detail_panel_inst = self._parent_instance.detail_panel
-        # First clear out existing items in splitter:
-        for value in self._old_event_dict.values():
-            splitter_id = value.get('splitter_id', None)
-            if splitter_id is None:
-                continue
-            dpg.delete_item(splitter_id)
-        # Then add back the events item to the splitter
         for key, value in self._event_dict.items():
             _event_tag = key
             _event_name = value['name'][0]
@@ -199,81 +186,44 @@ class Splitter:
             _current_node_editor_instance.item_registry_dict.update({_event_tag: item_handler_id})
             self._event_dict[_event_tag].update({'splitter_id': splitter_selectable_item})
 
-        _current_node_editor_instance.logger.debug('**** Refreshed event graph window ****')
-
     def drop_callback_reorder_event(self, sender, app_data):
         _current_node_editor_instance = self._parent_instance.current_node_editor_instance
         _source_event_tag = app_data
-        _destination_event_tag = None
-        for event_tag, value in self._event_dict.items():
-            if value['splitter_id'] == sender:
-                _destination_event_tag = event_tag
-                break
-        if _destination_event_tag is None:
-            _current_node_editor_instance.logger.error(f'Could not find '
-                                                       f'Event {dpg.get_item_label(sender)} from event dict!')
-            return 3
-        source_event_index = -1
-        destination_event_index = -1
-        for _index, event_tag in enumerate(self._event_dict.keys()):
-            if _source_event_tag == event_tag:
-                source_event_index = _index
-            if _destination_event_tag == event_tag:
-                destination_event_index = _index
-
-        if source_event_index == -1 or destination_event_index == -1:
-            _current_node_editor_instance.logger.error(f'Could not find the indices of the events in event dict')
-            return 3
-
-        # Make a copy of event dict keys
-        temp_dict = OrderedDict(enumerate(self._event_dict.keys()))
-
-        _push_up_order = False
-        _index_gap = 0
-        if source_event_index - destination_event_index < 0:  # push down the order
-            _index_gap = destination_event_index - source_event_index
-            _push_up_order = False
-        else:
-            _index_gap = source_event_index - destination_event_index
-            _push_up_order = True
-
-        if _push_up_order:
-            for i in range(destination_event_index + 1, len(temp_dict)):
-                if i - destination_event_index == _index_gap:
-                    continue
-                _current_node_editor_instance.event_dict.move_to_end(key=temp_dict[i])
-        else:
-            for i in range(source_event_index, len(temp_dict)):
-                if 0 < i - source_event_index <= _index_gap:
-                    continue
-                _current_node_editor_instance.event_dict.move_to_end(key=temp_dict[i])
+        _destination_event_tag = self._get_event_tag_from_dpg_id(sender)
+        source_event_index = get_index_in_dict_from_matched_tag_and_key(_source_event_tag, self._event_dict)
+        destination_event_index = get_index_in_dict_from_matched_tag_and_key(_destination_event_tag, self._event_dict)
+        apply_dict_order_on_source_and_destination_index(source_event_index, destination_event_index,
+                                                         _current_node_editor_instance.event_dict)
+        # Trigger a splitter refresh now that new event_dict order has been set
         self.event_dict = _current_node_editor_instance.event_dict
-        _current_node_editor_instance.logger.debug(f'**** New event dict order updated ****')
+
+    def _get_event_tag_from_dpg_id(self, dpg_id: int) -> str:
+        for event_tag, value in self._event_dict.items():
+            if value['splitter_id'] == dpg_id:
+                found_event_tag = event_tag
+                return found_event_tag
+        raise KeyError(f'Could not find event tag whose id is : {dpg_id}')
 
     def refresh_exposed_var_window(self):
         """
         Refresh the Exposed Variables collapsing header on Splitter
         """
+        self.clear_old_splitter_dpg_item(self._old_exposed_var_dict)
+        self._add_exposed_var_splitter_item()
+
+    def _add_exposed_var_splitter_item(self):
         _current_node_editor_instance = self._parent_instance.current_node_editor_instance
-        # First clear out existing items in splitter:
-        for value in self._old_exposed_var_dict.values():
-            splitter_id = value.get('splitter_id', None)
-            if splitter_id is None:
-                continue
-            dpg.delete_item(splitter_id)
-        # Then add back the events item to the splitter
         for key, value in self._exposed_var_dict.items():
             _var_tag = key
             _var_name = value['name'][0]
-            _is_var_exposed = value['is_exposed']
-            if _is_var_exposed[0]:
+            _is_var_exposed = value['is_exposed'][0]
+            if _is_var_exposed:
                 with dpg.table(parent=self._exposed_var_collapsing_header,
                                header_row=False, no_pad_outerX=True) as splitter_selectable_item:
                     dpg.add_table_column(no_reorder=True, no_resize=True, init_width_or_weight=100)
                     dpg.add_table_column(no_reorder=True, no_resize=True, init_width_or_weight=400)
                     with dpg.table_row():
                         _selectable_id = dpg.add_selectable(label=_var_name,
-                                                            # parent=self._exposed_var_collapsing_header,
                                                             callback=self._parent_instance.detail_panel.callback_show_var_detail,
                                                             user_data=_var_tag,
                                                             payload_type='__exposed_var',
@@ -287,202 +237,188 @@ class Splitter:
                 self._exposed_var_dict[_var_tag].update({'splitter_id': splitter_selectable_item,
                                                          'selectable_id': _selectable_id})
 
-        _current_node_editor_instance.logger.debug('**** Refreshed exposed var window ****')
-
     def drop_callback_reorder_var(self, sender, app_data):
         _current_node_editor_instance = self._parent_instance.current_node_editor_instance
         _source_var_tag = app_data
-        _destination_var_tag = None
+        _destination_var_tag = self._get_var_tag_from_dpg_id(sender)
+        _source_var_index = get_index_in_dict_from_matched_tag_and_key(_source_var_tag, self._exposed_var_dict)
+        _destination_var_index = get_index_in_dict_from_matched_tag_and_key(_destination_var_tag, self.exposed_var_dict)
+        apply_dict_order_on_source_and_destination_index(_source_var_index, _destination_var_index,
+                                                         _current_node_editor_instance.var_dict)
+        self.exposed_var_dict = deepcopy(_current_node_editor_instance.var_dict)
+
+    def _get_var_tag_from_dpg_id(self, dpg_id: int) -> str:
         for var_tag, value in self._exposed_var_dict.items():
             if value['is_exposed'][0]:
-                if value['selectable_id'] == sender:
-                    _destination_var_tag = var_tag
-                    break
-        if _destination_var_tag is None:
-            _current_node_editor_instance.logger.error(f'Could not find '
-                                                       f'variable {dpg.get_item_label(sender)} from splitter'
-                                                       f' var dict!')
-            return 3
-        _source_var_index = -1
-        _destination_var_index = -1
-        for _index, var_tag in enumerate(self._exposed_var_dict.keys()):
-            if _source_var_tag == var_tag:
-                _source_var_index = _index
-            if _destination_var_tag == var_tag:
-                _destination_var_index = _index
-
-        if _source_var_index == -1 or _destination_var_index == -1:
-            _current_node_editor_instance.logger.error(f'Could not find the indices of the vars in splitter var dict')
-            return 3
-
-        # Make a copy of var dict keys
-        temp_dict = OrderedDict(enumerate(self._exposed_var_dict.keys()))
-
-        _push_up_order = False
-        _index_gap = 0
-        if _source_var_index - _destination_var_index < 0:  # push down the order
-            _index_gap = _destination_var_index - _source_var_index
-            _push_up_order = False
-        else:
-            _index_gap = _source_var_index - _destination_var_index
-            _push_up_order = True
-
-        if _push_up_order:
-            for i in range(_destination_var_index + 1, len(temp_dict)):
-                if i - _destination_var_index == _index_gap:
-                    continue
-                _current_node_editor_instance.var_dict.move_to_end(key=temp_dict[i])
-        else:
-            for i in range(_source_var_index, len(temp_dict)):
-                if 0 < i - _source_var_index <= _index_gap:
-                    continue
-                _current_node_editor_instance.var_dict.move_to_end(key=temp_dict[i])
-        self.exposed_var_dict = deepcopy(_current_node_editor_instance.var_dict)
-        _current_node_editor_instance.logger.debug(f'**** New event dict order updated ****')
+                if value['selectable_id'] == dpg_id:
+                    found_var_tag = var_tag
+                    return found_var_tag
+        raise KeyError(f'Could not find var tag whose selectable id is : {dpg_id}')
 
     def refresh_variable_window(self):
         """
         Refresh the Variables collapsing header on Splitter
         """
-        _current_node_editor_instance = self._parent_instance.current_node_editor_instance
-        # First clear out variable items in splitter:
-        for value in self._old_var_dict.values():
-            splitter_id = value.get('splitter_id', None)
-            if splitter_id is None:
-                continue
-            dpg.delete_item(splitter_id)
-        if not self._var_dict:
-            # Reset old var dict
-            self._old_var_dict = OrderedDict([])
-        # Then add back the variable item to the splitter
+        self.clear_old_splitter_dpg_item(self._old_var_dict)
         for key, value in self._var_dict.items():
             self.add_var(sender='', app_data='', user_data=value['name'][0],
                          refresh=True, var_tag=key)
 
-        _current_node_editor_instance.logger.debug('**** Refreshed variable window ****')
+    @staticmethod
+    def clear_old_splitter_dpg_item(old_dict: dict):
+        for value in old_dict.values():
+            splitter_id = value.get('splitter_id', None)
+            if splitter_id is None:
+                continue
+            dpg.delete_item(splitter_id)
 
     def add_var(self, sender, app_data, user_data, refresh=None, var_tag='',
                 default_value=None, var_type=None, default_is_exposed_flag=False):
         """
         Add new variable
         """
-        parent = self._default_var_header
         _current_node_editor_instance = self._parent_instance.current_node_editor_instance
-        # Try to generate a default name that does not match with any existing ones
-        children_list: list = dpg.get_item_children(parent)[1]
-        not_match_any_flag = False
-        default_name = user_data
+        non_matching_name = auto_increment_matched_name_in_dpg_container(user_data, self._default_var_header)
         if not refresh:
             new_var_tag = generate_uuid()
         else:
             new_var_tag = var_tag
-        if children_list:
-            temp_name = default_name
-            if refresh is None:
-                i = 0
-                while not not_match_any_flag:
-                    # Skip first iteration
-                    if i != 0:
-                        temp_name = default_name + '_' + str(i)
-                    for child_item in children_list:
-                        if temp_name == dpg.get_item_label(child_item):
-                            break
-                        elif child_item == children_list[-1] and temp_name != dpg.get_item_label(child_item):
-                            not_match_any_flag = True
-                            default_name = temp_name
-                    i += 1
 
-        with dpg.table(label=default_name, header_row=False, no_pad_outerX=True, parent=parent) as var_splitter_id:
-            dpg.add_table_column(init_width_or_weight=400)
-            dpg.add_table_column(init_width_or_weight=300)
-            with dpg.table_row():
-                _selectable_id = dpg.add_selectable(label=default_name,
-                                                    callback=self._parent_instance.detail_panel.callback_show_var_detail,
-                                                    user_data=new_var_tag)
-                with dpg.drag_payload(parent=dpg.last_item(),
-                                      drag_data=new_var_tag,
-                                      payload_type='__var'):
-                    dpg.add_text(default_name)
-                # Var type will be one of the InputPinType except for  'Exec' input
-                var_type_list = [member.name for member in InputPinType if member.name not in ['Exec', 'WildCard']]
-                if self._combo_dict.get(new_var_tag, None) is None:
-                    default_type = var_type_list[0]
-                else:
-                    default_type = self._combo_dict[new_var_tag][1][0]
-                _combo_id = dpg.add_combo(var_type_list, width=95, popup_align_left=True,
-                                          callback=self.combo_update_callback, user_data=new_var_tag,
-                                          default_value=default_type)
-            # Add right-click handler to selectable
-            with dpg.item_handler_registry() as item_handler_id:
-                dpg.add_item_clicked_handler(button=dpg.mvMouseButton_Right,
-                                             callback=variable_right_click_menu,
-                                             user_data=(new_var_tag, self._parent_instance))
-            dpg.bind_item_handler_registry(_selectable_id, dpg.last_container())
-            _current_node_editor_instance.item_registry_dict.update({new_var_tag: item_handler_id})
-
-        # If param var_type exist (import new tool), however, override the default type
+        var_splitter_id, var_combo_id, default_type = self._add_splitter_var_dpg_item(non_matching_name, new_var_tag)
+        # Override var_type when importing tool
         if var_type is not None:
             default_type = var_type
-            # Update the combo list UI
-            dpg.configure_item(_combo_id, default_value=var_type)
-        # Prep data
-        new_var_info = {
-            new_var_tag: {
-                'name': [default_name],
-                'type': [default_type],
-                'splitter_id': var_splitter_id
-            }}
-        if self._combo_dict.get(new_var_tag, None) is None:
-            self._combo_dict.update({
-                new_var_tag:
-                    [new_var_info[new_var_tag]['name'],
-                     new_var_info[new_var_tag]['type']]
-            })
-        else:
-            self._combo_dict[new_var_tag][0][0] = default_name
-            self._combo_dict[new_var_tag][1][0] = default_type
-        # Update the new var info to the internal var_dict
-        if self._var_dict.get(new_var_tag, None) is None:
-            self._var_dict.update(new_var_info)
-        else:
-            self._var_dict[new_var_tag]['name'][0] = default_name
-            self._var_dict[new_var_tag]['type'][0] = default_type
-            self._var_dict[new_var_tag]['splitter_id'] = var_splitter_id
-        # Also update child node graph var dict
+            dpg.configure_item(var_combo_id, default_value=var_type)
+
+        new_var_info = self._init_var_data_on_add_new_var(new_var_tag, non_matching_name, default_type, var_splitter_id)
+        self._update_splitter_combo_dict_data_on_add_new_var(new_var_info)
+        self._update_splitter_var_dict_data_on_add_new_var(new_var_info)
+
         if not refresh:
             self._parent_instance.current_node_editor_instance.add_var(new_var_info,
                                                                        default_value, default_is_exposed_flag)
-
         # Update old var dict cache
         self._old_var_dict = deepcopy(self._var_dict)
 
         _current_node_editor_instance.logger.debug('***** Added new var on Splitter ****')
-        _current_node_editor_instance.logger.debug(f'Splitter Combo dict: {self._combo_dict}')
+
+    def _add_splitter_var_dpg_item(self, var_name: str, var_tag: str) -> tuple[int, int, str]:
+        _current_node_editor_instance = self._parent_instance.current_node_editor_instance
+        with dpg.table(label=var_name, header_row=False, no_pad_outerX=True,
+                       parent=self._default_var_header) as var_splitter_id:
+            dpg.add_table_column(init_width_or_weight=400)
+            dpg.add_table_column(init_width_or_weight=300)
+            with dpg.table_row():
+                _selectable_id = dpg.add_selectable(label=var_name,
+                                                    callback=self._parent_instance.detail_panel.callback_show_var_detail,
+                                                    user_data=var_tag)
+                with dpg.drag_payload(parent=dpg.last_item(),
+                                      drag_data=var_tag,
+                                      payload_type='__var'):
+                    dpg.add_text(var_name)
+                # Var type will be one of the InputPinType except for  'Exec' input
+                var_type_list = [member.name for member in InputPinType if member.name not in ['Exec', 'WildCard']]
+                if self._combo_dict.get(var_tag, None) is None:
+                    default_type = var_type_list[0]
+                else:
+                    default_type = self._combo_dict[var_tag][1][0]
+                var_combo_id = dpg.add_combo(var_type_list, width=95, popup_align_left=True,
+                                             callback=self.combo_update_callback, user_data=var_tag,
+                                             default_value=default_type)
+            # Add right-click handler to selectable
+            with dpg.item_handler_registry() as item_handler_id:
+                dpg.add_item_clicked_handler(button=dpg.mvMouseButton_Right,
+                                             callback=variable_right_click_menu,
+                                             user_data=(var_tag, self._parent_instance))
+            dpg.bind_item_handler_registry(_selectable_id, dpg.last_container())
+            _current_node_editor_instance.item_registry_dict.update({var_tag: item_handler_id})
+
+        return var_splitter_id, var_combo_id, default_type
+
+    @staticmethod
+    def _init_var_data_on_add_new_var(var_tag: str, var_name: str, var_type: str, var_splitter_id: int) -> dict:
+        new_var_info = {
+            var_tag: {
+                'name': [var_name],
+                'type': [var_type],
+                'splitter_id': var_splitter_id
+            }}
+        return new_var_info
+
+    def _update_splitter_combo_dict_data_on_add_new_var(self, var_info: dict):
+        var_tag = list(var_info.keys())[0]
+        var_name = var_info[var_tag]['name']
+        var_type = var_info[var_tag]['type']
+        if self._combo_dict.get(var_tag, None) is None:
+            self._combo_dict.update({
+                var_tag:
+                    [var_name, var_type]
+            })
+        else:
+            self._combo_dict[var_tag][0][0] = var_name[0]
+            self._combo_dict[var_tag][1][0] = var_type[0]
+
+    def _update_splitter_var_dict_data_on_add_new_var(self, var_info: dict):
+        var_tag = list(var_info.keys())[0]
+        var_name = var_info[var_tag]['name']
+        var_type = var_info[var_tag]['type']
+        var_splitter_id = var_info[var_tag]['splitter_id']
+        if self._var_dict.get(var_tag, None) is None:
+            self._var_dict.update(var_info)
+        else:
+            self._var_dict[var_tag]['name'][0] = var_name[0]
+            self._var_dict[var_tag]['type'][0] = var_type[0]
+            self._var_dict[var_tag]['splitter_id'] = var_splitter_id
 
     def combo_update_callback(self, sender, app_data, user_data):
-        _current_node_editor_instance = self._parent_instance.current_node_editor_instance
-        _var_tag = user_data
-        _var_name = _current_node_editor_instance.var_dict[_var_tag]['name'][0]
-        _new_var_type = app_data
-        _found_var_node_instance = False
-        # Find first Get/Set node instances in current node graph, if found re-confirm with user for node replacement
-        for node in _current_node_editor_instance.node_instance_dict.values():
-            if node.node_label == 'Set ' + _var_name or node.node_label == 'Get ' + _var_name:
-                _found_var_node_instance = True
-                break
+        var_tag = user_data
+        new_var_type = app_data
+        self._var_type_update_handler(var_tag, new_var_type)
 
-        if _found_var_node_instance:
-            _mid_widget_pos = [int(dpg.get_viewport_width() / 2.5), int(dpg.get_viewport_height() / 2.5)]
-            with dpg.window(modal=True, label='Change variable type',
-                            pos=_mid_widget_pos) as _modal_window:
-                dpg.add_text("Changing variable type will delink and replace all node instances of this var !\n"
-                             "This operation cannot be undone!")
-                with dpg.group(horizontal=True):
-                    dpg.add_button(label="OK", width=75, callback=self.callback_replace_node_of_new_type,
-                                   user_data=((_var_tag, _new_var_type), _modal_window))
-                    dpg.add_button(label="Cancel", width=75, callback=lambda: dpg.delete_item(_modal_window))
+    def _var_type_update_handler(self, var_tag: str, new_var_type: str):
+        _current_node_editor_instance = self._parent_instance.current_node_editor_instance
+        var_name = _current_node_editor_instance.var_dict[var_tag]['name'][0]
+
+        if self._is_found_var_node_matches_name(var_name):
+            self._init_reconfirm_change_var_type_popup(var_tag, new_var_type)
         else:
-            self.var_type_update(_var_tag, _new_var_type)
+            self.var_type_update(var_tag, new_var_type)
+
+    def _is_found_var_node_matches_name(self, check_var_name: str) -> bool:
+        _current_node_editor_instance = self._parent_instance.current_node_editor_instance
+        for node in _current_node_editor_instance.node_instance_dict.values():
+            if node.node_type & NodeTypeFlag.Variable and \
+                check_var_name == strip_node_type_from_node_label(node.node_label):
+                return True
+        return False
+
+    def _init_reconfirm_change_var_type_popup(self, var_tag: str, new_var_type: str):
+        _mid_widget_pos = [int(dpg.get_viewport_width() / 2.5), int(dpg.get_viewport_height() / 2.5)]
+        with dpg.window(modal=True, label='Change variable type',
+                        pos=_mid_widget_pos) as _modal_window:
+            dpg.add_text("Changing variable type will delink and replace all node instances of this var !\n"
+                         "This operation cannot be undone!")
+            with dpg.group(horizontal=True):
+                dpg.add_button(label="OK", width=75, callback=self.callback_replace_node_of_new_type,
+                               user_data=((var_tag, new_var_type), _modal_window))
+                dpg.add_button(label="Cancel", width=75, callback=lambda: dpg.delete_item(_modal_window))
+
+    def callback_replace_node_of_new_type(self, sender, app_data, user_data):
+        # Delete the modal window first
+        dpg.delete_item(user_data[1])
+        _current_node_editor_instance = self._parent_instance.current_node_editor_instance
+        var_tag = user_data[0][0]
+        new_var_type = user_data[0][1]
+        var_name = self._get_variable_name_from_tag(var_tag)
+        node_list = create_list_from_dict_values(_current_node_editor_instance.node_instance_dict)
+        for node in node_list:
+            if node.node_type & NodeTypeFlag.Variable and var_name == strip_node_type_from_node_label(node.node_label):
+                if node.node_type == NodeTypeFlag.SetVariable:
+                    self._replace_set_var_node_with_new_type(node, new_var_type, var_tag)
+                else:
+                    self._replace_get_var_node_with_new_type(node, new_var_type, var_tag)
+        # Finally reflect new type changes to the databases
+        self.var_type_update(var_tag, new_var_type)
 
     def var_type_update(self, var_tag, new_type):
         _var_tag = var_tag
@@ -501,22 +437,6 @@ class Splitter:
         self._parent_instance.detail_panel.callback_show_var_detail('', '', user_data=_var_tag)
 
         _current_node_editor_instance.logger.info(f'Updated new type for var of name {_var_name}: {_new_var_type}')
-
-    def callback_replace_node_of_new_type(self, sender, app_data, user_data):
-        # Delete the modal window first
-        dpg.delete_item(user_data[1])
-        _current_node_editor_instance = self._parent_instance.current_node_editor_instance
-        _var_tag = user_data[0][0]
-        new_var_type = user_data[0][1]
-        _var_name = self._get_variable_name_from_tag(_var_tag)
-        _node_list = create_list_from_dict_values(_current_node_editor_instance.node_instance_dict)
-        for node in _node_list:
-            if node.node_label == 'Set ' + _var_name:
-                self._replace_set_var_node_with_new_type(node, new_var_type, _var_tag)
-            elif node.node_label == 'Get ' + _var_name:
-                self._replace_get_var_node_with_new_type(node, new_var_type, _var_tag)
-        # Finally reflect new type changes to the databases
-        self.var_type_update(_var_tag, new_var_type)
 
     def _get_variable_name_from_tag(self, var_tag) -> str:
         return self._parent_instance.current_node_editor_instance.var_dict[var_tag]['name'][0]
