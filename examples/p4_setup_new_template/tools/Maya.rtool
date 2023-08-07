@@ -1,0 +1,120 @@
+{
+    "nodes": [
+        {
+            "uuid": "393a1aca34f011eead6754bf647df350",
+            "label": "Print",
+            "pins": [
+                {
+                    "uuid": "393a1acb34f011ee9beb54bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "393a1acc34f011eebbc554bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "393a1acd34f011ee9d0e54bf647df350",
+                    "label": "Wildcard",
+                    "meta_type": 1,
+                    "type": 6,
+                    "value": "Opened Maya"
+                },
+                {
+                    "uuid": "393a41bb34f011ee81c954bf647df350",
+                    "label": "String",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 3,
+            "import_path": "nodes.exec_node.print_node",
+            "position": {
+                "x": 744,
+                "y": 158
+            }
+        },
+        {
+            "uuid": "3bc1d39b34f011eea4a054bf647df350",
+            "label": "CMD",
+            "pins": [
+                {
+                    "uuid": "3bc1d39c34f011eeb47654bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "3bc1d39d34f011ee939554bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "3bc1d39e34f011eeb6da54bf647df350",
+                    "label": "String",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "notepad"
+                },
+                {
+                    "uuid": "3bc1fa9234f011ee933f54bf647df350",
+                    "label": "Return",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 3,
+            "import_path": "nodes.exec_node.cmd_node",
+            "position": {
+                "x": 458,
+                "y": 127
+            }
+        },
+        {
+            "uuid": "393a41bf34f011eeb40454bf647df350",
+            "label": "Event Open Maya 2020",
+            "pins": [
+                {
+                    "uuid": "393a41c034f011eeac5754bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "393a41c134f011eead0554bf647df350",
+                    "label": "Temp",
+                    "meta_type": 2,
+                    "type": null,
+                    "default_value": null
+                }
+            ],
+            "type": 8,
+            "import_path": "nodes._internal.event_node",
+            "position": {
+                "x": 149,
+                "y": 157
+            }
+        }
+    ],
+    "flows": [
+        [
+            "393a41c034f011eeac5754bf647df350",
+            "3bc1d39c34f011eeb47654bf647df350"
+        ],
+        [
+            "3bc1d39d34f011ee939554bf647df350",
+            "393a1acb34f011ee9beb54bf647df350"
+        ]
+    ],
+    "data_links": [],
+    "events": {
+        "393a41bf34f011eeb40454bf647df350": "3bc1d39b34f011eea4a054bf647df350"
+    },
+    "vars": {}
+}
