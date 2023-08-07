@@ -431,5 +431,3 @@ def get_index_in_dict_from_matched_tag_and_key(check_tag: str, check_dict: dict)
     raise Exception(f'Could not find element in dict that matches tag: {check_tag}')
 
 
-def strip_node_type_from_node_label(node_label: str):
-    return ' '.join(node_label.split(' ')[1:])

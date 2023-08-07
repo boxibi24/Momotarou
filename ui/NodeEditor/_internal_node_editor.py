@@ -742,13 +742,12 @@ class DPGNodeEditor:
         self.logger.debug(f'splitter_var_dict:  {self._splitter_var_dict}')
         return 0
 
-    def register_var_user_input_box(self, var_tag: str, user_box_id: int):
+    def register_var_user_input_box_tag(self, var_tag: str, user_input_box_tag: str):
         """
         Callback function upon enabling variable's exposed for user input flag
         """
-        self._var_dict[var_tag]['user_input_box_id'] = user_box_id
-        self.logger.debug(f'**** Register {var_tag} to take input from dpg item : {user_box_id} ****')
-        self.logger.debug(f'Current var dict of {var_tag}: {self._var_dict[var_tag]}')
+        self._var_dict[var_tag]['user_input_box_tag'] = user_input_box_tag
+        self.logger.debug(f'**** Registered {var_tag} to take input from dpg item : {user_input_box_tag} ****')
 
     def delete_item_registry(self, item_name: str):
         """

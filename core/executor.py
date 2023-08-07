@@ -53,7 +53,7 @@ def _determine_var_value():
         if var_info['is_exposed'][0] is False:
             var_info['value'][0] = None
         else:
-            user_input_value = dpg.get_value(var_info['user_input_box_id'])
+            user_input_value = dpg.get_value(var_info['user_input_box_tag'])
             var_info['value'][0] = user_input_value
 
 

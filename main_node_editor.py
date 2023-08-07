@@ -2,6 +2,8 @@ import argparse
 import os
 import json
 import logging
+import psutil
+
 from logging import Logger, Formatter, Handler
 from logging.handlers import QueueHandler, QueueListener
 from multiprocessing import Queue
@@ -164,6 +166,16 @@ def _construct_and_add_queue_handler_to_logger(logger: Logger, *args: Handler) -
 
 def _on_terminate_project(queue_listener: QueueListener):
     queue_listener.stop()
+    # Kill child processes if still alive
+    this_proc = os.getpid()
+    kill_proc_tree(this_proc)
+
+
+def kill_proc_tree(pid):
+    parent = psutil.Process(pid)
+    children = parent.children(recursive=True)
+    for child in children:
+        child.kill()
 
 
 if __name__ == '__main__':

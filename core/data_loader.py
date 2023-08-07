@@ -210,7 +210,7 @@ def _update_var_node_internal_data(internal_data_reference: dict, var_name: str)
                                     'default_var_value': var_info['default_value'],
                                     'var_name': var_name})
     if var_info['is_exposed'][0]:
-        internal_data_reference['var_value'][0] = dpg_get_value(var_info['user_input_box_id'])
+        internal_data_reference['var_value'][0] = dpg_get_value(var_info['user_input_box_tag'])
 
 
 def _get_following_exec_node_and_update_connection_data(node_index: int) -> list[int]:

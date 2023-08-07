@@ -18,13 +18,12 @@ from importlib import import_module
 from copy import deepcopy
 import traceback
 from core.utils import create_queueHandler_logger, json_load_from_file_path, json_write_to_file_path, generate_uuid, \
-    log_on_return_message, warn_duplicate_and_retry_new_project_dialog, \
-    construct_tool_path_from_tools_path_and_tool_name, convert_python_path_to_import_path, \
+    log_on_return_message, construct_tool_path_from_tools_path_and_tool_name, convert_python_path_to_import_path, \
     is_string_contains_special_characters
 from core.data_loader import refresh_core_data_with_json_dict
 from core.executor import execute_event
 from lib.constants import NODE_EDITOR_APP_NAME
-
+from misc import color as color
 
 INTERNAL_NODE_CATEGORY = '_internal'
 CACHE_DIR = Path(os.getenv('LOCALAPPDATA')) / "RUT" / NODE_EDITOR_APP_NAME
@@ -448,10 +447,15 @@ class NodeEditor:
     def callback_project_save_as(self, sender, app_data):
         project_path = Path(app_data['file_path_name'])
         if os.path.exists(project_path):
-            warn_duplicate_and_retry_new_project_dialog()
+            self.warn_duplicate_and_retry_new_project_dialog()
             return 0
         self._update_project_data(project_path)
         self._project_save_to_folder()
+
+    @staticmethod
+    def warn_duplicate_and_retry_new_project_dialog():
+        dpg.add_text(parent='project_save_as', default_value='Project existed, please rename', color=color.darkred)
+        dpg.show_item('project_save_as')
 
     def _update_project_data(self, project_path: Path):
         self._update_project_name(project_path.name)
@@ -561,14 +565,7 @@ class NodeEditor:
         refresh_core_data_with_json_dict(data_dict)
 
     def subprocess_execution_event(self, event_tag):
-        self._pop_output_log_window()
-        # self.thread_pool.apply_async(execute_event, (event_tag,))
-        execute_event(event_tag)
+        self.thread_pool.apply_async(execute_event, (event_tag,))
+        # Uncomment below if you want to execute event synchronously
+        # execute_event(event_tag)
 
-    def _pop_output_log_window(self):
-        dpg.configure_item(self.output_log_id, show=True)
-        # self._snap_log_output_track_to_latest_text()
-
-    # def _snap_log_output_track_to_latest_text(self):
-    #     dpg.configure_item(self.log_output_window_id, tracked=True, track_offset=1.0)
-    #     dpg.configure_item(self.log_output_window_id, tracked=False)

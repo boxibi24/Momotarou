@@ -12,8 +12,6 @@ from typing import Union
 
 from dearpygui import dearpygui as dpg
 
-from misc import color as color
-
 timer_registry = [0]
 
 
@@ -89,8 +87,12 @@ def generate_uuid() -> str:
 
 
 def add_user_input_box(var_type, callback=None, default_value=None,
-                       user_data=None, text='', add_separator=False, width=None):
-    _user_input_box = None
+                       user_data=None, text='', add_separator=False, width=None,
+                       tag='') -> str:
+    if not tag:
+        user_input_box_tag = generate_uuid()
+    else:
+        user_input_box_tag = tag
     if text:
         dpg.add_text(text)
     if default_value is None:
@@ -102,42 +104,48 @@ def add_user_input_box(var_type, callback=None, default_value=None,
     else:
         _width = width
     if var_type == 'String':
-        _user_input_box = dpg.add_input_text(on_enter=True, default_value=_default_value,
-                                             callback=callback,
-                                             user_data=user_data,
-                                             hint='one line text',
-                                             width=_width)
+        dpg.add_input_text(on_enter=True, default_value=_default_value,
+                           callback=callback,
+                           user_data=user_data,
+                           hint='one line text',
+                           width=_width,
+                           tag=user_input_box_tag)
     elif var_type == 'Int':
-        _user_input_box = dpg.add_input_int(on_enter=True, default_value=_default_value,
-                                            callback=callback,
-                                            user_data=user_data,
-                                            width=_width)
+        dpg.add_input_int(on_enter=True, default_value=_default_value,
+                          callback=callback,
+                          user_data=user_data,
+                          width=_width,
+                          tag=user_input_box_tag)
 
     elif var_type == 'Float':
-        _user_input_box = dpg.add_input_float(on_enter=True, default_value=_default_value,
-                                              callback=callback,
-                                              user_data=user_data,
-                                              width=_width)
+        dpg.add_input_float(on_enter=True, default_value=_default_value,
+                            callback=callback,
+                            user_data=user_data,
+                            width=_width,
+                            tag=user_input_box_tag)
     elif var_type == 'MultilineString':
-        _user_input_box = dpg.add_input_text(on_enter=True, multiline=True,
-                                             default_value=_default_value,
-                                             callback=callback,
-                                             user_data=user_data,
-                                             width=_width)
+        dpg.add_input_text(on_enter=True, multiline=True,
+                           default_value=_default_value,
+                           callback=callback,
+                           user_data=user_data,
+                           width=_width,
+                           tag=user_input_box_tag)
     elif var_type == 'Password':
-        _user_input_box = dpg.add_input_text(on_enter=True, password=True,
-                                             default_value=_default_value,
-                                             callback=callback,
-                                             user_data=user_data,
-                                             hint='password',
-                                             width=_width)
+        dpg.add_input_text(on_enter=True, password=True,
+                           default_value=_default_value,
+                           callback=callback,
+                           user_data=user_data,
+                           hint='password',
+                           width=_width,
+                           tag=user_input_box_tag)
     elif var_type == 'Bool':
-        _user_input_box = dpg.add_checkbox(callback=callback,
-                                           default_value=_default_value,
-                                           user_data=user_data)
+        dpg.add_checkbox(callback=callback,
+                         default_value=_default_value,
+                         user_data=user_data,
+                         tag=user_input_box_tag)
     if add_separator:
         dpg.add_separator()
-    return _user_input_box
+    return user_input_box_tag
 
 
 def get_var_default_value_on_type(var_type: str):
@@ -178,9 +186,6 @@ def log_on_return_message(logger, action: str, return_message=(0, ''), **kwargs)
             logger.error(message)
 
 
-def warn_duplicate_and_retry_new_project_dialog():
-    dpg.add_text(parent='project_save_as', default_value='Project existed, please rename', color=color.darkred)
-    dpg.show_item('project_save_as')
 
 
 def construct_tool_path_from_tools_path_and_tool_name(tools_path: Path, tool_name: str) -> str:
@@ -207,3 +212,7 @@ def is_string_contains_special_characters(check_string: str) -> bool:
         if special_char in check_string:
             return True
     return False
+
+
+def remove_node_type_from_node_label(node_label: str):
+    return ' '.join(node_label.split(' ')[1:])

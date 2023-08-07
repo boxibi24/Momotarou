@@ -2,12 +2,12 @@ import dearpygui.dearpygui as dpg
 from collections import OrderedDict
 from copy import deepcopy
 from core.enum_types import InputPinType, NodeTypeFlag
-from core.utils import generate_uuid, add_user_input_box, get_var_default_value_on_type
+from core.utils import generate_uuid, add_user_input_box, get_var_default_value_on_type, \
+    remove_node_type_from_node_label
 from ui.NodeEditor.item_right_click_menus import variable_right_click_menu, event_right_click_menu
 from ui.NodeEditor.input_handler import delete_selected_node
 from ui.NodeEditor.node_utils import create_list_from_dict_values, auto_increment_matched_name_in_dpg_container, \
-    get_index_in_dict_from_matched_tag_and_key, apply_dict_order_on_source_and_destination_index, \
-    strip_node_type_from_node_label
+    get_index_in_dict_from_matched_tag_and_key, apply_dict_order_on_source_and_destination_index
 from pprint import pprint
 
 
@@ -232,8 +232,8 @@ class Splitter:
                                               drag_data=_var_tag,
                                               payload_type='__exposed_var'):
                             dpg.add_text(_var_name)
-                        _user_input_box = add_user_input_box(var_type=value['type'][0], width=300)
-                        _current_node_editor_instance.register_var_user_input_box(_var_tag, _user_input_box)
+                        _user_input_box_tag = add_user_input_box(var_type=value['type'][0], width=300)
+                        _current_node_editor_instance.register_var_user_input_box_tag(_var_tag, _user_input_box_tag)
                 self._exposed_var_dict[_var_tag].update({'splitter_id': splitter_selectable_item,
                                                          'selectable_id': _selectable_id})
 
@@ -388,7 +388,7 @@ class Splitter:
         _current_node_editor_instance = self._parent_instance.current_node_editor_instance
         for node in _current_node_editor_instance.node_instance_dict.values():
             if node.node_type & NodeTypeFlag.Variable and \
-                check_var_name == strip_node_type_from_node_label(node.node_label):
+                check_var_name == remove_node_type_from_node_label(node.node_label):
                 return True
         return False
 
@@ -412,7 +412,7 @@ class Splitter:
         var_name = self._get_variable_name_from_tag(var_tag)
         node_list = create_list_from_dict_values(_current_node_editor_instance.node_instance_dict)
         for node in node_list:
-            if node.node_type & NodeTypeFlag.Variable and var_name == strip_node_type_from_node_label(node.node_label):
+            if node.node_type & NodeTypeFlag.Variable and var_name == remove_node_type_from_node_label(node.node_label):
                 if node.node_type == NodeTypeFlag.SetVariable:
                     self._replace_set_var_node_with_new_type(node, new_var_type, var_tag)
                 else:

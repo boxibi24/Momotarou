@@ -1,8 +1,7 @@
 import dearpygui.dearpygui as dpg
 from copy import deepcopy
-from core.utils import dpg_set_value, add_user_input_box, log_on_return_message
+from core.utils import dpg_set_value, add_user_input_box, log_on_return_message, remove_node_type_from_node_label
 from core.enum_types import NodeTypeFlag
-from ui.NodeEditor.node_utils import strip_node_type_from_node_label
 from pprint import pprint
 
 
@@ -173,7 +172,7 @@ class DetailPanel:
         _current_node_editor_instance = self._parent_instance.current_node_editor_instance
         for node_instance in _current_node_editor_instance.node_instance_dict.values():
             if node_instance.node_type & NodeTypeFlag.Variable and \
-                old_var_name == strip_node_type_from_node_label(node_instance.node_label):
+                old_var_name == remove_node_type_from_node_label(node_instance.node_label):
                 _new_node_label = node_instance.node_label.split(' ')[0] + ' ' + new_var_name
                 node_instance.node_label = _new_node_label
                 dpg.configure_item(node_instance.id, label=node_instance.node_label)
@@ -191,7 +190,7 @@ class DetailPanel:
         node_info_list = _current_node_editor_instance.node_dict['nodes']
         for node_info in node_info_list:
             if node_info['type'] & NodeTypeFlag.Variable and\
-                old_var_name == strip_node_type_from_node_label(node_info['label']):
+                old_var_name == remove_node_type_from_node_label(node_info['label']):
                 node_info['label'] = node_info['label'].split(' ')[0] + ' ' + new_var_name
 
     def _refresh_splitter_vars(self):
@@ -265,7 +264,7 @@ class DetailPanel:
         _current_node_editor_instance = self._parent_instance.current_node_editor_instance
         for node_instance in _current_node_editor_instance.node_instance_dict.values():
             if node_instance.node_type == NodeTypeFlag.Event and\
-                old_event_name == strip_node_type_from_node_label(node_instance.node_label):
+                old_event_name == remove_node_type_from_node_label(node_instance.node_label):
                 _new_node_label = node_instance.node_label.split(' ')[0] + ' ' + new_event_name
                 node_instance.node_label = _new_node_label
                 dpg.configure_item(node_instance.id, label=node_instance.node_label)
@@ -277,7 +276,7 @@ class DetailPanel:
         node_info_list = _current_node_editor_instance.node_dict['nodes']
         for node_info in node_info_list:
             if node_info['type'] == NodeTypeFlag.Event and\
-                old_event_name == strip_node_type_from_node_label(node_info['label']):
+                old_event_name == remove_node_type_from_node_label(node_info['label']):
                 node_info['label'] = node_info['label'].split(' ')[0] + ' ' + new_event_name
                 break
 
