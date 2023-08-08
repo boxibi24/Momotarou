@@ -38,7 +38,7 @@ build:
     # - virtualenv venv
     # - source venv/bin/activate
     - apt-get update && apt-get install -y libgl1
-    - sudo add-apt-repository ppa:deadsnakes/ppa   
+    - add-apt-repository ppa:deadsnakes/ppa   
     - apt install python3.7    
     - pip install -r requirements.txt
   #   # - pip install pyinstaller
