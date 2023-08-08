@@ -1,4 +1,5 @@
 import dearpygui.dearpygui as dpg
+from typing import Tuple
 from collections import OrderedDict
 from copy import deepcopy
 from core.enum_types import InputPinType, NodeTypeFlag
@@ -301,7 +302,7 @@ class Splitter:
 
         _current_node_editor_instance.logger.debug('***** Added new var on Splitter ****')
 
-    def _add_splitter_var_dpg_item(self, var_name: str, var_tag: str) -> tuple[int, int, str]:
+    def _add_splitter_var_dpg_item(self, var_name: str, var_tag: str) -> Tuple[int, int, str]:
         _current_node_editor_instance = self._parent_instance.current_node_editor_instance
         with dpg.table(label=var_name, header_row=False, no_pad_outerX=True,
                        parent=self._default_var_header) as var_splitter_id:

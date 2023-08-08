@@ -6,6 +6,7 @@ import traceback
 from core.classes.link import Link, LinkInfo
 from core.classes.pin import PinInfo
 from collections import OrderedDict
+from typing import Tuple
 
 
 def delete_selected_node(node_editor, node_id=None):
@@ -249,7 +250,7 @@ def reapply_imported_pin_value_to_new_node(imported_pin_list, new_node):
         dpg_set_value(new_pin_info['pin_instance'].value_tag, imported_value)
 
 
-def reconstruct_node_pos_from_imported_info(node_info) -> tuple[float, float]:
+def reconstruct_node_pos_from_imported_info(node_info) -> Tuple[float, float]:
     """
     Reconstruct node position from imported info
 

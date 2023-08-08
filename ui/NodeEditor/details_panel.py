@@ -1,4 +1,5 @@
 import dearpygui.dearpygui as dpg
+from typing import Tuple
 from copy import deepcopy
 from core.utils import dpg_set_value, add_user_input_box, log_on_return_message, remove_node_type_from_node_label
 from core.enum_types import NodeTypeFlag
@@ -140,7 +141,7 @@ class DetailPanel:
         return_message = self._update_var_name(new_var_name=appdata, var_tag=user_data, input_box_id=sender)
         log_on_return_message(self._parent_instance.logger, action, return_message)
 
-    def _update_var_name(self, var_tag: str, new_var_name: str, input_box_id: int) -> tuple[int, object]:
+    def _update_var_name(self, var_tag: str, new_var_name: str, input_box_id: int) -> Tuple[int, object]:
         _current_node_editor_instance = self._parent_instance.current_node_editor_instance
         old_var_name = _current_node_editor_instance.var_dict[var_tag]['name'][0]
         # Check if new name existed, then skip and set text input back to its previous value
@@ -232,7 +233,7 @@ class DetailPanel:
         return_message = self._update_event_name(event_tag=user_data, new_event_name=appdata, input_box_id=sender)
         log_on_return_message(self._parent_instance.logger, action, return_message)
 
-    def _update_event_name(self, event_tag: str, new_event_name: str, input_box_id: int) -> tuple[int, object]:
+    def _update_event_name(self, event_tag: str, new_event_name: str, input_box_id: int) -> Tuple[int, object]:
         _current_node_editor_instance = self._parent_instance.current_node_editor_instance
         old_event_name = _current_node_editor_instance.event_dict[event_tag]['name'][0]
 

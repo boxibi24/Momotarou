@@ -527,7 +527,7 @@ class DPGNodeEditor:
         return_message = self.add_link_from_sourcePin_to_destinationPin(source_pin_tag, destination_pin_tag)
         log_on_return_message(self.logger, 'Link Node', return_message)
 
-    def add_link_from_sourcePin_to_destinationPin(self, source_pin_tag, destination_pin_tag) -> tuple[int, str]:
+    def add_link_from_sourcePin_to_destinationPin(self, source_pin_tag, destination_pin_tag) -> Tuple[int, str]:
 
         prepared_link_info = self._construct_link_info_from_source_and_destination_pin_tag(source_pin_tag,
                                                                                            destination_pin_tag)
@@ -632,7 +632,7 @@ class DPGNodeEditor:
             self.remove_flow_link(tobe_removed_link)
         log_on_return_message(self.logger, action, (1, ''))
 
-    def _get_link_from_id(self, link_id) -> tuple[Link, bool]:
+    def _get_link_from_id(self, link_id) -> Tuple[Link, bool]:
         for link in self._data_link_list:
             if link.link_id == link_id:
                 return link, True

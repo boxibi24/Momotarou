@@ -2,7 +2,7 @@ from core.enum_types import PinMetaType, NodeTypeFlag
 from importlib import import_module
 from copy import deepcopy
 from core.utils import extract_var_name_from_node_info, dpg_get_value
-from pprint import pprint
+from typing import Tuple
 
 nodes_data = {}
 vars_data = {}
@@ -108,7 +108,7 @@ def _is_data_input_pin_type(pin_type: PinMetaType) -> bool:
     return False
 
 
-def _get_source_node_and_pin_index_dataLinked_to_pin(pin_info: dict) -> tuple[int, int]:
+def _get_source_node_and_pin_index_dataLinked_to_pin(pin_info: dict) -> Tuple[int, int]:
     data_link = _get_data_link_connected_to_destination_pin(pin_info['uuid'])
     if not data_link:
         return -1, -1
@@ -124,7 +124,7 @@ def _get_data_link_connected_to_destination_pin(destination_pin_id):
             return data_link
 
 
-def _get_source_node_index_in_data_link(data_link: dict) -> tuple[int, int]:
+def _get_source_node_index_in_data_link(data_link: dict) -> Tuple[int, int]:
     for source_node_index, source_node_info in enumerate(node_list):
         for source_pin_index, pin_info in enumerate(source_node_info['pins']):
             if pin_info['uuid'] == data_link[0]:
@@ -227,7 +227,7 @@ def _get_following_exec_node_and_update_connection_data(node_index: int) -> list
     return following_node_index_list
 
 
-def _get_destination_node_and_pin_index_flowLinked_to_pin(pin_info: dict) -> tuple[int, int]:
+def _get_destination_node_and_pin_index_flowLinked_to_pin(pin_info: dict) -> Tuple[int, int]:
     flow_link = _get_flow_link_connected_to_source_pin(pin_info['uuid'])
     if flow_link is None:
         return -1, -1
@@ -243,7 +243,7 @@ def _get_flow_link_connected_to_source_pin(source_pin_id):
             return flow_link
 
 
-def _get_destination_node_index_in_flow_link(flow_link: dict) -> tuple[int, int]:
+def _get_destination_node_index_in_flow_link(flow_link: dict) -> Tuple[int, int]:
     for destination_node_index, destination_node_info in enumerate(node_list):
         for destination_pin_index, pin_info in enumerate(destination_node_info['pins']):
             if pin_info['uuid'] == flow_link[1]:

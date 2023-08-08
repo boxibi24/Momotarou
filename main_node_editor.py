@@ -77,14 +77,14 @@ def get_arg():
     return args
 
 
-def setup_logger(is_debug_mode: bool) -> tuple[Logger, Queue, QueueListener]:
+def setup_logger(is_debug_mode: bool) -> Tuple[Logger, Queue, QueueListener]:
     logger, logger_queue, queue_listener = _setup_main_logger(is_debug_mode)
     setup_executor_logger(logger_queue, is_debug_mode)
     setup_p4_logger(logger_queue, is_debug_mode)
     return logger, logger_queue, queue_listener
 
 
-def _setup_main_logger(is_debug_mode: bool) -> tuple[Logger, Queue, QueueListener]:
+def _setup_main_logger(is_debug_mode: bool) -> Tuple[Logger, Queue, QueueListener]:
     logger_name = NODE_EDITOR_APP_NAME
     logger = logging.getLogger(logger_name)
     logging_formatter = _get_logging_formatter(logger_name)

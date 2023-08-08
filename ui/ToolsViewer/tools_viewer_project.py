@@ -12,6 +12,7 @@ from core.enum_types import NodeTypeFlag
 
 from collections import OrderedDict
 from pathlib import Path
+from typing import Tuple
 
 
 class ToolsViewer:
@@ -108,7 +109,7 @@ class ToolsViewer:
         self._import_tool_to_tab(tab_child_window_id, tool_path)
         return tab_id
 
-    def _init_new_tab_and_get_child_window_id(self, new_tab_name: str) -> tuple[int, int]:
+    def _init_new_tab_and_get_child_window_id(self, new_tab_name: str) -> Tuple[int, int]:
         with dpg.tab(label=new_tab_name, parent=self.tab_bar_id, closable=False) as tab_id:
             with dpg.child_window(label="Main Window",
                                   height=self._setting_dict['viewport_height'] - 200,

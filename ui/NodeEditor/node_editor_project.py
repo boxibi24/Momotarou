@@ -1,4 +1,5 @@
 import dearpygui.dearpygui as dpg
+from typing import List, Tuple
 from multiprocessing import Queue
 from multiprocessing.pool import ThreadPool
 from ui.NodeEditor.utils import callback_project_save_as
@@ -37,11 +38,11 @@ class NodeEditor:
     node_editor_tag = generate_uuid()
 
     @property
-    def node_editor_bb(self) -> list[tuple]:
+    def node_editor_bb(self) -> List[tuple]:
         return self._node_editor_bb
 
     @node_editor_bb.setter
-    def node_editor_bb(self, value: list[tuple]):
+    def node_editor_bb(self, value: List[tuple]):
         self._node_editor_bb = value
 
     @property
@@ -471,7 +472,7 @@ class NodeEditor:
         return_message = self._open_new_project(project_file_path)
         log_on_return_message(self.logger, action, return_message)
 
-    def _open_new_project(self, project_file_path: Path) -> tuple[int, object]:
+    def _open_new_project(self, project_file_path: Path) -> Tuple[int, object]:
         self._clean_current_project()
         self._batch_import_tools_to_project(project_file_path)
         self._update_project_data(project_file_path.parent)
@@ -507,7 +508,7 @@ class NodeEditor:
         return_message = self._project_save_to_folder()
         log_on_return_message(self.logger, action, return_message)
 
-    def _project_save_to_folder(self) -> tuple[int, object]:
+    def _project_save_to_folder(self) -> Tuple[int, object]:
         try:
             self.refresh_node_editor_dict()
             self._construct_project_folder()

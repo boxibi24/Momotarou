@@ -5,7 +5,8 @@ from core.utils import create_queueHandler_logger, start_timer, stop_timer_and_g
 from core.data_loader import nodes_data, events_data, vars_data
 import dearpygui.dearpygui as dpg
 from core.enum_types import PinMetaType, NodeTypeFlag
-from pprint import pprint
+from typing import Tuple
+
 
 logger = logging.getLogger('')
 is_debug_mode = False
@@ -17,7 +18,7 @@ def setup_executor_logger(logger_queue, debug_mode: bool):
     logger = create_queueHandler_logger(__name__, logger_queue, is_debug_mode)
 
 
-def execute_event(event_node_tag: str, ) -> tuple[int, str]:
+def execute_event(event_node_tag: str, ) -> Tuple[int, str]:
     preprocess_execute_event()
     start_timer()
     logger.info(f'**** Exec event : {event_node_tag} ****')
