@@ -24,7 +24,7 @@ build:
   stage: build
   image: 
     name: cdrx/pyinstaller-windows:python3
-    entrypoint: [ '/bin/bash', '-c', 'ln -snf /bin/bash /bin/sh && /bin/bash -c $0' ]
+    entrypoint: [ '/bin/bash/entrypoint-windows.sh']
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
   cache:
@@ -46,8 +46,8 @@ build:
   script:
     # - mkdir bin
     # - cd ../..
-    # - ls
-    - sh entrypoint-windows.sh
+    - ls
+    # - sh entrypoint-windows.sh
     # - cdrx/pyinstaller-windows
     # - pyinstaller main_node_editor.py --name NodeEditor --paths=./ --add-data "Config/*.cfg;Config" --add-data "font/*.ttf;font"
 
