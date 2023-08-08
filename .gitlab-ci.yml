@@ -23,8 +23,8 @@ variables:
 build:
   stage: build
   image: 
-    - name: cdrx/pyinstaller-windows:latest
-    - entrypoint: [""]
+    name: cdrx/pyinstaller-windows:latest
+    entrypoint: [""]
   # image: python:latest
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
