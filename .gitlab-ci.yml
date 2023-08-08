@@ -42,7 +42,7 @@ build:
   #   # - echo ${PACKAGE_REGISTRY_URL}
   script:
     - mkdir bin
-    - cd ..
+    - cd ../..
     - ls
     # - pyinstaller main_tools_viewer.py --onefile --name ${DARWIN_AMD64_BINARY} --paths=./ --add-data "Config/*.cfg:Config" --add-data "font/*.ttf:font" 
     - cp -r dist/* bin
