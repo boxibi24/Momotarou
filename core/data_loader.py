@@ -2,7 +2,7 @@ from core.enum_types import PinMetaType, NodeTypeFlag
 from importlib import import_module
 from copy import deepcopy
 from core.utils import extract_var_name_from_node_info, dpg_get_value
-from typing import Tuple
+from typing import Tuple, List
 
 nodes_data = {}
 vars_data = {}
@@ -213,7 +213,7 @@ def _update_var_node_internal_data(internal_data_reference: dict, var_name: str)
         internal_data_reference['var_value'][0] = dpg_get_value(var_info['user_input_box_tag'])
 
 
-def _get_following_exec_node_and_update_connection_data(node_index: int) -> list[int]:
+def _get_following_exec_node_and_update_connection_data(node_index: int) -> List[int]:
     following_node_index_list = []
     for pin_index, pin_info in enumerate(_get_pin_list_of_node(node_index)):
         if pin_info['meta_type'] != PinMetaType.FlowOut:
