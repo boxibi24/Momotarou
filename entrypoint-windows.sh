@@ -2,7 +2,7 @@
 
 # Fail on errors.
 set -e
-echo "Running entry point"
+
 # Make sure .bashrc is sourced
 . /root/.bashrc
 
@@ -10,8 +10,6 @@ echo "Running entry point"
 # Useful for CI pipiles which use docker for their build steps
 # and don't allow that much flexibility to mount volumes
 WORKDIR=${SRCDIR:-/src}
-
-echo ${WORKDIR}
 
 #
 # In case the user specified a custom URL for PYPI, then use
@@ -40,7 +38,7 @@ fi # [ -f requirements.txt ]
 echo "$@"
 
 if [[ "$@" == "" ]]; then
-    pyinstaller --clean -y --dist ./dist/windows --workpath /tmp *.spec
+    pyinstaller --clean -y --dist ./dist/windows --workpath /tmp "*.spec"
     chown -R --reference=. ./dist/windows
 else
     sh -c "$@"
