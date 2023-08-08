@@ -186,8 +186,6 @@ def log_on_return_message(logger, action: str, return_message=(0, ''), **kwargs)
             logger.error(message)
 
 
-
-
 def construct_tool_path_from_tools_path_and_tool_name(tools_path: Path, tool_name: str) -> str:
     return (tools_path / (tool_name + '.rtool')).as_posix()
 

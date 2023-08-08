@@ -1,4 +1,3 @@
-import json
 from tkinter import Tk, filedialog
 import dearpygui.dearpygui as dpg
 from pathlib import Path

@@ -70,7 +70,7 @@ def get_arg():
     )
     parser.add_argument(
         "--is_debug_mode",
-        action='store_false'
+        action='store_true'
     )
 
     args = parser.parse_args()

@@ -1,4 +1,4 @@
-from ui.NodeEditor.classes.node import BaseNode
+from core.classes.node import BaseNode
 from core.enum_types import NodeTypeFlag, InputPinType, OutputPinType
 from P4 import P4Exception
 from lib.p4util import create_p4_workspace

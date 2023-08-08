@@ -8,7 +8,6 @@ from ui.NodeEditor.item_right_click_menus import variable_right_click_menu, even
 from ui.NodeEditor.input_handler import delete_selected_node
 from ui.NodeEditor.node_utils import create_list_from_dict_values, auto_increment_matched_name_in_dpg_container, \
     get_index_in_dict_from_matched_tag_and_key, apply_dict_order_on_source_and_destination_index
-from pprint import pprint
 
 
 class Splitter:

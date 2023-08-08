@@ -2,7 +2,6 @@ import dearpygui.dearpygui as dpg
 from ui.NodeEditor.node_editor_project import NodeEditor
 from ui.NodeEditor.menu_bar import initialize_file_dialog, initialize_menu_bar
 from multiprocessing import Queue
-import os
 from pathlib import Path
 
 
@@ -22,13 +21,11 @@ def initialize_dpg(editor_width: int, editor_height: int):
 
 def setup_dpg_font():
     # Setup DPG font
-    current_dir = os.path.dirname(os.path.abspath(__file__))
+    font_path = Path(__file__).parent.parent.parent / 'font/OpenSans-Regular.ttf'
     with dpg.font_registry():
-        with dpg.font(
-            current_dir +
-            '/font/OpenSans-Regular.ttf',
-            16
-        ) as default_font:
+        with dpg.font(font_path.as_posix(),
+                      16
+                      ) as default_font:
             dpg.add_font_range_hint(dpg.mvFontRangeHint_Vietnamese)
     dpg.bind_font(default_font)
 

@@ -2,7 +2,6 @@ import dearpygui.dearpygui as dpg
 from copy import deepcopy
 from core.utils import dpg_set_value, add_user_input_box, log_on_return_message, remove_node_type_from_node_label
 from core.enum_types import NodeTypeFlag
-from pprint import pprint
 
 
 class DetailPanel:

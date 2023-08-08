@@ -8,7 +8,7 @@ from ui.NodeEditor.splitter import Splitter
 from ui.NodeEditor.details_panel import DetailPanel
 from ui.NodeEditor._internal_node_editor import DPGNodeEditor
 from ui.NodeEditor.item_right_click_menus import tab_right_click_menu
-from ui.NodeEditor.classes.node import NodeModule
+from core.classes.node import NodeModule
 from ui.NodeEditor.node_utils import construct_var_node_label, construct_module_name_from_var_action_and_type
 from collections import OrderedDict
 import os
@@ -565,7 +565,11 @@ class NodeEditor:
         refresh_core_data_with_json_dict(data_dict)
 
     def subprocess_execution_event(self, event_tag):
+        self._pop_output_log_window()
         self.thread_pool.apply_async(execute_event, (event_tag,))
         # Uncomment below if you want to execute event synchronously
         # execute_event(event_tag)
+
+    def _pop_output_log_window(self):
+        dpg.configure_item(self.output_log_id, show=True)
 

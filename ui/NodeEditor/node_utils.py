@@ -3,8 +3,8 @@ from core.enum_types import NodeTypeFlag
 from ui.NodeEditor.utils import sort_data_link_dict, sort_flow_link_dict
 from core.utils import dpg_set_value, dpg_get_value, json_write_to_file_path
 import traceback
-from ui.NodeEditor.classes.link import Link, LinkInfo
-from ui.NodeEditor.classes.pin import PinInfo
+from core.classes.link import Link, LinkInfo
+from core.classes.pin import PinInfo
 from collections import OrderedDict
 
 
