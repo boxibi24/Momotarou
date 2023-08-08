@@ -32,7 +32,7 @@ build:
   #     - .cache/pip
   #     - venv/
   before_script:
-    - apt-get install python3.6-dev
+    - apt-get install -y python3.7-dev
   #   # - ls
   #   # - python --version  # For debugging
     # - pip install virtualenv
