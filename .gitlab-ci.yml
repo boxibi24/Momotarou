@@ -46,6 +46,8 @@ build:
     # - cd ../..
     # - ls
     - ls
+    - pyinstaller main_node_editor.py --name NodeEditor --paths=./ --add-data "Config/*.cfg:Config" --add-data "font/*.ttf:font"
+
   artifacts:
     paths:
       - dist/windows
