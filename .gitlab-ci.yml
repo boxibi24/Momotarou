@@ -37,6 +37,7 @@ build:
     - apt-get update && apt-get install -y libgl1
     - pip install -r requirements.txt
     - pip install pyinstaller
+    - echo ${PACKAGE_REGISTRY_URL}
   script:
     - mkdir bin
     - pyinstaller main_tools_viewer.py --name ${DARWIN_AMD64_BINARY} --paths=./ --add-data "Config/*.cfg:Config" --add-data "font/*.ttf:font" 
