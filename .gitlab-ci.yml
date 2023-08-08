@@ -22,6 +22,7 @@ variables:
 
 build:
   stage: build
+  image: cdrx/pyinstaller-windows:latest
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
   cache:
@@ -29,15 +30,15 @@ build:
       - .cache/pip
       - venv/
   before_script:
-    - ls
-    - python --version  # For debugging
-    - pip install virtualenv
-    - virtualenv venv
-    - source venv/bin/activate
+    # - ls
+    # - python --version  # For debugging
+    # - pip install virtualenv
+    # - virtualenv venv
+    # - source venv/bin/activate
     - apt-get update && apt-get install -y libgl1
-    - pip install -r requirements.txt
-    - pip install pyinstaller
-    - echo ${PACKAGE_REGISTRY_URL}
+    # - pip install -r requirements.txt
+    # - pip install pyinstaller
+    # - echo ${PACKAGE_REGISTRY_URL}
   script:
     - mkdir bin
     - pyinstaller main_tools_viewer.py --onefile --name ${DARWIN_AMD64_BINARY} --paths=./ --add-data "Config/*.cfg:Config" --add-data "font/*.ttf:font" 
