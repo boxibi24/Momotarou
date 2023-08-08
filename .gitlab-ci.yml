@@ -47,7 +47,7 @@ build:
     # - cd ../..
     # - ls
     - $(pwd):/src/
-    - cdrx/pyinstaller-windows
+    - pyinstaller
     - cp -r dist/windows/* bin
     # - echo "Mock binary for ${DARWIN_AMD64_BINARY}" > bin/${DARWIN_AMD64_BINARY}
     # - echo "Mock binary for ${LINUX_AMD64_BINARY}" > bin/${LINUX_AMD64_BINARY}
