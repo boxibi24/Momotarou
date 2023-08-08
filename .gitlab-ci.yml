@@ -25,20 +25,20 @@ build:
   image: cdrx/pyinstaller-windows:latest
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-  cache:
-    paths:
-      - .cache/pip
-      - venv/
-  before_script:
-    # - ls
-    # - python --version  # For debugging
-    # - pip install virtualenv
-    # - virtualenv venv
-    # - source venv/bin/activate
-    # - apt-get update && apt-get install -y libgl1
-    # - pip install -r requirements.txt
-    # - pip install pyinstaller
-    # - echo ${PACKAGE_REGISTRY_URL}
+  # cache:
+  #   paths:
+  #     - .cache/pip
+  #     - venv/
+  # before_script:
+  #   # - ls
+  #   # - python --version  # For debugging
+  #   # - pip install virtualenv
+  #   # - virtualenv venv
+  #   # - source venv/bin/activate
+  #   # - apt-get update && apt-get install -y libgl1
+  #   # - pip install -r requirements.txt
+  #   # - pip install pyinstaller
+  #   # - echo ${PACKAGE_REGISTRY_URL}
   script:
     - mkdir bin
     - cd ..
