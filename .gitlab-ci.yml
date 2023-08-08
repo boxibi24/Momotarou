@@ -23,8 +23,7 @@ variables:
 build:
   stage: build
   image: 
-    name: cdrx/pyinstaller-windows:latest
-    entrypoint: [ '/bin/bash', '-c', 'ln -snf /bin/bash /bin/sh && /bin/bash -c $0' ]
+    name: schnouki/pyinstaller-windows-ci:latest
   # image: python:latest
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
@@ -46,8 +45,8 @@ build:
     - mkdir bin
     # - cd ../..
     # - ls
-    - $(pwd):/src/
-    - pyinstaller
+    # - $(pwd):/src/
+    # - pyinstaller
     - cp -r dist/windows/* bin
     # - echo "Mock binary for ${DARWIN_AMD64_BINARY}" > bin/${DARWIN_AMD64_BINARY}
     # - echo "Mock binary for ${LINUX_AMD64_BINARY}" > bin/${LINUX_AMD64_BINARY}
