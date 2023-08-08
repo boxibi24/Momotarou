@@ -27,19 +27,19 @@ build:
     entrypoint: [ '/bin/bash', '-c', 'ln -snf /bin/bash /bin/sh && /bin/bash -c $0' ]
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-  # cache:
-  #   paths:
-  #     - .cache/pip
-  #     - venv/
+  cache:
+    paths:
+      - .cache/pip
+      - venv/
   before_script:
   #   # - ls
-  #   # - python --version  # For debugging
-    # - pip install virtualenv
-    # - virtualenv venv
-    # - source venv/bin/activate
+    - python --version  # For debugging
+    - pip install virtualenv
+    - virtualenv venv
+    - source venv/bin/activate
     - apt-get update && apt-get install -y libgl1
-    - add-apt-repository ppa:deadsnakes/ppa   
-    - apt install python3.7    
+    # - add-apt-repository ppa:deadsnakes/ppa   
+    # - apt install python3.7    
     - pip install -r requirements.txt
   #   # - pip install pyinstaller
   #   # - echo ${PACKAGE_REGISTRY_URL}
