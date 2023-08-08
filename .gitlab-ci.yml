@@ -31,22 +31,22 @@ build:
   #   paths:
   #     - .cache/pip
   #     - venv/
-  # before_script:
+  before_script:
   #   # - ls
   #   # - python --version  # For debugging
     # - pip install virtualenv
     # - virtualenv venv
     # - source venv/bin/activate
     # - apt-get update && apt-get install -y libgl1
-  #   # - pip install -r requirements.txt
+    - pip install -r requirements.txt
   #   # - pip install pyinstaller
   #   # - echo ${PACKAGE_REGISTRY_URL}
   script:
     # - mkdir bin
     # - cd ../..
-    - ls
     # - ls
-    # - pyinstaller main_node_editor.py --name NodeEditor --paths=./ --add-data "Config/*.cfg;Config" --add-data "font/*.ttf;font"
+    # - ls
+    - pyinstaller main_node_editor.py --name NodeEditor --paths=./ --add-data "Config/*.cfg;Config" --add-data "font/*.ttf;font"
 
   artifacts:
     paths:
