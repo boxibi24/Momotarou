@@ -22,7 +22,7 @@ variables:
 
 build:
   stage: build
-  image: cdrx/pyinstaller-windows:python
+  image: cdrx/pyinstaller-windows:python3
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
   # cache:
