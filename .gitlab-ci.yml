@@ -41,8 +41,6 @@ build:
     - mkdir bin
     - pyinstaller main_tools_viewer.py --name ${DARWIN_AMD64_BINARY} --paths=./ --add-data "Config/*.cfg:Config" --add-data "font/*.ttf:font" 
     - cp -r dist/* bin
-    - cd bin
-    - ls
     # - echo "Mock binary for ${DARWIN_AMD64_BINARY}" > bin/${DARWIN_AMD64_BINARY}
     # - echo "Mock binary for ${LINUX_AMD64_BINARY}" > bin/${LINUX_AMD64_BINARY}
   artifacts:
@@ -54,7 +52,7 @@ upload:
   stage: upload
   image: curlimages/curl:latest
   rules:
-    - if: $CI_COMMIT_TAG
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
   script:
     - |
       curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file bin/${DARWIN_AMD64_BINARY} "${PACKAGE_REGISTRY_URL}/${DARWIN_AMD64_BINARY}"
@@ -67,7 +65,7 @@ release:
   stage: release
   image: registry.gitlab.com/gitlab-org/release-cli:latest
   rules:
-    - if: $CI_COMMIT_TAG
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
   script:
     - |
       release-cli create --name "Release $CI_COMMIT_TAG" --tag-name $CI_COMMIT_TAG \
@@ -98,5 +96,5 @@ pages:
     paths:
       - public
   rules:
-    - if: $CI_COMMIT_TAG
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
