@@ -15,37 +15,37 @@ variables:
   # Must be in the format of X.Y.Z, i.e. should match /\A\d+\.\d+\.\d+\z/ regular expresion.
   # See https://docs.gitlab.com/ee/user/packages/generic_packages/#publish-a-package-file
   PACKAGE_VERSION: "0.0.1"
-  DARWIN_AMD64_BINARY: "nodeeditor-${PACKAGE_VERSION}"
+  DARWIN_AMD64_BINARY: "NodeEditor.exe"
   # LINUX_AMD64_BINARY: "myawesomerelease-linux-amd64-${PACKAGE_VERSION}"
   PACKAGE_REGISTRY_URL: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/releases/${PACKAGE_VERSION}"
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 
 build:
   stage: build
-  # image: cdrx/pyinstaller-windows:latest
-  image: python:latest
+  image: cdrx/pyinstaller-windows:latest
+  # image: python:latest
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-  # cache:
-  #   paths:
-  #     - .cache/pip
-  #     - venv/
-  # before_script:
+  cache:
+    paths:
+      - .cache/pip
+      - venv/
+  before_script:
   #   # - ls
   #   # - python --version  # For debugging
-  #   # - pip install virtualenv
-  #   # - virtualenv venv
-  #   # - source venv/bin/activate
-  #   # - apt-get update && apt-get install -y libgl1
+    # - pip install virtualenv
+    # - virtualenv venv
+    # - source venv/bin/activate
+    - apt-get update && apt-get install -y libgl1
   #   # - pip install -r requirements.txt
   #   # - pip install pyinstaller
   #   # - echo ${PACKAGE_REGISTRY_URL}
   script:
     - mkdir bin
-    - cd ../..
-    - ls
-    # - pyinstaller main_tools_viewer.py --onefile --name ${DARWIN_AMD64_BINARY} --paths=./ --add-data "Config/*.cfg:Config" --add-data "font/*.ttf:font" 
-    - cp -r dist/* bin
+    # - cd ../..
+    # - ls
+    - cdrx/pyinstaller-windows
+    - cp -r dist/windows/* bin
     # - echo "Mock binary for ${DARWIN_AMD64_BINARY}" > bin/${DARWIN_AMD64_BINARY}
     # - echo "Mock binary for ${LINUX_AMD64_BINARY}" > bin/${LINUX_AMD64_BINARY}
   artifacts:
