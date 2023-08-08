@@ -32,13 +32,13 @@ build:
   #     - .cache/pip
   #     - venv/
   before_script:
-    - apt-get install -y python3.7-dev
   #   # - ls
   #   # - python --version  # For debugging
     # - pip install virtualenv
     # - virtualenv venv
     # - source venv/bin/activate
     - apt-get update && apt-get install -y libgl1
+    - apt-get install python3.7
     - pip install -r requirements.txt
   #   # - pip install pyinstaller
   #   # - echo ${PACKAGE_REGISTRY_URL}
