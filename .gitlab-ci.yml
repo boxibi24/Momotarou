@@ -24,7 +24,7 @@ build:
   stage: build
   image: 
     name: cdrx/pyinstaller-windows:python3
-    entrypoint: [ '/bin/bash/']
+    entrypoint: ['/bin/bash', '-c', 'ln -snf /bin/bash /bin/sh && /bin/bash -c $0']
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
   cache:
