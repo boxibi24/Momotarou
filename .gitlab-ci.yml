@@ -1,55 +1,101 @@
-# This file is a template, and might need editing before it works on your project.
-# To contribute improvements to CI/CD templates, please follow the Development guide at:
-# https://docs.gitlab.com/ee/development/cicd/templates.html
-# This specific template is located at:
-# https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Python.gitlab-ci.yml
+default:
+  image: python:latest
 
-# Official language image. Look for the different tagged releases at:
-# https://hub.docker.com/r/library/python/tags/
-image: python:latest
+stages:
+  - build
+  - upload
+  - release
+  - pages
 
-# Change pip's cache directory to be inside the project directory since we can
-# only cache local items.
+
+
+
 variables:
+  # Package version can only contain numbers (0-9), and dots (.).
+  # Must be in the format of X.Y.Z, i.e. should match /\A\d+\.\d+\.\d+\z/ regular expresion.
+  # See https://docs.gitlab.com/ee/user/packages/generic_packages/#publish-a-package-file
+  PACKAGE_VERSION: "0.0.1"
+  DARWIN_AMD64_BINARY: "NodeEditor.exe"
+  # LINUX_AMD64_BINARY: "myawesomerelease-linux-amd64-${PACKAGE_VERSION}"
+  PACKAGE_REGISTRY_URL: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/releases/${PACKAGE_VERSION}"
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 
-# Pip's cache doesn't store the python packages
-# https://pip.pypa.io/en/stable/reference/pip_install/#caching
-#
-# If you want to also cache the installed packages, you have to install
-# them in a virtualenv and cache it as well.
-cache:
-  paths:
-    - .cache/pip
-    - venv/
+build:
+  stage: build
+  image: cdrx/pyinstaller-windows:latest
+  # image: python:latest
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  cache:
+    paths:
+      - .cache/pip
+      - venv/
+  before_script:
+  #   # - ls
+  #   # - python --version  # For debugging
+    # - pip install virtualenv
+    # - virtualenv venv
+    # - source venv/bin/activate
+    - apt-get update && apt-get install -y libgl1
+  #   # - pip install -r requirements.txt
+  #   # - pip install pyinstaller
+  #   # - echo ${PACKAGE_REGISTRY_URL}
+  script:
+    - mkdir bin
+    # - cd ../..
+    # - ls
+    - cdrx/pyinstaller-windows
+    - cp -r dist/windows/* bin
+    # - echo "Mock binary for ${DARWIN_AMD64_BINARY}" > bin/${DARWIN_AMD64_BINARY}
+    # - echo "Mock binary for ${LINUX_AMD64_BINARY}" > bin/${LINUX_AMD64_BINARY}
+  artifacts:
+    paths:
+      - bin/
 
-before_script:
-  - python --version  # For debugging
-  - pip install virtualenv
-  - virtualenv venv
-  - source venv/bin/activate
 
-# test:
-#   script:
-#     - python setup.py test
-#     - pip install tox flake8  # you can also use tox
-#     - tox -e py36,flake8
+upload:
+  stage: upload
+  image: curlimages/curl:latest
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  script:
+    - |
+      IFS=$' \t\r\n'
+    - |
+      curl --proxy-insecure --proxy-cacert --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file bin/${DARWIN_AMD64_BINARY} "${PACKAGE_REGISTRY_URL}/${DARWIN_AMD64_BINARY}"
+    # - |
+    #   curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file bin/${LINUX_AMD64_BINARY} "${PACKAGE_REGISTRY_URL}/${LINUX_AMD64_BINARY}"
 
-# run:
-#   script:
-#     - python setup.py bdist_wheel
-#     # an alternative approach is to install and run:
-#     - pip install dist/*
-#     # run the command here
-#   artifacts:
-#     paths:
-#       - dist/*.whl
+release:
+  # Caution, as of 2021-02-02 these assets links require a login, see:
+  # https://gitlab.com/gitlab-org/gitlab/-/issues/299384
+  stage: release
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  script:
+    - |
+      release-cli create --name "Release $CI_COMMIT_TAG" --tag-name $CI_COMMIT_TAG \
+        --assets-link "{\"name\":\"${DARWIN_AMD64_BINARY}\",\"url\":\"${PACKAGE_REGISTRY_URL}/${DARWIN_AMD64_BINARY}\"}"
+        # --assets-link "{\"name\":\"${LINUX_AMD64_BINARY}\",\"url\":\"${PACKAGE_REGISTRY_URL}/${LINUX_AMD64_BINARY}\"}"
 
 pages:
-  script:
+  stage: pages
+  cache:
+    paths:
+      - .cache/pip
+      - venv/
+  before_script:
+    - python --version  # For debugging
+    - pip install virtualenv
+    - virtualenv venv
+    - source venv/bin/activate
     - apt-get update && apt-get install -y libgl1
     - pip install -r requirements.txt
     - pip install sphinx sphinx-book-theme sphinx-autodoc-typehints myst-nb sphinx-thebe
+    - pip install pyinstaller
+
+  script:
     - cd docs
     - make html
     - mv build/html/ ../public/
@@ -58,3 +104,4 @@ pages:
       - public
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
