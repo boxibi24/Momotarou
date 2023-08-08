@@ -34,13 +34,13 @@ build:
   before_script:
   #   # - ls
     - python --version  # For debugging
-    - pip install virtualenv
-    - virtualenv venv
-    - source venv/bin/activate
-    - apt-get update && apt-get install -y libgl1
-    # - add-apt-repository ppa:deadsnakes/ppa   
-    # - apt install python3.7    
-    - pip install -r requirements.txt
+    # - pip install virtualenv
+    # - virtualenv venv
+    # - source venv/bin/activate
+    # - apt-get update && apt-get install -y libgl1
+    # # - add-apt-repository ppa:deadsnakes/ppa   
+    # # - apt install python3.7    
+    # - pip install -r requirements.txt
   #   # - pip install pyinstaller
   #   # - echo ${PACKAGE_REGISTRY_URL}
   script:
@@ -48,7 +48,8 @@ build:
     # - cd ../..
     # - ls
     # - ls
-    - pyinstaller main_node_editor.py --name NodeEditor --paths=./ --add-data "Config/*.cfg;Config" --add-data "font/*.ttf;font"
+    - cdrx/pyinstaller-windows
+    # - pyinstaller main_node_editor.py --name NodeEditor --paths=./ --add-data "Config/*.cfg;Config" --add-data "font/*.ttf;font"
 
   artifacts:
     paths:
