@@ -31,7 +31,7 @@ fi
 
 cd $WORKDIR
 
-pip install -r requirements.txt
+pip install -r "./requirements.txt"
 #if [ -f "./requirements.txt" ]; then
 #fi # [ -f requirements.txt ]
 
