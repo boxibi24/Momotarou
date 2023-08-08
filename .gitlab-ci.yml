@@ -22,7 +22,9 @@ variables:
 
 build:
   stage: build
-  image: docker:stable
+  image: 
+    name: docker:stable
+    entrypoint: [ '/bin/bash', '-c', 'ln -snf /bin/bash /bin/sh && /bin/bash -c $0' ]
   # image: python:latest
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
