@@ -28,17 +28,17 @@ build:
   # image: python:latest
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-  cache:
-    paths:
-      - .cache/pip
-      - venv/
-  before_script:
+  # cache:
+  #   paths:
+  #     - .cache/pip
+  #     - venv/
+  # before_script:
   #   # - ls
   #   # - python --version  # For debugging
     # - pip install virtualenv
     # - virtualenv venv
     # - source venv/bin/activate
-    - apt-get update && apt-get install -y libgl1
+    # - apt-get update && apt-get install -y libgl1
   #   # - pip install -r requirements.txt
   #   # - pip install pyinstaller
   #   # - echo ${PACKAGE_REGISTRY_URL}
@@ -46,6 +46,7 @@ build:
     - mkdir bin
     # - cd ../..
     # - ls
+    - $(pwd):/src/
     - cdrx/pyinstaller-windows
     - cp -r dist/windows/* bin
     # - echo "Mock binary for ${DARWIN_AMD64_BINARY}" > bin/${DARWIN_AMD64_BINARY}
