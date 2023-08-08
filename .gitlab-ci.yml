@@ -40,7 +40,9 @@ build:
   script:
     - mkdir bin
     - pyinstaller main_tools_viewer.py --name ${DARWIN_AMD64_BINARY} --paths=./ --add-data "Config/*.cfg:Config" --add-data "font/*.ttf:font" 
-    - cp ./dist/* bin
+    - cp -r dist/* bin
+    - cd bin
+    - ls
     # - echo "Mock binary for ${DARWIN_AMD64_BINARY}" > bin/${DARWIN_AMD64_BINARY}
     # - echo "Mock binary for ${LINUX_AMD64_BINARY}" > bin/${LINUX_AMD64_BINARY}
   artifacts:
