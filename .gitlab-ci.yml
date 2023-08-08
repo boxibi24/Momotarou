@@ -32,13 +32,13 @@ build:
   #     - .cache/pip
   #     - venv/
   before_script:
-    - sudo apt-get install python3.6-dev
+    - apt-get install python3.6-dev
   #   # - ls
   #   # - python --version  # For debugging
     # - pip install virtualenv
     # - virtualenv venv
     # - source venv/bin/activate
-    # - apt-get update && apt-get install -y libgl1
+    - apt-get update && apt-get install -y libgl1
     - pip install -r requirements.txt
   #   # - pip install pyinstaller
   #   # - echo ${PACKAGE_REGISTRY_URL}
