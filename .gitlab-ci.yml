@@ -34,7 +34,7 @@ build:
   before_script:
   #   # - ls
     - python --version  # For debugging
-    # - python -m pip install --upgrade pip wheel setuptools
+    - python -m pip install --upgrade pip wheel setuptools
     # - pip install virtualenv
     # - virtualenv venv
     # - source venv/bin/activate
@@ -47,7 +47,7 @@ build:
   script:
     # - mkdir bin
     # - cd ../..
-    - ls
+    # - ls
     - sh entrypoint-windows.sh
     # - cdrx/pyinstaller-windows
     # - /entrypoint-windows.sh
