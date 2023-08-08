@@ -5,7 +5,7 @@ block_cipher = None
 
 
 a = Analysis(
-    ['main_tools_viewer.py'],
+    ['main_node_editor.py'],
     pathex=['./'],
     binaries=[],
     datas=[('Config/*.cfg', 'Config'), ('font/*.ttf', 'font')],
