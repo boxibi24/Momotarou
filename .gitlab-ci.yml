@@ -30,8 +30,6 @@ build:
       - .cache/pip
       - venv/
   before_script:
-    - cd ..
-    - ls
     # - ls
     # - python --version  # For debugging
     # - pip install virtualenv
@@ -43,7 +41,9 @@ build:
     # - echo ${PACKAGE_REGISTRY_URL}
   script:
     - mkdir bin
-    - pyinstaller main_tools_viewer.py --onefile --name ${DARWIN_AMD64_BINARY} --paths=./ --add-data "Config/*.cfg:Config" --add-data "font/*.ttf:font" 
+    - cd ..
+    - ls
+    # - pyinstaller main_tools_viewer.py --onefile --name ${DARWIN_AMD64_BINARY} --paths=./ --add-data "Config/*.cfg:Config" --add-data "font/*.ttf:font" 
     - cp -r dist/* bin
     # - echo "Mock binary for ${DARWIN_AMD64_BINARY}" > bin/${DARWIN_AMD64_BINARY}
     # - echo "Mock binary for ${LINUX_AMD64_BINARY}" > bin/${LINUX_AMD64_BINARY}
