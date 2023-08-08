@@ -30,12 +30,14 @@ build:
       - .cache/pip
       - venv/
   before_script:
+    - cd ..
+    - ls
     # - ls
     # - python --version  # For debugging
     # - pip install virtualenv
     # - virtualenv venv
     # - source venv/bin/activate
-    - apt-get update && apt-get install -y libgl1
+    # - apt-get update && apt-get install -y libgl1
     # - pip install -r requirements.txt
     # - pip install pyinstaller
     # - echo ${PACKAGE_REGISTRY_URL}
