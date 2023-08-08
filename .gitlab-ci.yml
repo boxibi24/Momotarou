@@ -22,8 +22,7 @@ variables:
 
 build:
   stage: build
-  image: 
-    name: schnouki/pyinstaller-windows-ci:latest
+  image: docker:stable
   # image: python:latest
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
@@ -42,17 +41,16 @@ build:
   #   # - pip install pyinstaller
   #   # - echo ${PACKAGE_REGISTRY_URL}
   script:
-    - mkdir bin
+    # - mkdir bin
     # - cd ../..
     # - ls
-    # - $(pwd):/src/
-    # - pyinstaller
-    - cp -r dist/windows/* bin
+    - docker run --rm -v "$(pwd):/src/" cdrx/pyinstaller-windows:python3 "pyinstaller main_node_editor.py --name NodeEditor --paths=./ --add-data "Config/*.cfg;Config" --add-data "font/*.ttf;font"
+    # - cp -r dist/windows/* bin
     # - echo "Mock binary for ${DARWIN_AMD64_BINARY}" > bin/${DARWIN_AMD64_BINARY}
     # - echo "Mock binary for ${LINUX_AMD64_BINARY}" > bin/${LINUX_AMD64_BINARY}
   artifacts:
     paths:
-      - bin/
+      - dist/windows
 
 
 upload:
