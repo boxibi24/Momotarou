@@ -2,7 +2,7 @@
 
 # Fail on errors.
 set -e
-
+echo "Running entry point"
 # Make sure .bashrc is sourced
 . /root/.bashrc
 
@@ -10,6 +10,8 @@ set -e
 # Useful for CI pipiles which use docker for their build steps
 # and don't allow that much flexibility to mount volumes
 WORKDIR=${SRCDIR:-/src}
+
+echo ${WORKDIR}
 
 #
 # In case the user specified a custom URL for PYPI, then use
