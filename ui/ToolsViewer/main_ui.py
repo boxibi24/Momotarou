@@ -30,7 +30,7 @@ def setup_dpg_font():
     dpg.bind_font(default_font)
 
 
-def initialize_tools_viewer_project(setting_dict: dict, packages_list: list, logger_queue: Queue, is_debug_mode: bool):
+def initialize_tools_viewer_project(setting_dict: dict, logger_queue: Queue, is_debug_mode: bool):
     tools_viewer_project: ToolsViewer = _initialize_primary_window_as_node_graph(setting_dict,
                                                                                  logger_queue,
                                                                                  is_debug_mode)
@@ -52,7 +52,7 @@ def _initialize_primary_window_as_node_graph(setting_dict: dict, logger_queue: Q
                                            use_debug_print=is_debug_mode,
                                            logging_queue=logger_queue)
 
-        initialize_menu_bar(tools_viewer_project)
+        initialize_menu_bar(tools_viewer_project, setting_dict)
     dpg.set_primary_window('Main_Window', True)
     dpg.show_viewport()
     return tools_viewer_project

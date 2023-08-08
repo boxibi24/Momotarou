@@ -55,6 +55,8 @@ def dpg_get_value(tag: str):
 
 
 def json_load_from_file_path(file_path) -> dict:
+    if file_path == '.':
+        return {}
     with open(file_path, 'r') as fp:
         try:
             return_dict = json.load(fp)

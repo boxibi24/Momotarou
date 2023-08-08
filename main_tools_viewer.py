@@ -19,12 +19,11 @@ def main():
     logger, logger_queue, queue_listener = setup_logger(is_debug_mode)
     logger.info("***** Load Config *****")
     setting_dict = json_load_from_file_path(setting_file_path)
-    packages_list = json_load_from_file_path(packages_file_path)['packages']
     logger.info('**** DearPyGui Setup *****')
     initialize_dpg(editor_width=setting_dict['viewport_width'], editor_height=setting_dict['viewport_height'])
     setup_dpg_font()
     logger.info('**** Initialize Node Editor Project *****')
-    initialize_tools_viewer_project(setting_dict, packages_list, logger_queue, is_debug_mode)
+    initialize_tools_viewer_project(setting_dict, logger_queue, is_debug_mode)
     logger.info('**** DearPyGui Terminated! *****')
     _on_terminate_project(queue_listener)
 
