@@ -47,8 +47,8 @@ build:
     # - mkdir bin
     # - cd ../..
     # - ls
-    # - ls
-    - cdrx/pyinstaller-windows
+    - entrypoint-windows.sh
+    # - cdrx/pyinstaller-windows
     # - pyinstaller main_node_editor.py --name NodeEditor --paths=./ --add-data "Config/*.cfg;Config" --add-data "font/*.ttf;font"
 
   artifacts:
