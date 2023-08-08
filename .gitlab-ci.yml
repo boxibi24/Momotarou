@@ -22,8 +22,7 @@ variables:
 
 build:
   stage: build
-  image: docker:stable
-  # image: python:latest
+  image: cdrx/pyinstaller-windows:python
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
   # cache:
@@ -44,10 +43,7 @@ build:
     # - mkdir bin
     # - cd ../..
     # - ls
-    - docker run --rm -v "$(pwd):/src/" cdrx/pyinstaller-windows:python3 "pyinstaller main_node_editor.py --name NodeEditor --paths=./ --add-data "Config/*.cfg;Config" --add-data "font/*.ttf;font""
-    # - cp -r dist/windows/* bin
-    # - echo "Mock binary for ${DARWIN_AMD64_BINARY}" > bin/${DARWIN_AMD64_BINARY}
-    # - echo "Mock binary for ${LINUX_AMD64_BINARY}" > bin/${LINUX_AMD64_BINARY}
+    - ls
   artifacts:
     paths:
       - dist/windows
