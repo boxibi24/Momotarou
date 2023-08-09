@@ -38,8 +38,12 @@ fi # [ -f requirements.txt ]
 echo "$@"
 
 if [[ "$@" == "" ]]; then
-    pyinstaller --clean -y --dist ./dist/windows --workpath /tmp *.spec
+    pyinstaller --clean -y --dist ./dist/windows --workpath /tmp NodeEditor.spec
+    pyinstaller --clean -y --dist ./dist/windows --workpath /tmp ToolsViewer.spec
     chown -R --reference=. ./dist/windows
 else
     sh -c "$@"
 fi # [[ "$@" == "" ]]
+
+cp -r nodes ./dist/windows/NodeEditor
+cp -r nodes ./dist/windows/ToolsViewer
