@@ -52,10 +52,11 @@ build:
     # - cdrx/pyinstaller-windows
     # - /entrypoint-windows.sh
     # - pyinstaller main_node_editor.py --name NodeEditor --paths=./ --add-data "Config/*.cfg;Config" --add-data "font/*.ttf;font"
+    - cp -r dist/windows/* bin
 
   artifacts:
     paths:
-      - dist/windows
+      - bin/
 
 
 upload:
@@ -69,7 +70,7 @@ upload:
     # - |
       # curl --proxy-insecure --proxy-cacert --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file bin/${DARWIN_AMD64_BINARY} "${PACKAGE_REGISTRY_URL}/${DARWIN_AMD64_BINARY}"
     - |
-      curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file dist/windows/${DARWIN_AMD64_BINARY} "${PACKAGE_REGISTRY_URL}/${DARWIN_AMD64_BINARY}"
+      curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file bin/${DARWIN_AMD64_BINARY} "${PACKAGE_REGISTRY_URL}/${DARWIN_AMD64_BINARY}"
 
 release:
   # Caution, as of 2021-02-02 these assets links require a login, see:
