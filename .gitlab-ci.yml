@@ -42,9 +42,9 @@ build:
   script:
     - mkdir bin
     - sh entrypoint-windows.sh
-    - cd dist
-    - zip -r ${DARWIN_AMD64_BINARY} windows/
-    - cp ${DARWIN_AMD64_BINARY} ../bin
+    - cd dist/windows
+    - zip -r ${DARWIN_AMD64_BINARY} *
+    - cp ${DARWIN_AMD64_BINARY} ../../bin
   artifacts:
     paths:
       - bin/
