@@ -15,7 +15,7 @@ variables:
   # Must be in the format of X.Y.Z, i.e. should match /\A\d+\.\d+\.\d+\z/ regular expresion.
   # See https://docs.gitlab.com/ee/user/packages/generic_packages/#publish-a-package-file
   PACKAGE_VERSION: "0.0.1"
-  DARWIN_AMD64_BINARY: "NodeEditor.exe"
+  DARWIN_AMD64_BINARY: "riotuniversaltool_release_${PACKAGE_VERSION}.zip"
   # LINUX_AMD64_BINARY: "myawesomerelease-linux-amd64-${PACKAGE_VERSION}"
   PACKAGE_REGISTRY_URL: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/releases/${PACKAGE_VERSION}"
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
@@ -52,11 +52,12 @@ build:
     # - cdrx/pyinstaller-windows
     # - /entrypoint-windows.sh
     # - pyinstaller main_node_editor.py --name NodeEditor --paths=./ --add-data "Config/*.cfg;Config" --add-data "font/*.ttf;font"
-    - cp -r dist/windows/* bin
-
+    - zip -r ${DARWIN_AMD64_BINARY} dist/windows
+    - cp -r ${DARWIN_AMD64_BINARY} bin
   artifacts:
     paths:
       - bin/
+    when: on_success
 
 
 upload:
