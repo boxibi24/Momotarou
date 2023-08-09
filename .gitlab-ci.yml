@@ -45,7 +45,7 @@ build:
   #   # - pip install pyinstaller
   #   # - echo ${PACKAGE_REGISTRY_URL}
   script:
-    # - mkdir bin
+    - mkdir bin
     # - cd ../..
     # - ls
     - sh entrypoint-windows.sh
@@ -53,7 +53,7 @@ build:
     # - /entrypoint-windows.sh
     # - pyinstaller main_node_editor.py --name NodeEditor --paths=./ --add-data "Config/*.cfg;Config" --add-data "font/*.ttf;font"
     - zip -r ${DARWIN_AMD64_BINARY} dist/windows
-    - cp -r ${DARWIN_AMD64_BINARY} bin
+    - cp ${DARWIN_AMD64_BINARY} bin
   artifacts:
     paths:
       - bin/
