@@ -104,7 +104,7 @@ html_logo = "_static/RUT_wide.svg"
 html_title = "Riot Universal Tool"
 html_copy_source = True
 
-html_favicon = "_static/logo-square.svg"
+html_favicon = "_static/logo_square.svg"
 html_last_updated_fmt = ""
 
 html_css_files = ["custom.css"]
