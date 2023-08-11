@@ -4,7 +4,7 @@
 <br />
 <div align="center">
   <a href="https://vngitlab.virtuosgames.com/techart/CTS/-/tree/dev_RiotUniversalTool/CTS_ProjectSetup/RIOT/RiotUniversalTool">
-    <img src="images/logo.png" alt="Logo" width="80" height="80">
+    <img src="docs/source/_static/logo_square.svg" alt="Logo" width="80" height="80">
   </a>
 
 <h3 align="center">Riot Universal Tool</h3>
@@ -53,10 +53,10 @@
 A tool consist of 2 main aplication that work hand in hand with each other
 1. **Node Editor**: a node graph designer environment that let user create/debug automation tasks. Saved `.json` files can be loaded
 on *Tools Viewer* to execute it in practice
-![NodeEditor](images/node_editor_demo.gif)
+![NodeEditor](docs/source/images/node_editor_demo.gif)
 2. **Tools Viewer**: a GUI widget that aggregates events saved from *Node Editor* that lets end users executing designated
 events at runtime.
-![ToolsViewer](images/tools_viewer_demo.gif)
+![ToolsViewer](docs/source/images/tools_viewer_demo.gif)
 <!-- GETTING STARTED -->
 ## Getting Started
 

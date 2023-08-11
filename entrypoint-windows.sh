@@ -46,4 +46,6 @@ else
 fi # [[ "$@" == "" ]]
 
 cp -r nodes ./dist/windows/NodeEditor
+cp -r icons ./dist/windows/NodeEditor
 cp -r nodes ./dist/windows/ToolsViewer
+cp -r icons ./dist/windows/ToolsViewer
