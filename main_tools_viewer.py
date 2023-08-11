@@ -11,7 +11,7 @@ from typing import Tuple
 import psutil
 from core.executor import setup_executor_logger
 from core.utils import json_load_from_file_path
-from ui.ToolsViewer.main_ui import initialize_dpg, setup_dpg_font, initialize_tools_viewer_project
+from ui.ToolsViewer.main_ui import initialize_dpg, setup_dpg_font, setup_dpg_icon, initialize_tools_viewer_project
 
 
 def main():
@@ -22,6 +22,7 @@ def main():
     logger.info('**** DearPyGui Setup *****')
     initialize_dpg(editor_width=setting_dict['viewport_width'], editor_height=setting_dict['viewport_height'])
     setup_dpg_font()
+    setup_dpg_icon()
     logger.info('**** Initialize Node Editor Project *****')
     initialize_tools_viewer_project(setting_dict, logger_queue, is_debug_mode)
     logger.info('**** DearPyGui Terminated! *****')

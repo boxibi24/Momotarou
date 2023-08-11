@@ -1,3 +1,4 @@
+import re
 import json
 import logging
 import os
@@ -216,3 +217,7 @@ def is_string_contains_special_characters(check_string: str) -> bool:
 
 def remove_node_type_from_node_label(node_label: str):
     return ' '.join(node_label.split(' ')[1:])
+
+
+def camel_case_split(string_input: str):
+    return ' '.join(re.findall(r'[A-Z](?:[a-z]+|[A-Z]*(?=[A-Z]|$))', string_input))

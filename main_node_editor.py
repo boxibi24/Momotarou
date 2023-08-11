@@ -11,7 +11,7 @@ from typing import Tuple
 
 from lib.constants import NODE_EDITOR_APP_NAME
 from lib.p4util import setup_p4_logger
-from ui.NodeEditor.main_ui import initialize_node_editor_project, setup_dpg_font, initialize_dpg
+from ui.NodeEditor.main_ui import initialize_node_editor_project, setup_dpg_font, setup_dpg_icon, initialize_dpg
 from core.executor import setup_executor_logger
 from core.utils import json_load_from_file_path
 
@@ -25,6 +25,7 @@ def main():
     logger.info('**** DearPyGui Setup *****')
     initialize_dpg(editor_width=setting_dict['editor_width'], editor_height=setting_dict['editor_height'])
     setup_dpg_font()
+    setup_dpg_icon()
     # demo.show_demo()
     logger.info('**** Initialize Node Editor Project *****')
     initialize_node_editor_project(setting_dict, packages_list, logger_queue, is_debug_mode)

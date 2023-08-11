@@ -3,15 +3,16 @@ from ui.NodeEditor.node_editor_project import NodeEditor
 from ui.NodeEditor.menu_bar import initialize_file_dialog, initialize_menu_bar
 from multiprocessing import Queue
 from pathlib import Path
+from lib.constants import NODE_EDITOR_APP_NAME
+from core.utils import camel_case_split
 
 
 def initialize_dpg(editor_width: int, editor_height: int):
     dpg.create_context()
 
     dpg.configure_app(init_file='dpg.ini')
-
     dpg.create_viewport(
-        title="RUT Node Editor",
+        title=camel_case_split(NODE_EDITOR_APP_NAME),
         width=editor_width,
         height=editor_height
     )
@@ -28,6 +29,13 @@ def setup_dpg_font():
                       ) as default_font:
             dpg.add_font_range_hint(dpg.mvFontRangeHint_Vietnamese)
     dpg.bind_font(default_font)
+
+
+def setup_dpg_icon():
+    # Setup DPG font
+    icon_path = Path(__file__).parent.parent.parent / f'icons/{NODE_EDITOR_APP_NAME}.ico'
+    dpg.set_viewport_large_icon(icon_path.as_posix())
+    dpg.set_viewport_small_icon(icon_path.as_posix())
 
 
 def initialize_node_editor_project(setting_dict: dict, packages_list: list, logger_queue: Queue, is_debug_mode: bool):

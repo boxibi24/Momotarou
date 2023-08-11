@@ -25,5 +25,5 @@ class Node(BaseNode):
             internal_data_dict['Successful login?'] = True
         except P4Exception:
             internal_data_dict['Successful login?'] = False
-            return 4, traceback.format_exc()
+            return 4, traceback.format_exc()\
 

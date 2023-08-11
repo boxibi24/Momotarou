@@ -88,7 +88,7 @@ html_theme_options = {
     "use_sidenotes": True,
     "show_toc_level": 2,
     "logo": {
-        "image_dark": "_static/RUT_wide_dark.png",
+        "image_dark": "_static/RUT_wide_dark.svg",
         # "text": html_title,  # Uncomment to try text with logo
     },
     "launch_buttons": {
@@ -100,11 +100,11 @@ html_theme_options = {
         # "jupyterhub_url": "https://datahub.berkeley.edu",  # For testing
     },
 }
-html_logo = "_static/RUT_wide.png"
+html_logo = "_static/RUT_wide.svg"
 html_title = "Riot Universal Tool"
 html_copy_source = True
 
-html_favicon = "_static/logo-square.png"
+html_favicon = "_static/logo-square.svg"
 html_last_updated_fmt = ""
 
 html_css_files = ["custom.css"]

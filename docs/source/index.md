@@ -15,7 +15,7 @@ api
 <br />
 <div align="center">
   <a href="https://vngitlab.virtuosgames.com/techart/CTS/-/tree/dev_RiotUniversalTool/CTS_ProjectSetup/RIOT/RiotUniversalTool">
-    <img src="images/logo.png" alt="Logo" width="80" height="80">
+    <img src="_static/logo_square.svg" alt="Logo" width="80" height="80">
   </a>
 
 <h3 align="center">Riot Universal Tool</h3>
