@@ -8,7 +8,7 @@ a = Analysis(
     ['main_node_editor.py'],
     pathex=['./'],
     binaries=[],
-    datas=[('Config/*.cfg', 'Config'), ('font/*.ttf', 'font')],
+    datas=[('Config/*.cfg', 'Config'), ('font/*.ttf', 'font'), ('icons/*.ico', 'icons')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

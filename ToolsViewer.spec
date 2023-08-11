@@ -8,7 +8,7 @@ a = Analysis(
     ['main_tools_viewer.py'],
     pathex=['./'],
     binaries=[],
-    datas=[('Config/*.cfg', 'Config'), ('font/*.ttf', 'font')],
+    datas=[('Config/*.cfg', 'Config'), ('font/*.ttf', 'font'), ('icons/*.ico', 'icons')],
     hiddenimports=['core.classes.node', 'misc.color', 'lib.p4util', 'lib.constants'],
     hookspath=[],
     hooksconfig={},
