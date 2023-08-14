@@ -20,11 +20,10 @@ from copy import deepcopy
 import traceback
 from core.utils import create_queueHandler_logger, json_load_from_file_path, json_write_to_file_path, generate_uuid, \
     log_on_return_message, construct_tool_path_from_tools_path_and_tool_name, convert_python_path_to_import_path, \
-    is_string_contains_special_characters
+    is_string_contains_special_characters, warn_file_dialog_and_reshow_widget, clear_file_dialog_children
 from core.data_loader import refresh_core_data_with_json_dict
 from core.executor import execute_event
 from lib.constants import NODE_EDITOR_APP_NAME
-from misc import color as color
 
 INTERNAL_NODE_CATEGORY = '_internal'
 CACHE_DIR = Path(os.getenv('LOCALAPPDATA')) / "RUT" / NODE_EDITOR_APP_NAME
@@ -190,6 +189,7 @@ class NodeEditor:
         return self._init_new_tab(new_tab_name)
 
     def _init_new_tab(self, new_tab_name: str, is_open_tool=False, tool_import_path=''):
+        self.refresh_node_editor_dict()
         if self._node_editor_tab_dict.get(new_tab_name, None) is not None or \
             is_string_contains_special_characters(new_tab_name):
             return self.add_node_graph_tab_ask_name('', new_tab_name, is_retry=True,
@@ -447,16 +447,19 @@ class NodeEditor:
 
     def callback_project_save_as(self, sender, app_data):
         project_path = Path(app_data['file_path_name'])
+        action = dpg.get_item_label(sender)
+        file_dialog_tag = sender
+        if is_string_contains_special_characters(project_path.name):
+            return_message = (3, 'Project name contains special character(s), please rename!')
+            warn_file_dialog_and_reshow_widget(file_dialog_tag, return_message[1])
+            return log_on_return_message(self.logger, action, return_message)
         if os.path.exists(project_path):
-            self.warn_duplicate_and_retry_new_project_dialog()
-            return 0
+            return_message = (3, 'Project existed, please rename')
+            warn_file_dialog_and_reshow_widget(file_dialog_tag, return_message[1])
+            return log_on_return_message(self.logger, action, return_message)
         self._update_project_data(project_path)
-        self._project_save_to_folder()
-
-    @staticmethod
-    def warn_duplicate_and_retry_new_project_dialog():
-        dpg.add_text(parent='project_save_as', default_value='Project existed, please rename', color=color.darkred)
-        dpg.show_item('project_save_as')
+        return_message = self._project_save_to_folder()
+        log_on_return_message(self.logger, action, return_message)
 
     def _update_project_data(self, project_path: Path):
         self._update_project_name(project_path.name)
@@ -474,8 +477,10 @@ class NodeEditor:
 
     def _open_new_project(self, project_file_path: Path) -> Tuple[int, object]:
         self._clean_current_project()
+        self._init_flag = True
         self._batch_import_tools_to_project(project_file_path)
         self._update_project_data(project_file_path.parent)
+        self._init_flag = False
         return 1, ''
 
     def _clean_current_project(self):
@@ -511,10 +516,19 @@ class NodeEditor:
     def _project_save_to_folder(self) -> Tuple[int, object]:
         try:
             self.refresh_node_editor_dict()
+            self._delete_tool_files_if_not_used()
             self._construct_project_folder()
         except Exception:
             return 4, traceback.format_exc()
         return 1, ''
+
+    def _delete_tool_files_if_not_used(self):
+        tools_path = self.project_folder_path / 'tools'
+        if not tools_path.exists():
+            return None
+        for tool_file in tools_path.glob('*.rtool'):
+            if self._node_editor_tab_dict.get(tool_file.name, None) is None:
+                tool_file.unlink()
 
     def _construct_project_folder(self):
         self._construct_tools_folder()
@@ -573,4 +587,3 @@ class NodeEditor:
 
     def _pop_output_log_window(self):
         dpg.configure_item(self.output_log_id, show=True)
-

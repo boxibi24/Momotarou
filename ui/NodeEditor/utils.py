@@ -1,8 +1,10 @@
 import dearpygui.dearpygui as dpg
 from collections import OrderedDict
+from core.utils import clear_file_dialog_children
 
 
 def callback_project_save_as():
+    clear_file_dialog_children('project_save_as')
     dpg.show_item('project_save_as')
 
 

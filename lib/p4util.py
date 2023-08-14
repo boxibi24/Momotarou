@@ -55,7 +55,7 @@ def createP4Instance(user: str, password: str, port: str, client: str, charset: 
     p4.password = password
     p4.port = port
     p4.charset = charset
-    p4.progress = SyncProgress()
+    # p4.progress = SyncProgress()
     p4.client = client
 
     return p4

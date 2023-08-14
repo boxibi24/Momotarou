@@ -85,19 +85,19 @@ class DetailPanel:
                 dpg.add_input_text(default_value=var_name,
                                    callback=self.callback_var_name_update, on_enter=True,
                                    user_data=var_tag)
-            with dpg.group(horizontal=True):
-                add_user_input_box(var_type, callback=self.callback_default_var_value_update,
-                                   default_value=default_var_value,
-                                   user_data=var_tag,
-                                   text='Default value: ',
-                                   add_separator=False)
-            with dpg.group(horizontal=True):
-                if var_type in ['String', 'Int', 'Float', 'MultilineString', 'Password', 'Bool']:
-                    dpg.add_text('Get value from user input: ')
-                    dpg.add_checkbox(callback=self.callback_var_is_exposed_update,
-                                     default_value=var_is_exposed_value,
-                                     user_data=var_tag,
-                                     )
+            if var_type in ['String', 'Int', 'Float', 'MultilineString', 'Password', 'Bool']:
+                with dpg.group(horizontal=True):
+                    add_user_input_box(var_type, callback=self.callback_default_var_value_update,
+                                       default_value=default_var_value,
+                                       user_data=var_tag,
+                                       text='Default value: ',
+                                       add_separator=False)
+                with dpg.group(horizontal=True):
+                        dpg.add_text('Get value from user input: ')
+                        dpg.add_checkbox(callback=self.callback_var_is_exposed_update,
+                                         default_value=var_is_exposed_value,
+                                         user_data=var_tag,
+                                         )
 
         # Display var detail
         with dpg.collapsing_header(label='_internal_data', parent=self._window_id,
@@ -105,9 +105,8 @@ class DetailPanel:
             dpg.add_text(default_value=f'Name: {var_name}')
             dpg.add_text(default_value=f'Tag: {var_tag}')
             dpg.add_text(default_value=f'Type: {var_type}')
-            if var_type in ['String', 'Int', 'Float', 'MultilineString', 'Password', 'Bool']:
-                dpg.add_text(default_value=f'Default Value: {default_var_value}')
-                dpg.add_text(default_value=f'Is exposed for user input?: {var_is_exposed_value}')
+            dpg.add_text(default_value=f'Default Value: {default_var_value}')
+            dpg.add_text(default_value=f'Is exposed for user input?: {var_is_exposed_value}')
 
     def callback_default_var_value_update(self, sender, app_data, user_data):
         _current_node_editor_instance = self._parent_instance.current_node_editor_instance

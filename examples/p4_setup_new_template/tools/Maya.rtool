@@ -1,30 +1,30 @@
 {
     "nodes": [
         {
-            "uuid": "d06e17bb373511eea12f54bf647df350",
+            "uuid": "15119b95383911ee9bc254bf647df350",
             "label": "Print",
             "pins": [
                 {
-                    "uuid": "d06e17bc373511ee964754bf647df350",
+                    "uuid": "15119b96383911ee960754bf647df350",
                     "label": "Exec In",
                     "meta_type": 3,
                     "type": 5
                 },
                 {
-                    "uuid": "d06e17bd373511ee845954bf647df350",
+                    "uuid": "15119b97383911eeb2c554bf647df350",
                     "label": "Exec Out",
                     "meta_type": 4,
                     "type": 5
                 },
                 {
-                    "uuid": "d06e17be373511ee872154bf647df350",
+                    "uuid": "15119b98383911ee9c0954bf647df350",
                     "label": "Wildcard",
                     "meta_type": 1,
                     "type": 6,
                     "value": "Opened Maya"
                 },
                 {
-                    "uuid": "d06e3ea6373511eeb8df54bf647df350",
+                    "uuid": "15119b9a383911eea91d54bf647df350",
                     "label": "String",
                     "meta_type": 2,
                     "type": 1,
@@ -39,30 +39,30 @@
             }
         },
         {
-            "uuid": "d06e3ea9373511ee8cee54bf647df350",
+            "uuid": "15119b9d383911eebc5454bf647df350",
             "label": "CMD",
             "pins": [
                 {
-                    "uuid": "d06e3eaa373511ee8ad954bf647df350",
+                    "uuid": "15119b9e383911eea2de54bf647df350",
                     "label": "Exec In",
                     "meta_type": 3,
                     "type": 5
                 },
                 {
-                    "uuid": "d06e3eab373511eea12354bf647df350",
+                    "uuid": "15119b9f383911ee977154bf647df350",
                     "label": "Exec Out",
                     "meta_type": 4,
                     "type": 5
                 },
                 {
-                    "uuid": "d06e3eac373511ee9dc954bf647df350",
+                    "uuid": "15119ba0383911ee913654bf647df350",
                     "label": "String",
                     "meta_type": 1,
                     "type": 1,
                     "value": "notepad"
                 },
                 {
-                    "uuid": "d06e3eae373511ee8e6854bf647df350",
+                    "uuid": "15119ba2383911ee946754bf647df350",
                     "label": "Return",
                     "meta_type": 2,
                     "type": 1,
@@ -77,17 +77,17 @@
             }
         },
         {
-            "uuid": "d06e3eb2373511ee917c54bf647df350",
+            "uuid": "15119ba6383911eeb38a54bf647df350",
             "label": "Event Open Maya 2020",
             "pins": [
                 {
-                    "uuid": "d06e3eb3373511eea7b554bf647df350",
+                    "uuid": "1511c28b383911ee970b54bf647df350",
                     "label": "Exec Out",
                     "meta_type": 4,
                     "type": 5
                 },
                 {
-                    "uuid": "d06e3eb4373511ee82c954bf647df350",
+                    "uuid": "1511c28c383911eeaf4a54bf647df350",
                     "label": "Temp",
                     "meta_type": 2,
                     "type": null,
@@ -104,17 +104,17 @@
     ],
     "flows": [
         [
-            "d06e3eb3373511eea7b554bf647df350",
-            "d06e3eaa373511ee8ad954bf647df350"
+            "1511c28b383911ee970b54bf647df350",
+            "15119b9e383911eea2de54bf647df350"
         ],
         [
-            "d06e3eab373511eea12354bf647df350",
-            "d06e17bc373511ee964754bf647df350"
+            "15119b9f383911ee977154bf647df350",
+            "15119b96383911ee960754bf647df350"
         ]
     ],
     "data_links": [],
     "events": {
-        "d06e3eb2373511ee917c54bf647df350": "d06e3ea9373511ee8cee54bf647df350"
+        "15119ba6383911eeb38a54bf647df350": "15119b9d383911eebc5454bf647df350"
     },
     "vars": {}
 }

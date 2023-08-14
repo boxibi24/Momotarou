@@ -10,6 +10,7 @@ from pathlib import Path
 from time import perf_counter
 from uuid import uuid1
 from typing import Union
+from misc import color as color
 
 from dearpygui import dearpygui as dpg
 
@@ -208,7 +209,7 @@ def convert_python_path_to_import_path(python_path: Path) -> str:
 
 
 def is_string_contains_special_characters(check_string: str) -> bool:
-    special_chars_list = ['*', '/', '\\']
+    special_chars_list = ['*', '/', '\\', '\"', "-", "."]
     for special_char in special_chars_list:
         if special_char in check_string:
             return True
@@ -221,3 +222,14 @@ def remove_node_type_from_node_label(node_label: str):
 
 def camel_case_split(string_input: str):
     return ' '.join(re.findall(r'[A-Z](?:[a-z]+|[A-Z]*(?=[A-Z]|$))', string_input))
+
+
+def warn_file_dialog_and_reshow_widget(widget_tag: str, warn_text: str):
+    clear_file_dialog_children(widget_tag)
+    dpg.add_text(parent=widget_tag, default_value=warn_text, color=color.darkred)
+    dpg.show_item(widget_tag)
+
+
+def clear_file_dialog_children(file_dialog_tag: str):
+    for item_id in dpg.get_item_children(file_dialog_tag)[1]:
+        dpg.delete_item(item_id)
