@@ -578,7 +578,7 @@ class NodeEditor:
         data_dict = json_load_from_file_path(cache_file_path)
         return_message = refresh_core_data_with_json_dict(data_dict)
         log_on_return_message(self.logger, action, return_message)
-        if return_message[0] == 1: #compile success
+        if return_message[0] == 1:  # compile success
             return 1
 
     def subprocess_execution_event(self, event_tag):

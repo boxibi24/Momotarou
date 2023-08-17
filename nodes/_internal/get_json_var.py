@@ -19,7 +19,7 @@ class Node(BaseNode):
     def run(internal_data_dict):
         var_value = internal_data_dict.get('var_value', None)
         if var_value is None:
-            return 8
+            raise ValueError
         if var_value[0] is None:
             var_value[0] = internal_data_dict['default_var_value'][0]
         internal_data_dict['Json out'] = var_value[0]

@@ -18,7 +18,7 @@ class Node(BaseNode):
     def run(internal_data_dict):
         var_value = internal_data_dict.get('var_value', None)
         if var_value is None:
-            return 3
+            raise ValueError
         else:
             internal_data_dict['var_value'][0] = internal_data_dict['P4Inst in']
             internal_data_dict['P4Inst out'] = internal_data_dict['P4Inst in']

@@ -5,7 +5,7 @@ from core.utils import create_queueHandler_logger, start_timer, stop_timer_and_g
 from core.data_loader import nodes_data, events_data
 from core.enum_types import PinMetaType, NodeTypeFlag
 from typing import Tuple
-
+from tkinter import Tk, messagebox
 
 logger = logging.getLogger('')
 is_debug_mode = False
@@ -153,7 +153,7 @@ def compute_internal_output_data(node_tag: str):
     node_info = nodes_data[node_tag]
     _set_pins_value_from_connected_preceding_pin_value(node_info)
     _update_internal_input_data(node_info)
-    _run_node_and_set_to_clean(node_info)
+    _run_node_and_set_to_clean(node_tag)
     _update_pins_value_in_node_info(node_info)
     nodes_data.update({node_tag: node_info})
 
@@ -184,11 +184,15 @@ def _find_pin_info_in_pin_list_match_uuid(node_info: dict, match_pin_uuid: str) 
             return pin_info
 
 
-def _run_node_and_set_to_clean(node_info: dict):
+def _run_node_and_set_to_clean(node_tag: str):
+    node_info = nodes_data[node_tag]
     Run = node_info['run']
-    Run(node_info['internal_data'])
+    try:
+        Run(node_info['internal_data'])
+    except:
+        logger.exception(f'Failed to run node: {node_info["label"]} (uuid: {node_tag})')
+        raise RuntimeWarning
     node_info['is_dirty'] = False
-
 
 def _update_pins_value_in_node_info(node_info: dict):
     for pin_info in node_info['pins']:

@@ -19,7 +19,7 @@ class Node(BaseNode):
         var_value = internal_data_dict.get('var_value', None)
         if var_value is None:
             # KeyError could not find var_value in internal_data_dict
-            return 8
+            raise ValueError
         else:
             internal_data_dict['var_value'][0] = internal_data_dict['Bool in']
             internal_data_dict['Bool out'] = internal_data_dict['Bool in']
