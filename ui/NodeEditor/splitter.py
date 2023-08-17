@@ -273,7 +273,7 @@ class Splitter:
             dpg.delete_item(splitter_id)
 
     def add_var(self, sender, app_data, user_data, refresh=None, var_tag='',
-                default_value=None, var_type=None, default_is_exposed_flag=False):
+                default_value=None, var_type=None, default_is_exposed_flag=False, regex=None):
         """
         Add new variable
         """
@@ -296,7 +296,7 @@ class Splitter:
 
         if not refresh:
             self._parent_instance.current_node_editor_instance.add_var(new_var_info,
-                                                                       default_value, default_is_exposed_flag)
+                                                                       default_value, default_is_exposed_flag, regex)
         # Update old var dict cache
         self._old_var_dict = deepcopy(self._var_dict)
 

@@ -5,7 +5,7 @@ from multiprocessing.pool import ThreadPool
 
 from ui.ToolsViewer.utils import tkinter_file_dialog
 from core.utils import create_queueHandler_logger, json_load_from_file_path, add_user_input_box, \
-    remove_node_type_from_node_label
+    remove_node_type_from_node_label, log_on_return_message
 from core.data_loader import refresh_core_data_with_json_dict
 from core.executor import execute_event
 from core.enum_types import NodeTypeFlag
@@ -13,6 +13,8 @@ from core.enum_types import NodeTypeFlag
 from collections import OrderedDict
 from pathlib import Path
 from typing import Tuple
+
+from lib.constants import CACHE_DIR
 
 
 class ToolsViewer:
@@ -37,6 +39,7 @@ class ToolsViewer:
         # ------ ATTRIBUTES -----
         self.current_tab_name = None
         self.project_name = 'MyRUTProject'
+        self.project_folder_path = CACHE_DIR
         if setting_dict is None:
             self._setting_dict = {}
         else:
@@ -57,8 +60,10 @@ class ToolsViewer:
             label=self.tools_viewer_label,
             border=False
         ):
-            self.project_name_text_field_id = dpg.add_button(label=self.project_name, width=-1, enabled=False)
-            with dpg.tab_bar(reorderable=True, callback=self.update_current_tab_name_match_with_tab_id) as self.tab_bar_id:
+            self.project_name_button_id = dpg.add_button(label=self.project_name + ' (click to refresh)', width=-1,
+                                                         callback=self.refresh_project)
+            with dpg.tab_bar(reorderable=True,
+                             callback=self.update_current_tab_name_match_with_tab_id) as self.tab_bar_id:
                 with dpg.tab(label=default_tab_name, closable=False) as default_tab_id:
                     with dpg.child_window(label="Main Window",
                                           height=self._setting_dict['viewport_height'] - 200,
@@ -72,6 +77,13 @@ class ToolsViewer:
                                   horizontal_scrollbar=True):
                 dpg.add_text(tag='log', tracked=False, track_offset=1.0)
 
+    def refresh_project(self):
+        project_file_path = self.project_folder_path / '{}.rproject'.format(self.project_name)
+        if not project_file_path.exists():
+            return
+        self._clean_current_project()
+        self._batch_open_tools_in_project(project_file_path)
+
     def update_current_tab_name_match_with_tab_id(self, sender, app_data):
         for tab_name, tab_info in self.tab_dict.items():
             if tab_info['id'] == app_data:
@@ -83,6 +95,8 @@ class ToolsViewer:
         Open new project
         """
         project_file_path = tkinter_file_dialog()
+        if project_file_path == '.':
+            return
         self._clean_current_project()
         self._batch_open_tools_in_project(project_file_path)
         self._update_project_data(project_file_path.parent)
@@ -150,8 +164,10 @@ class ToolsViewer:
 
     def callback_execute_event(self, sender, app_data, user_data):
         event_tag = user_data
-        refresh_core_data_with_json_dict(self.get_current_tool_data())
-        self.subprocess_execution_event(event_tag)
+        return_message = refresh_core_data_with_json_dict(self.get_current_tool_data())
+        log_on_return_message(self.logger, 'Compile node graph', return_message)
+        if return_message[0] == 1:  # compile success
+            self.subprocess_execution_event(event_tag)
 
     def get_current_tool_data(self) -> dict:
         tool_path = self.tab_dict[self.current_tab_name]['tool_path']
@@ -166,5 +182,4 @@ class ToolsViewer:
 
     def _update_project_name(self, new_project_name: str):
         self.project_name = new_project_name
-        dpg.configure_item(self.project_name_text_field_id, label=new_project_name)
-
+        dpg.configure_item(self.project_name_button_id, label=new_project_name + ' (click to refresh)')

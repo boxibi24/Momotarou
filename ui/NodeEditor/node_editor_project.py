@@ -23,11 +23,9 @@ from core.utils import create_queueHandler_logger, json_load_from_file_path, jso
     is_string_contains_special_characters, warn_file_dialog_and_reshow_widget, clear_file_dialog_children
 from core.data_loader import refresh_core_data_with_json_dict
 from core.executor import execute_event
-from lib.constants import NODE_EDITOR_APP_NAME
+from lib.constants import CACHE_DIR
 
 INTERNAL_NODE_CATEGORY = '_internal'
-CACHE_DIR = Path(os.getenv('LOCALAPPDATA')) / "RUT" / NODE_EDITOR_APP_NAME
-TOOLS_PATH = CACHE_DIR / 'tools'
 EVENT_IMPORT_PATH = ''
 
 
@@ -572,12 +570,16 @@ class NodeEditor:
         except SystemError:
             pass
 
-    def callback_compile_current_node_graph(self, sender):
+    def callback_compile_current_node_graph(self):
         cache_file_path = CACHE_DIR / (__name__ + '.rtool')
-        self.current_node_editor_instance.callback_tool_save(sender,
+        action = 'Compile node graph'
+        self.current_node_editor_instance.callback_tool_save('',
                                                              app_data={'file_path_name': cache_file_path})
         data_dict = json_load_from_file_path(cache_file_path)
-        refresh_core_data_with_json_dict(data_dict)
+        return_message = refresh_core_data_with_json_dict(data_dict)
+        log_on_return_message(self.logger, action, return_message)
+        if return_message[0] == 1: #compile success
+            return 1
 
     def subprocess_execution_event(self, event_tag):
         self._pop_output_log_window()

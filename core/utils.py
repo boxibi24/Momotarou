@@ -233,3 +233,15 @@ def warn_file_dialog_and_reshow_widget(widget_tag: str, warn_text: str):
 def clear_file_dialog_children(file_dialog_tag: str):
     for item_id in dpg.get_item_children(file_dialog_tag)[1]:
         dpg.delete_item(item_id)
+
+
+def is_var_type_of_primitive_types(var_type: str) -> bool:
+    if var_type in ['String', 'MultilineString', 'Password', 'Int', 'Float', 'Bool']:
+        return True
+    return False
+
+
+def is_var_type_of_string_based(var_type: str) -> bool:
+    if var_type in ['String', 'Password', 'MultilineString']:
+        return True
+    return False

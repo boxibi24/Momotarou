@@ -2,8 +2,7 @@ import logging
 from time import perf_counter
 from core.enum_types import OutputPinType
 from core.utils import create_queueHandler_logger, start_timer, stop_timer_and_get_elapsed_time
-from core.data_loader import nodes_data, events_data, vars_data
-import dearpygui.dearpygui as dpg
+from core.data_loader import nodes_data, events_data
 from core.enum_types import PinMetaType, NodeTypeFlag
 from typing import Tuple
 
@@ -42,20 +41,6 @@ def preprocess_execute_event():
     for node_uuid in nodes_data.keys():
         nodes_data[node_uuid]['is_dirty'] = True
         nodes_data[node_uuid]['is_executed'] = False
-
-
-def _determine_var_value():
-    """
-    Reset every vars' value to None if it's not exposed, else get from user input box
-
-    :return:
-    """
-    for var_info in vars_data.values():
-        if var_info['is_exposed'][0] is False:
-            var_info['value'][0] = None
-        else:
-            user_input_value = dpg.get_value(var_info['user_input_box_tag'])
-            var_info['value'][0] = user_input_value
 
 
 def flow_control_redirect(anchors: list):

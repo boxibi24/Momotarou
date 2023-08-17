@@ -4,7 +4,8 @@ from core.enum_types import InputPinType, OutputPinType
 from ui.NodeEditor.node_utils import *
 from multiprocessing import Queue
 from core.utils import create_queueHandler_logger, extract_var_name_from_node_info, json_load_from_file_path, \
-    generate_uuid, log_on_return_message
+    generate_uuid, log_on_return_message, get_var_default_value_on_type, is_var_type_of_primitive_types,\
+    is_var_type_of_string_based
 
 
 class DPGNodeEditor:
@@ -439,7 +440,8 @@ class DPGNodeEditor:
             self.splitter_panel.add_var('', '', var_info['name'][0],
                                         default_value=var_info['default_value'][0],
                                         var_type=var_info['type'][0],
-                                        default_is_exposed_flag=var_info['is_exposed'][0])
+                                        default_is_exposed_flag=var_info['is_exposed'][0],
+                                        regex=var_info['regex'][0])
 
         # Refresh exposed var window since it does not update by itself
         self.splitter_panel.exposed_var_dict = deepcopy(self._var_dict)
@@ -699,7 +701,7 @@ class DPGNodeEditor:
         if link.source_node_instance.node_type == NodeTypeFlag.Event:
             self.tobe_exported_event_dict.pop(link.source_node_instance.node_tag)
 
-    def add_var(self, var_info: dict, default_value=None, default_is_exposed_flag=False):
+    def add_var(self, var_info: dict, default_value=None, default_is_exposed_flag=False, regex=None):
         # Save one for the splitter's var_dict
         self._splitter_var_dict.update(var_info)
         var_tag: str = list(var_info.keys())[0]
@@ -707,21 +709,15 @@ class DPGNodeEditor:
         var_type: list = var_info[var_tag]['type']
         _default_var_value = None
         if default_value is None:
-            # set default var value based on value type
-            if var_type[0] in ['String', 'MultilineString', 'Password']:
-                _default_var_value = ''
-            elif var_type[0] == 'Int':
-                _default_var_value = 0
-            elif var_type[0] == 'Float':
-                _default_var_value = 0.0
-            elif var_type[0] == 'Bool':
-                _default_var_value = False
+            _default_var_value = get_var_default_value_on_type(var_type[0])
         else:
             _default_var_value = default_value
         if _default_var_value is None and \
-            var_type[0] in ['String', 'MultilineString', 'Password', 'Int', 'Float', 'Bool']:
+            is_var_type_of_primitive_types(var_type[0]):
             self.logger.critical(f'Could not retrieve default value for {var_name}')
-            return 3
+            return
+        if regex is None and is_var_type_of_string_based(var_type[0]):
+            regex = '.+'
         if self._var_dict.get(var_tag, None) is None:
             self._var_dict.update({
                 var_tag: {
@@ -729,8 +725,8 @@ class DPGNodeEditor:
                     'type': var_type,
                     'value': [None],
                     'default_value': [_default_var_value],
-                    # For unknown reasons, default_is_exposed_flag is None when you add new vars
-                    'is_exposed': [default_is_exposed_flag if default_is_exposed_flag is not None else False]
+                    'is_exposed': [default_is_exposed_flag if default_is_exposed_flag is not None else False],
+                    'regex': [regex]
                 }})
         else:  # Refresh UI
             self._var_dict[var_tag]['name'][0] = var_name[0]
@@ -739,7 +735,6 @@ class DPGNodeEditor:
         self.logger.debug('**** Added new var entries ****')
         self.logger.debug(f'var_dict: {self._var_dict}')
         self.logger.debug(f'splitter_var_dict:  {self._splitter_var_dict}')
-        return 0
 
     def register_var_user_input_box_tag(self, var_tag: str, user_input_box_tag: str):
         """

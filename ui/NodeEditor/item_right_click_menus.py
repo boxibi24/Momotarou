@@ -19,9 +19,10 @@ def event_right_click_menu(sender, app_data, user_data):
 
 def callback_run_event(sender, app_data, user_data):
     _event_node_tag = user_data[0]
+
     _master_node_editor_instance = user_data[1]
-    _master_node_editor_instance.callback_compile_current_node_graph(sender)
-    _master_node_editor_instance.subprocess_execution_event(_event_node_tag)
+    if _master_node_editor_instance.callback_compile_current_node_graph():
+        _master_node_editor_instance.subprocess_execution_event(_event_node_tag)
 
 
 def callback_ask_event_delete(sender, app_data, user_data):

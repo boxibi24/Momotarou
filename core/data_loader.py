@@ -1,8 +1,12 @@
 from core.enum_types import PinMetaType, NodeTypeFlag
 from importlib import import_module
 from copy import deepcopy
-from core.utils import extract_var_name_from_node_info, dpg_get_value
+from core.utils import extract_var_name_from_node_info, dpg_get_value, is_var_type_of_string_based
 from typing import Tuple, List
+import dearpygui.dearpygui as dpg
+import re
+from tkinter import Tk, messagebox
+from traceback import format_exc
 
 nodes_data = {}
 vars_data = {}
@@ -19,7 +23,10 @@ def refresh_core_data_with_json_dict(json_dict: dict):
     _load_data_link_list(json_dict)
     _load_flow_link_list(json_dict)
     _load_vars_data(json_dict)
-    _load_nodes_data()
+    try:
+        _load_nodes_data()
+    except ValueError:
+        return 4, format_exc()
     return 1, ''
 
 
@@ -210,7 +217,38 @@ def _update_var_node_internal_data(internal_data_reference: dict, var_name: str)
                                     'default_var_value': var_info['default_value'],
                                     'var_name': var_name})
     if var_info['is_exposed'][0]:
-        internal_data_reference['var_value'][0] = dpg_get_value(var_info['user_input_box_tag'])
+        # internal_data_reference['var_value'][0] = dpg_get_value(var_info['user_input_box_tag'])
+        internal_data_reference['var_value'][0] = _get_var_value_from_user_input_and_terminate_if_regex_fails(var_name)
+
+
+def _get_var_value_from_user_input_and_terminate_if_regex_fails(var_name: str):
+    """
+    Reset every vars' value to None if it's not exposed, else get from user input box
+
+    :return:
+    """
+    var_info = vars_data[var_name]
+    user_input_value = dpg.get_value(var_info['user_input_box_tag'])
+    if is_var_type_of_string_based(var_info['type'][0]):
+        if not _is_full_match_regex(user_input_value, var_info['regex'][0]):
+            warn_user_of_incorrect_input_and_terminate(var_name)
+    return user_input_value
+
+
+def _is_full_match_regex(to_check_string: str, regex: str) -> bool:
+    pattern = re.compile(regex)
+    match_object = re.fullmatch(pattern, to_check_string)
+    if match_object is not None:
+        return True
+    return False
+
+
+def warn_user_of_incorrect_input_and_terminate(var_name: str):
+    root = Tk()
+    root.withdraw()
+    messagebox.showerror('Execution Error', f'Incorrect input value for {var_name}')
+    root.destroy()
+    raise ValueError(f'Incorrect input value for {var_name}')
 
 
 def _get_following_exec_node_and_update_connection_data(node_index: int) -> List[int]:

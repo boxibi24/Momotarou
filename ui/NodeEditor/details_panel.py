@@ -1,7 +1,8 @@
 import dearpygui.dearpygui as dpg
 from typing import Tuple
 from copy import deepcopy
-from core.utils import dpg_set_value, add_user_input_box, log_on_return_message, remove_node_type_from_node_label
+from core.utils import dpg_set_value, add_user_input_box, log_on_return_message,\
+    remove_node_type_from_node_label, is_var_type_of_primitive_types, is_var_type_of_string_based
 from core.enum_types import NodeTypeFlag
 
 
@@ -79,25 +80,37 @@ class DetailPanel:
         var_type = var_info['type'][0]
         default_var_value = var_info['default_value'][0]
         var_is_exposed_value = var_info['is_exposed'][0]
-        with dpg.collapsing_header(label='Variable Attributes', parent=self._window_id, default_open=True):
+        var_regex = var_info['regex'][0]
+        with dpg.collapsing_header(label='Variable Attributes',
+                                   parent=self._window_id,
+                                   default_open=True) as self._var_attr_collapsing_header_id:
             with dpg.group(horizontal=True):
                 dpg.add_text('Name: ')
                 dpg.add_input_text(default_value=var_name,
                                    callback=self.callback_var_name_update, on_enter=True,
                                    user_data=var_tag)
-            if var_type in ['String', 'Int', 'Float', 'MultilineString', 'Password', 'Bool']:
+            if is_var_type_of_primitive_types(var_type):
                 with dpg.group(horizontal=True):
                     add_user_input_box(var_type, callback=self.callback_default_var_value_update,
                                        default_value=default_var_value,
                                        user_data=var_tag,
                                        text='Default value: ',
                                        add_separator=False)
-                with dpg.group(horizontal=True):
-                        dpg.add_text('Get value from user input: ')
-                        dpg.add_checkbox(callback=self.callback_var_is_exposed_update,
-                                         default_value=var_is_exposed_value,
-                                         user_data=var_tag,
-                                         )
+                dpg.add_checkbox(callback=self.callback_var_is_exposed_update,
+                                 default_value=var_is_exposed_value,
+                                 user_data=var_tag,
+                                 label='Get value from user input?'
+                                 )
+                if var_is_exposed_value and is_var_type_of_string_based(var_type):
+                    if var_regex is None:
+                        raise ValueError('Var regex cannot be null')
+                    with dpg.group(horizontal=True, indent=20):
+                        dpg.add_text('RegEx: ')
+                        dpg.add_input_text(on_enter=True,
+                                           default_value=var_regex,
+                                           callback=self.callback_var_regex_update,
+                                           user_data=var_tag
+                                           )
 
         # Display var detail
         with dpg.collapsing_header(label='_internal_data', parent=self._window_id,
@@ -107,6 +120,8 @@ class DetailPanel:
             dpg.add_text(default_value=f'Type: {var_type}')
             dpg.add_text(default_value=f'Default Value: {default_var_value}')
             dpg.add_text(default_value=f'Is exposed for user input?: {var_is_exposed_value}')
+            if is_var_type_of_string_based(var_type):
+                dpg.add_text(default_value=f'Regex: {var_regex}')
 
     def callback_default_var_value_update(self, sender, app_data, user_data):
         _current_node_editor_instance = self._parent_instance.current_node_editor_instance
@@ -118,19 +133,38 @@ class DetailPanel:
         _current_node_editor_instance.logger.info(f'{_var_name} new default value updated: {app_data}')
 
     def callback_var_is_exposed_update(self, sender, app_data, user_data):
-        _current_node_editor_instance = self._parent_instance.current_node_editor_instance
         _var_tag = user_data
-        _current_node_editor_instance.var_dict[_var_tag]['is_exposed'][0] = app_data
+        _var_is_exposed_value = app_data
+        self._set_var_is_exposed_attr_value(_var_tag, _var_is_exposed_value)
         if not app_data:  # Remove dpg id if turn off is_exposed
-            _current_node_editor_instance.var_dict[_var_tag].pop('user_input_box_id')
+            self._on_turn_off_var_exposure_status(_var_tag)
         self._refresh_splitter_exposed_vars()
         # Refresh self
         self.callback_show_var_detail('', '', user_data=_var_tag)
+
+    def _set_var_is_exposed_attr_value(self, var_tag: str, value: bool):
+        _current_node_editor_instance = self._parent_instance.current_node_editor_instance
+        _current_node_editor_instance.var_dict[var_tag]['is_exposed'][0] = value
+
+    def _on_turn_off_var_exposure_status(self, var_tag: str):
+        _current_node_editor_instance = self._parent_instance.current_node_editor_instance
+        _current_node_editor_instance.var_dict[var_tag].pop('user_input_box_tag')
 
     def _refresh_splitter_exposed_vars(self):
         _current_var_dict = self._parent_instance.current_node_editor_instance.var_dict
         _splitter_panel = self._parent_instance.current_node_editor_instance.splitter_panel
         _splitter_panel.exposed_var_dict = deepcopy(_current_var_dict)
+
+    def callback_var_regex_update(self, sender, app_data, user_data):
+        _var_tag = user_data
+        _regex = app_data
+        self._set_var_regex_value(_var_tag, _regex)
+        # Refresh self
+        self.callback_show_var_detail('', '', user_data=_var_tag)
+
+    def _set_var_regex_value(self, var_tag: str, value: str):
+        _current_node_editor_instance = self._parent_instance.current_node_editor_instance
+        _current_node_editor_instance.var_dict[var_tag]['regex'][0] = value
 
     def callback_var_name_update(self, sender, appdata, user_data):
         """
@@ -188,7 +222,7 @@ class DetailPanel:
         _current_node_editor_instance = self._parent_instance.current_node_editor_instance
         node_info_list = _current_node_editor_instance.node_dict['nodes']
         for node_info in node_info_list:
-            if node_info['type'] & NodeTypeFlag.Variable and\
+            if node_info['type'] & NodeTypeFlag.Variable and \
                 old_var_name == remove_node_type_from_node_label(node_info['label']):
                 node_info['label'] = node_info['label'].split(' ')[0] + ' ' + new_var_name
 
@@ -262,7 +296,7 @@ class DetailPanel:
         """
         _current_node_editor_instance = self._parent_instance.current_node_editor_instance
         for node_instance in _current_node_editor_instance.node_instance_dict.values():
-            if node_instance.node_type == NodeTypeFlag.Event and\
+            if node_instance.node_type == NodeTypeFlag.Event and \
                 old_event_name == remove_node_type_from_node_label(node_instance.node_label):
                 _new_node_label = node_instance.node_label.split(' ')[0] + ' ' + new_event_name
                 node_instance.node_label = _new_node_label
@@ -274,7 +308,7 @@ class DetailPanel:
         _current_node_editor_instance.event_dict[event_tag]['name'][0] = new_event_name
         node_info_list = _current_node_editor_instance.node_dict['nodes']
         for node_info in node_info_list:
-            if node_info['type'] == NodeTypeFlag.Event and\
+            if node_info['type'] == NodeTypeFlag.Event and \
                 old_event_name == remove_node_type_from_node_label(node_info['label']):
                 node_info['label'] = node_info['label'].split(' ')[0] + ' ' + new_event_name
                 break
