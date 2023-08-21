@@ -35,7 +35,7 @@ build:
     - sh entrypoint-windows.sh
     - cd dist
     - zip -r ${WINDOWS_BINARY} *
-    - cp ${DARWIN_AMD64_BINARY} ../../bin
+    - cp ${WINDOWS_BINARY} ../../bin
   artifacts:
     paths:
       - bin/
