@@ -45,5 +45,5 @@ else
     sh -c "$@"
 fi # [[ "$@" == "" ]]
 
-cp -r nodes ./dist/NodeEditor
-cp -r nodes ./dist/ToolsViewer
+cp -r src/nodes ./dist/NodeEditor
+cp -r src/nodes ./dist/ToolsViewer
