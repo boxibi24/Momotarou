@@ -83,9 +83,9 @@ pages:
     - pip install pyinstaller
 
   script:
-    - cd docs
+    - cd src/docs
     - make html
-    - mv build/html/ ../public/
+    - mv build/html/ ../../public/
   artifacts:
     paths:
       - public
