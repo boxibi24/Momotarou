@@ -40,8 +40,8 @@ echo "$@"
 cd src
 
 if [[ "$@" == "" ]]; then
-    pyinstaller --clean -y --dist ./dist --workpath /tmp src/NodeEditor.spec
-    pyinstaller --clean -y --dist ./dist --workpath /tmp src/ToolsViewer.spec
+    pyinstaller --clean -y --dist ./dist --workpath /tmp NodeEditor.spec
+    pyinstaller --clean -y --dist ./dist --workpath /tmp ToolsViewer.spec
     chown -R --reference=. ./dist
 else
     sh -c "$@"
