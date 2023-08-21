@@ -134,7 +134,6 @@ dmypy.json
 .DS_Store
 # Pycharm generated foldr
 .idea
-/docs/source/generated/
-/docs/source/_autosummary/
-/dpg.ini
+/src/docs/source/generated/
+/src/docs/source/_autosummary/
 /dpg.ini
