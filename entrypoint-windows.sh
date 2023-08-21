@@ -37,6 +37,8 @@ fi # [ -f requirements.txt ]
 
 echo "$@"
 
+cd src
+
 if [[ "$@" == "" ]]; then
     pyinstaller --clean -y --dist ./dist --workpath /tmp src/NodeEditor.spec
     pyinstaller --clean -y --dist ./dist --workpath /tmp src/ToolsViewer.spec
@@ -45,5 +47,7 @@ else
     sh -c "$@"
 fi # [[ "$@" == "" ]]
 
-cp -r src/nodes ./dist/NodeEditor
-cp -r src/nodes ./dist/ToolsViewer
+cp -r nodes ./dist/NodeEditor
+cp -r nodes ./dist/ToolsViewer
+
+cd ..

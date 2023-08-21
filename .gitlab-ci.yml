@@ -33,9 +33,9 @@ build:
   script:
     - mkdir bin
     - sh entrypoint-windows.sh
-    - cd dist
+    - cd src/dist
     - zip -r ${WINDOWS_BINARY} *
-    - cp ${WINDOWS_BINARY} ../../bin
+    - cp ${WINDOWS_BINARY} ../../../bin
   artifacts:
     paths:
       - bin/
