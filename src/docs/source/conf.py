@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.abspath('../..'))
 project = 'Momotarou'
 copyright = '2023, Tu Nguyen'
 author = 'Tu Nguyen'
-release = '0.0.1'
+release = '0.0.1b'
 
 master_doc = "index"
 
@@ -58,7 +58,7 @@ templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 intersphinx_mapping = {
-    "python": ("https://docs.python.org/3.11", None)
+    "python": ("https://docs.python.org/3.7", None)
 }
 
 
@@ -78,13 +78,14 @@ myst_url_schemes = ("http", "https", "mailto")
 html_theme = 'sphinx_book_theme'
 html_static_path = ['_static']
 html_theme_options = {
-    "repository_url": "https://vngitlab.virtuosgames.com/techart/CTS",
+    "repository_url": "https://vngitlab.virtuosgames.com/techart/charactertech/projectsetup/momotarou",
     "repository_provider": "gitlab",
-    "repository_branch": "dev_RiotUniversalTool",
+    "repository_branch": "main",
     "use_edit_page_button": True,
     "use_source_button": True,
     "use_repository_button": True,
     "use_download_button": True,
+    "use_issues_button": True,
     "use_sidenotes": True,
     "show_toc_level": 2,
     "logo": {

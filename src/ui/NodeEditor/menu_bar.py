@@ -166,6 +166,12 @@ def initialize_menu_bar(node_editor_project, setting_dict: dict):
                 callback=callback_open_doc_url,
                 user_data=setting_dict['doc_url']
             )
+            dpg.add_menu_item(
+                tag='Menu_Help_Issue',
+                label='Report issue',
+                callback=callback_report_issue,
+                user_data=setting_dict['git_repository']
+            )
             dpg.add_separator()
             dpg.add_menu_item(
                 tag='Menu_Help_About',
@@ -177,6 +183,11 @@ def initialize_menu_bar(node_editor_project, setting_dict: dict):
 def callback_open_doc_url(sender, app_data, user_data):
     doc_url = user_data
     webbrowser.open(doc_url)
+
+
+def callback_report_issue(sender, app_data, user_data):
+    repo_url = user_data
+    webbrowser.open(repo_url + '-/issues/new')
 
 
 def callback_show_about_window():
