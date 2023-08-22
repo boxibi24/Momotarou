@@ -58,9 +58,10 @@ class RightClickMenu:
             no_saved_settings=True,
             no_bring_to_front_on_focus=True,
             max_size=[200, 200],
+            horizontal_scrollbar=True
         ) as self._window_id:
-            with dpg.table(freeze_rows=1, header_row=False, scrollY=True):
-                dpg.add_table_column()
+            with dpg.table(freeze_rows=1, header_row=False, scrollY=True, scrollX=True):
+                dpg.add_table_column(width=200, width_fixed=True)
                 with dpg.table_row():
                     dpg.add_input_text(callback=lambda s, a: dpg.set_value('__right_click_menu_filter', a),
                                        hint='Type to search', width=150)
@@ -71,7 +72,8 @@ class RightClickMenu:
                             if node_category == '_internal':
                                 continue
                             dpg.add_separator()
-                            dpg.add_text(default_value=node_category.replace('_', ' ').title(), filter_key=node_category, color=(221, 84, 255, 255))
+                            dpg.add_text(default_value=node_category.replace('_', ' ').title(),
+                                         filter_key=node_category, color=(221, 84, 255, 255))
                             dpg.add_separator()
                             for node_name, node_module in node_module_dict.items():
                                 node = node_module.python_module.Node(

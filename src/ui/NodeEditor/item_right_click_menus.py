@@ -60,7 +60,7 @@ def callback_delete_event(sender, app_data, user_data):
     # First refresh detail panel
     _master_node_editor_instance.detail_panel.refresh_ui_with_selected_node_info()
     # Refresh splitter items already performed in the deletion function
-    # Delete the registry of var selectable
+    # Delete the registry of event selectable
     _current_node_editor_instance.delete_item_registry(_event_tag)
 
 

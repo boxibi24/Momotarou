@@ -5,7 +5,8 @@ from copy import deepcopy
 from core.enum_types import InputPinType, NodeTypeFlag
 from core.utils import generate_uuid, add_user_input_box, get_var_default_value_on_type, \
     remove_node_type_from_node_label
-from ui.NodeEditor.item_right_click_menus import variable_right_click_menu, event_right_click_menu
+from ui.NodeEditor.item_right_click_menus import variable_right_click_menu, event_right_click_menu,\
+    callback_run_event, callback_ask_event_delete, callback_ask_variable_delete
 from ui.NodeEditor.input_handler import delete_selected_node
 from ui.NodeEditor.node_utils import create_list_from_dict_values, auto_increment_matched_name_in_dpg_container, \
     get_index_in_dict_from_matched_tag_and_key, apply_dict_order_on_source_and_destination_index
@@ -13,6 +14,8 @@ from ui.NodeEditor.node_utils import create_list_from_dict_values, auto_incremen
 
 class Splitter:
     splitter_label = 'Splitter'
+    var_default_name = 'Var'
+    event_default_name = 'Button'
 
     @property
     def event_dict(self) -> OrderedDict:
@@ -87,7 +90,7 @@ class Splitter:
         # Splitter
         with dpg.child_window(
             width=self._width,
-            label='Splitter',
+            label=self.splitter_label,
             border=False,
             autosize_x=True
 
@@ -102,16 +105,18 @@ class Splitter:
             with dpg.item_handler_registry():
                 dpg.add_item_clicked_handler(button=dpg.mvMouseButton_Right,
                                              callback=self.event_graph_header_right_click_menu,
-                                             user_data=('', 'Button'))
+                                             user_data=('', self.event_default_name))
             dpg.bind_item_handler_registry(self._event_graph_collapsing_header, dpg.last_container())
+            self._create_add_event_button()
 
-            self._default_var_header = dpg.add_collapsing_header(label='Variables', tag='__var_header',
-                                                                 default_open=True)
+            self._variable_collapsing_header = dpg.add_collapsing_header(label='Variables', tag='__var_header',
+                                                                         default_open=True)
             with dpg.item_handler_registry():
                 dpg.add_item_clicked_handler(button=dpg.mvMouseButton_Right,
                                              callback=self.variable_header_right_click_menu,
-                                             user_data='var')
-            dpg.bind_item_handler_registry(self._default_var_header, dpg.last_container())
+                                             user_data=self.var_default_name)
+            dpg.bind_item_handler_registry(self._variable_collapsing_header, dpg.last_container())
+            self._create_add_var_button()
 
             self._parent_instance.logger.debug('**** Initialized Splitter ****')
 
@@ -122,7 +127,6 @@ class Splitter:
 
         non_matching_name = auto_increment_matched_name_in_dpg_container(user_data[1],
                                                                          self._event_graph_collapsing_header)
-
         if instant_add:
             added_node = self._parent_instance.current_editor_add_event_node(non_matching_name, override_pos)
             return added_node
@@ -163,28 +167,44 @@ class Splitter:
         self._add_event_splitter_items()
 
     def _add_event_splitter_items(self):
-        _current_node_editor_instance = self._parent_instance.current_node_editor_instance
-        _detail_panel_inst = self._parent_instance.detail_panel
         for key, value in self._event_dict.items():
             _event_tag = key
             _event_name = value['name'][0]
-            splitter_selectable_item = dpg.add_selectable(label=_event_name,
-                                                          parent=self._event_graph_collapsing_header,
-                                                          callback=_detail_panel_inst.callback_show_event_detail,
-                                                          user_data=_event_tag,
-                                                          payload_type='__event',
-                                                          drop_callback=self.drop_callback_reorder_event)
-            with dpg.drag_payload(parent=dpg.last_item(),
-                                  drag_data=_event_tag,
-                                  payload_type='__event'):
-                dpg.add_text('Event ' + _event_name)
-            with dpg.item_handler_registry() as item_handler_id:
-                dpg.add_item_clicked_handler(button=dpg.mvMouseButton_Right,
-                                             callback=event_right_click_menu,
-                                             user_data=(_event_tag, self._parent_instance))
-            dpg.bind_item_handler_registry(splitter_selectable_item, dpg.last_container())
-            _current_node_editor_instance.item_registry_dict.update({_event_tag: item_handler_id})
-            self._event_dict[_event_tag].update({'splitter_id': splitter_selectable_item})
+            self._add_event_splitter_item(_event_tag, _event_name)
+
+    def _add_event_splitter_item(self, event_tag: str, event_name: str):
+        _current_node_editor_instance = self._parent_instance.current_node_editor_instance
+        _detail_panel_inst = self._parent_instance.detail_panel
+        callback_user_data = (event_tag, self._parent_instance)
+        with dpg.table(parent=self._event_graph_collapsing_header,
+                       header_row=False, no_pad_outerX=True,
+                       before=self._event_add_button_id,
+                       label=event_name) as splitter_item:
+            dpg.add_table_column(no_reorder=True, no_resize=True)
+            dpg.add_table_column(no_reorder=True, no_resize=True, width_fixed=True)
+            dpg.add_table_column(no_reorder=True, no_resize=True, width_fixed=True)
+            with dpg.table_row():
+                event_selectable = dpg.add_selectable(label=event_name,
+                                                      callback=_detail_panel_inst.callback_show_event_detail,
+                                                      user_data=event_tag,
+                                                      payload_type='__event',
+                                                      drop_callback=self.drop_callback_reorder_event,
+                                                      indent=20)
+                dpg.add_button(arrow=True, direction=dpg.mvMouseButton_Right, callback=callback_run_event,
+                               user_data=callback_user_data)
+                dpg.add_button(label='X', width=20, callback=callback_ask_event_delete, user_data=callback_user_data)
+        with dpg.drag_payload(parent=event_selectable,
+                              drag_data=event_tag,
+                              payload_type='__event'):
+            dpg.add_text('Event ' + event_name)
+        with dpg.item_handler_registry() as item_handler_id:
+            dpg.add_item_clicked_handler(button=dpg.mvMouseButton_Right,
+                                         callback=event_right_click_menu,
+                                         user_data=callback_user_data)
+        dpg.bind_item_handler_registry(event_selectable, dpg.last_container())
+        _current_node_editor_instance.item_registry_dict.update({event_tag: item_handler_id})
+        self._event_dict[event_tag].update({'splitter_id': splitter_item,
+                                            'selectable_id': event_selectable})
 
     def drop_callback_reorder_event(self, sender, app_data):
         _current_node_editor_instance = self._parent_instance.current_node_editor_instance
@@ -199,7 +219,7 @@ class Splitter:
 
     def _get_event_tag_from_dpg_id(self, dpg_id: int) -> str:
         for event_tag, value in self._event_dict.items():
-            if value['splitter_id'] == dpg_id:
+            if value['selectable_id'] == dpg_id:
                 found_event_tag = event_tag
                 return found_event_tag
         raise KeyError(f'Could not find event tag whose id is : {dpg_id}')
@@ -209,9 +229,9 @@ class Splitter:
         Refresh the Exposed Variables collapsing header on Splitter
         """
         self.clear_old_splitter_dpg_item(self._old_exposed_var_dict)
-        self._add_exposed_var_splitter_item()
+        self._add_exposed_var_splitter_items()
 
-    def _add_exposed_var_splitter_item(self):
+    def _add_exposed_var_splitter_items(self):
         _current_node_editor_instance = self._parent_instance.current_node_editor_instance
         for key, value in self._exposed_var_dict.items():
             _var_tag = key
@@ -220,19 +240,20 @@ class Splitter:
             if _is_var_exposed:
                 with dpg.table(parent=self._exposed_var_collapsing_header,
                                header_row=False, no_pad_outerX=True) as splitter_selectable_item:
-                    dpg.add_table_column(no_reorder=True, no_resize=True, init_width_or_weight=100)
-                    dpg.add_table_column(no_reorder=True, no_resize=True, init_width_or_weight=400)
+                    dpg.add_table_column(no_reorder=True, no_resize=True)
+                    dpg.add_table_column(no_reorder=True, no_resize=True, width_fixed=True)
                     with dpg.table_row():
                         _selectable_id = dpg.add_selectable(label=_var_name,
                                                             callback=self._parent_instance.detail_panel.callback_show_var_detail,
                                                             user_data=_var_tag,
                                                             payload_type='__exposed_var',
-                                                            drop_callback=self.drop_callback_reorder_var)
+                                                            drop_callback=self.drop_callback_reorder_var,
+                                                            indent=20)
                         with dpg.drag_payload(parent=dpg.last_item(),
                                               drag_data=_var_tag,
                                               payload_type='__exposed_var'):
                             dpg.add_text(_var_name)
-                        _user_input_box_tag = add_user_input_box(var_type=value['type'][0], width=300)
+                        _user_input_box_tag = add_user_input_box(var_type=value['type'][0], width=250)
                         _current_node_editor_instance.register_var_user_input_box_tag(_var_tag, _user_input_box_tag)
                 self._exposed_var_dict[_var_tag].update({'splitter_id': splitter_selectable_item,
                                                          'selectable_id': _selectable_id})
@@ -264,6 +285,24 @@ class Splitter:
             self.add_var(sender='', app_data='', user_data=value['name'][0],
                          refresh=True, var_tag=key)
 
+    def _create_add_var_button(self):
+        self._var_add_button_id = dpg.add_button(parent=self._variable_collapsing_header,
+                                                 label='+',
+                                                 callback=self.add_var,
+                                                 user_data=self.var_default_name,
+                                                 width=-1,
+                                                 indent=20)
+
+    def _create_add_event_button(self):
+        self._event_add_button_id = dpg.add_button(parent=self._event_graph_collapsing_header,
+                                                   label='+',
+                                                   callback=self.callback_add_event_button,
+                                                   width=-1,
+                                                   indent=20)
+
+    def callback_add_event_button(self):
+        self.event_graph_header_right_click_menu('', '', user_data=((0, 0), self.event_default_name), instant_add=True)
+
     @staticmethod
     def clear_old_splitter_dpg_item(old_dict: dict):
         for value in old_dict.values():
@@ -278,7 +317,7 @@ class Splitter:
         Add new variable
         """
         _current_node_editor_instance = self._parent_instance.current_node_editor_instance
-        non_matching_name = auto_increment_matched_name_in_dpg_container(user_data, self._default_var_header)
+        non_matching_name = auto_increment_matched_name_in_dpg_container(user_data, self._variable_collapsing_header)
         if not refresh:
             new_var_tag = generate_uuid()
         else:
@@ -304,32 +343,40 @@ class Splitter:
 
     def _add_splitter_var_dpg_item(self, var_name: str, var_tag: str) -> Tuple[int, int, str]:
         _current_node_editor_instance = self._parent_instance.current_node_editor_instance
+        callback_user_data = (var_tag, self._parent_instance)
         with dpg.table(label=var_name, header_row=False, no_pad_outerX=True,
-                       parent=self._default_var_header) as var_splitter_id:
-            dpg.add_table_column(init_width_or_weight=400)
-            dpg.add_table_column(init_width_or_weight=300)
+                       parent=self._variable_collapsing_header,
+                       before=self._var_add_button_id) as var_splitter_id:
+            dpg.add_table_column(no_reorder=True, no_resize=True)
+            dpg.add_table_column(no_reorder=True, no_resize=True, width_fixed=True)
+            dpg.add_table_column(no_reorder=True, no_resize=True, width_fixed=True)
             with dpg.table_row():
+                # Variable selectable
                 _selectable_id = dpg.add_selectable(label=var_name,
                                                     callback=self._parent_instance.detail_panel.callback_show_var_detail,
-                                                    user_data=var_tag)
-                with dpg.drag_payload(parent=dpg.last_item(),
+                                                    user_data=var_tag,
+                                                    indent=20)
+                with dpg.drag_payload(parent=_selectable_id,
                                       drag_data=var_tag,
                                       payload_type='__var'):
                     dpg.add_text(var_name)
-                # Var type will be one of the InputPinType except for  'Exec' input
+                # Combo list
                 var_type_list = [member.name for member in InputPinType if member.name not in ['Exec', 'WildCard']]
                 if self._combo_dict.get(var_tag, None) is None:
                     default_type = var_type_list[0]
                 else:
                     default_type = self._combo_dict[var_tag][1][0]
-                var_combo_id = dpg.add_combo(var_type_list, width=95, popup_align_left=True,
+                var_combo_id = dpg.add_combo(var_type_list, width=100, popup_align_left=True,
                                              callback=self.combo_update_callback, user_data=var_tag,
                                              default_value=default_type)
+                # Delete button
+                dpg.add_button(label='X', width=20, callback=callback_ask_variable_delete, user_data=callback_user_data)
+
             # Add right-click handler to selectable
             with dpg.item_handler_registry() as item_handler_id:
                 dpg.add_item_clicked_handler(button=dpg.mvMouseButton_Right,
                                              callback=variable_right_click_menu,
-                                             user_data=(var_tag, self._parent_instance))
+                                             user_data=callback_user_data)
             dpg.bind_item_handler_registry(_selectable_id, dpg.last_container())
             _current_node_editor_instance.item_registry_dict.update({var_tag: item_handler_id})
 

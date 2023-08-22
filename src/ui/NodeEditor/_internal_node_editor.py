@@ -6,6 +6,7 @@ from multiprocessing import Queue
 from core.utils import create_queueHandler_logger, extract_var_name_from_node_info, json_load_from_file_path, \
     generate_uuid, log_on_return_message, get_var_default_value_on_type, is_var_type_of_primitive_types,\
     is_var_type_of_string_based
+from pprint import pprint
 
 
 class DPGNodeEditor:
@@ -567,7 +568,8 @@ class DPGNodeEditor:
             self.logger.warning("Cannot connect pins with different types")
             return False
         # Cannot connect exec pin to wildcard pins also
-        elif link_info.source_pin_info.pin_type == OutputPinType.Exec and link_info.destination_pin_info.pin_type == InputPinType.WildCard:
+        elif link_info.source_pin_info.pin_type == OutputPinType.Exec and\
+            link_info.destination_pin_info.pin_type == InputPinType.WildCard:
             self.logger.warning("Cannot connect exec pin to wildcard")
             return False
         else:
@@ -743,10 +745,10 @@ class DPGNodeEditor:
         self._var_dict[var_tag]['user_input_box_tag'] = user_input_box_tag
         self.logger.debug(f'**** Registered {var_tag} to take input from dpg item : {user_input_box_tag} ****')
 
-    def delete_item_registry(self, item_name: str):
+    def delete_item_registry(self, item_tag: str):
         """
         Delete item registry from dpg and registry dict
         """
-        registry_id = self.item_registry_dict[item_name]
+        registry_id = self.item_registry_dict[item_tag]
         dpg.delete_item(registry_id)
-        self.item_registry_dict.pop(item_name)
+        self.item_registry_dict.pop(item_tag)

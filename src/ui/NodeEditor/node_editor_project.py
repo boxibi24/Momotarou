@@ -245,10 +245,11 @@ class NodeEditor:
             dpg.set_item_callback(handler, event_handler)
 
     def callback_tab_bar_change(self, sender, app_data):
+        old_node_editor_instance = self.current_node_editor_instance
         self.update_current_tab_id_and_instance(app_data)
         self.detail_panel.refresh_ui_with_selected_node_info()
         self.refresh_splitter_data()
-        self.clean_old_node_graph_registry_item()
+        self.clean_old_node_graph_registry_item(old_node_editor_instance)
 
     def update_current_tab_id_and_instance(self, tab_id: int):
         _selected_tab = dpg.get_item_label(tab_id)
@@ -298,8 +299,7 @@ class NodeEditor:
         self.splitter_panel.var_dict = self.current_node_editor_instance.splitter_var_dict
         self.splitter_panel.exposed_var_dict = deepcopy(self.current_node_editor_instance.var_dict)
 
-    def clean_old_node_graph_registry_item(self):
-        _old_node_editor_instance = self.current_node_editor_instance
+    def clean_old_node_graph_registry_item(self, _old_node_editor_instance):
         _old_tab_name = dpg.get_item_label(self.current_tab_id)
         if self._node_editor_tab_dict.get(_old_tab_name, None) is not None:
             for item, registry_id in _old_node_editor_instance.item_registry_dict.items():
