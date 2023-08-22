@@ -174,7 +174,7 @@ complete list of proposed features and issues.
 
 Tu Nguyen - [Facebook](https://www.facebook.com/nguyenanh.tuantu) - tu.nguyen_b@virtuosgames.com
 
-Project Link: [https://vngitlab.virtuosgames.com/techart/charactertech/projectsetup/momotarou)
+Project Link: https://vngitlab.virtuosgames.com/techart/charactertech/projectsetup/momotarou
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
