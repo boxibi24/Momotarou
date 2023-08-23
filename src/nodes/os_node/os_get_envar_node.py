@@ -18,4 +18,4 @@ class Node(BaseNode):
     @staticmethod
     def run(internal_data_dict):
         internal_data_dict['Value'] = os.environ.get(internal_data_dict['Env var'], '')
-        return 1, ''
+        

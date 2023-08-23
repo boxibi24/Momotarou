@@ -5,7 +5,7 @@ from copy import deepcopy
 from core.enum_types import InputPinType, NodeTypeFlag
 from core.utils import generate_uuid, add_user_input_box, get_var_default_value_on_type, \
     remove_node_type_from_node_label
-from ui.NodeEditor.item_right_click_menus import variable_right_click_menu, event_right_click_menu,\
+from ui.NodeEditor.item_right_click_menus import variable_right_click_menu, event_right_click_menu, \
     callback_run_event, callback_ask_event_delete, callback_ask_variable_delete
 from ui.NodeEditor.input_handler import delete_selected_node
 from ui.NodeEditor.node_utils import create_list_from_dict_values, auto_increment_matched_name_in_dpg_container, \
@@ -64,6 +64,9 @@ class Splitter:
                  exposed_var_dict=None,
                  parent_instance=None
                  ):
+        self._variable_collapsing_header = None
+        self._event_graph_collapsing_header = None
+        self._exposed_var_collapsing_header = None
         self._parent_instance = parent_instance
         self._old_event_dict = OrderedDict([])
         self._old_var_dict = OrderedDict([])
@@ -95,12 +98,16 @@ class Splitter:
             autosize_x=True
 
         ) as self._splitter_id:
-            # TODO: select other items will deselect nodes
-            # Exposed var list
-            self._exposed_var_collapsing_header = dpg.add_collapsing_header(label='Exposed Variables',
+            self.init_collapsing_header(is_fresh_init=True)
+        self._parent_instance.logger.debug('**** Initialized Splitter ****')
+
+    def init_collapsing_header(self, header_type='', is_fresh_init=False):
+        if is_fresh_init:
+            self._exposed_var_collapsing_header = dpg.add_collapsing_header(parent=self._splitter_id,
+                                                                            label='Exposed Variables',
                                                                             default_open=True)
-            # Event graph list
-            self._event_graph_collapsing_header = dpg.add_collapsing_header(label='Event Graph',
+            self._event_graph_collapsing_header = dpg.add_collapsing_header(parent=self._splitter_id,
+                                                                            label='Event Graph',
                                                                             default_open=True)
             with dpg.item_handler_registry():
                 dpg.add_item_clicked_handler(button=dpg.mvMouseButton_Right,
@@ -109,7 +116,8 @@ class Splitter:
             dpg.bind_item_handler_registry(self._event_graph_collapsing_header, dpg.last_container())
             self._create_add_event_button()
 
-            self._variable_collapsing_header = dpg.add_collapsing_header(label='Variables', tag='__var_header',
+            self._variable_collapsing_header = dpg.add_collapsing_header(parent=self._splitter_id,
+                                                                         label='Variables', tag='__var_header',
                                                                          default_open=True)
             with dpg.item_handler_registry():
                 dpg.add_item_clicked_handler(button=dpg.mvMouseButton_Right,
@@ -117,8 +125,45 @@ class Splitter:
                                              user_data=self.var_default_name)
             dpg.bind_item_handler_registry(self._variable_collapsing_header, dpg.last_container())
             self._create_add_var_button()
+            return
+        if header_type == 'Exposed variable':
+            # Exposed var list
+            self._exposed_var_collapsing_header = dpg.add_collapsing_header(parent=self._splitter_id,
+                                                                            label='Exposed Variables',
+                                                                            default_open=True,
+                                                                            before=self._event_graph_collapsing_header)
+            return
+        if header_type == 'Event graph':
+            # Event graph list
+            self._event_graph_collapsing_header = dpg.add_collapsing_header(parent=self._splitter_id,
+                                                                            label='Event Graph',
+                                                                            default_open=True,
+                                                                            before=self._variable_collapsing_header)
+            with dpg.item_handler_registry():
+                dpg.add_item_clicked_handler(button=dpg.mvMouseButton_Right,
+                                             callback=self.event_graph_header_right_click_menu,
+                                             user_data=('', self.event_default_name))
+            dpg.bind_item_handler_registry(self._event_graph_collapsing_header, dpg.last_container())
+            self._create_add_event_button()
+            return
+        if header_type == 'Variable':
+            self._variable_collapsing_header = dpg.add_collapsing_header(parent=self._splitter_id,
+                                                                         label='Variables', tag='__var_header',
+                                                                         default_open=True)
+            with dpg.item_handler_registry():
+                dpg.add_item_clicked_handler(button=dpg.mvMouseButton_Right,
+                                             callback=self.variable_header_right_click_menu,
+                                             user_data=self.var_default_name)
+            dpg.bind_item_handler_registry(self._variable_collapsing_header, dpg.last_container())
+            self._create_add_var_button()
+            return
 
-            self._parent_instance.logger.debug('**** Initialized Splitter ****')
+    def reinit_collapsing_header(self, header_id: int, header_type: str):
+        # try:
+        dpg.delete_item(header_id)
+        # except:
+        #     pass
+        self.init_collapsing_header(header_type)
 
     def event_graph_header_right_click_menu(self, sender, app_data, user_data, instant_add=False):
         _current_node_editor_instance = self._parent_instance.current_node_editor_instance
@@ -163,7 +208,7 @@ class Splitter:
         Refresh the Event Graph collapsing header on Splitter
         """
 
-        self.clear_old_splitter_dpg_item(self._old_event_dict)
+        self.clear_old_splitter_dpg_item(self._old_event_dict, self._event_graph_collapsing_header)
         self._add_event_splitter_items()
 
     def _add_event_splitter_items(self):
@@ -228,7 +273,7 @@ class Splitter:
         """
         Refresh the Exposed Variables collapsing header on Splitter
         """
-        self.clear_old_splitter_dpg_item(self._old_exposed_var_dict)
+        self.clear_old_splitter_dpg_item(self._old_exposed_var_dict, self._exposed_var_collapsing_header)
         self._add_exposed_var_splitter_items()
 
     def _add_exposed_var_splitter_items(self):
@@ -280,7 +325,7 @@ class Splitter:
         """
         Refresh the Variables collapsing header on Splitter
         """
-        self.clear_old_splitter_dpg_item(self._old_var_dict)
+        self.clear_old_splitter_dpg_item(self._old_var_dict, self._variable_collapsing_header)
         for key, value in self._var_dict.items():
             self.add_var(sender='', app_data='', user_data=value['name'][0],
                          refresh=True, var_tag=key)
@@ -304,12 +349,18 @@ class Splitter:
         self.event_graph_header_right_click_menu('', '', user_data=((0, 0), self.event_default_name), instant_add=True)
 
     @staticmethod
-    def clear_old_splitter_dpg_item(old_dict: dict):
+    def clear_old_splitter_dpg_item(old_dict: dict, parent_id: int):
         for value in old_dict.values():
             splitter_id = value.get('splitter_id', None)
             if splitter_id is None:
                 continue
             dpg.delete_item(splitter_id)
+        # if parent_id == self._variable_collapsing_header:
+        #     self.reinit_collapsing_header(parent_id, 'Variable')
+        # elif parent_id == self._event_graph_collapsing_header:
+        #     self.reinit_collapsing_header(parent_id, 'Event Graph')
+        # elif parent_id == self._exposed_var_collapsing_header:
+        #     self.reinit_collapsing_header(parent_id, 'Exposed variable')
 
     def add_var(self, sender, app_data, user_data, refresh=None, var_tag='',
                 default_value=None, var_type=None, default_is_exposed_flag=False, regex=None):

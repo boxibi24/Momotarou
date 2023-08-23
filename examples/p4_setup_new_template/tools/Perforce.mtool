@@ -405,7 +405,7 @@
                 }
             ],
             "type": 1,
-            "import_path": "nodes.os_node.os_environ_node",
+            "import_path": "nodes.os_node.os_get_envar_node",
             "position": {
                 "x": -885,
                 "y": 1169
