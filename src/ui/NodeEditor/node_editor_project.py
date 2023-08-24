@@ -244,12 +244,13 @@ class NodeEditor:
         for handler in dpg.get_item_children("__node_editor_mouse_handler", 1):
             dpg.set_item_callback(handler, event_handler)
 
-    def callback_tab_bar_change(self, sender, app_data):
-        old_node_editor_instance = self.current_node_editor_instance
-        self.update_current_tab_id_and_instance(app_data)
+    def callback_tab_bar_change(self, sender, app_data, is_open_project=False):
+        tab_id = app_data
+        if not is_open_project:
+            self.clean_old_node_graph_registry_item(self.current_node_editor_instance)
+        self.update_current_tab_id_and_instance(tab_id)
         self.detail_panel.refresh_ui_with_selected_node_info()
         self.refresh_splitter_data()
-        self.clean_old_node_graph_registry_item(old_node_editor_instance)
 
     def update_current_tab_id_and_instance(self, tab_id: int):
         _selected_tab = dpg.get_item_label(tab_id)
@@ -494,14 +495,12 @@ class NodeEditor:
         for tool_name, tool_path in project_dict.items():
             self.callback_add_tab('project_open', tool_name, (0, self.tab_bar_id))
             if i == 0:
-                _first_imported_node_editor_instance = self._node_editor_tab_dict[tool_name]['node_editor_instance']
                 _first_tab_id = self._node_editor_tab_dict[tool_name]['id']
             self.current_node_editor_instance = self._node_editor_tab_dict[tool_name]['node_editor_instance']
             self.current_node_editor_instance.callback_tool_import('project_open', {
                 'file_path_name': project_file_path.parent / tool_path})
             i += 1
-        self.current_node_editor_instance = _first_imported_node_editor_instance
-        self.current_tab_id = _first_tab_id
+        self.callback_tab_bar_change(0, _first_tab_id, is_open_project=True)
 
     def callback_project_save(self, sender):
         # If project is still temp, prompt to save project as another location

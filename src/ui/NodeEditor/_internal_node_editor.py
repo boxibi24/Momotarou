@@ -6,7 +6,6 @@ from multiprocessing import Queue
 from core.utils import create_queueHandler_logger, extract_var_name_from_node_info, json_load_from_file_path, \
     generate_uuid, log_on_return_message, get_var_default_value_on_type, is_var_type_of_primitive_types,\
     is_var_type_of_string_based
-from pprint import pprint
 
 
 class DPGNodeEditor:

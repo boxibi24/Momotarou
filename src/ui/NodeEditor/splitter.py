@@ -98,72 +98,44 @@ class Splitter:
             autosize_x=True
 
         ) as self._splitter_id:
-            self.init_collapsing_header(is_fresh_init=True)
+            self.fresh_init_collapsing_headers()
         self._parent_instance.logger.debug('**** Initialized Splitter ****')
 
-    def init_collapsing_header(self, header_type='', is_fresh_init=False):
-        if is_fresh_init:
-            self._exposed_var_collapsing_header = dpg.add_collapsing_header(parent=self._splitter_id,
-                                                                            label='Exposed Variables',
-                                                                            default_open=True)
-            self._event_graph_collapsing_header = dpg.add_collapsing_header(parent=self._splitter_id,
-                                                                            label='Event Graph',
-                                                                            default_open=True)
-            with dpg.item_handler_registry():
-                dpg.add_item_clicked_handler(button=dpg.mvMouseButton_Right,
-                                             callback=self.event_graph_header_right_click_menu,
-                                             user_data=('', self.event_default_name))
-            dpg.bind_item_handler_registry(self._event_graph_collapsing_header, dpg.last_container())
-            self._create_add_event_button()
+    def fresh_init_collapsing_headers(self):
+        self._init_exposed_var_collapsing_header()
+        self._init_event_graph_collapsing_header()
+        self._init_variable_collapsing_header()
 
-            self._variable_collapsing_header = dpg.add_collapsing_header(parent=self._splitter_id,
-                                                                         label='Variables', tag='__var_header',
-                                                                         default_open=True)
-            with dpg.item_handler_registry():
-                dpg.add_item_clicked_handler(button=dpg.mvMouseButton_Right,
-                                             callback=self.variable_header_right_click_menu,
-                                             user_data=self.var_default_name)
-            dpg.bind_item_handler_registry(self._variable_collapsing_header, dpg.last_container())
-            self._create_add_var_button()
-            return
-        if header_type == 'Exposed variable':
-            # Exposed var list
-            self._exposed_var_collapsing_header = dpg.add_collapsing_header(parent=self._splitter_id,
-                                                                            label='Exposed Variables',
-                                                                            default_open=True,
-                                                                            before=self._event_graph_collapsing_header)
-            return
-        if header_type == 'Event graph':
-            # Event graph list
-            self._event_graph_collapsing_header = dpg.add_collapsing_header(parent=self._splitter_id,
-                                                                            label='Event Graph',
-                                                                            default_open=True,
-                                                                            before=self._variable_collapsing_header)
-            with dpg.item_handler_registry():
-                dpg.add_item_clicked_handler(button=dpg.mvMouseButton_Right,
-                                             callback=self.event_graph_header_right_click_menu,
-                                             user_data=('', self.event_default_name))
-            dpg.bind_item_handler_registry(self._event_graph_collapsing_header, dpg.last_container())
-            self._create_add_event_button()
-            return
-        if header_type == 'Variable':
-            self._variable_collapsing_header = dpg.add_collapsing_header(parent=self._splitter_id,
-                                                                         label='Variables', tag='__var_header',
-                                                                         default_open=True)
-            with dpg.item_handler_registry():
-                dpg.add_item_clicked_handler(button=dpg.mvMouseButton_Right,
-                                             callback=self.variable_header_right_click_menu,
-                                             user_data=self.var_default_name)
-            dpg.bind_item_handler_registry(self._variable_collapsing_header, dpg.last_container())
-            self._create_add_var_button()
-            return
+    def _init_exposed_var_collapsing_header(self, is_insert=False):
+        self._exposed_var_collapsing_header = \
+            dpg.add_collapsing_header(parent=self._splitter_id,
+                                      label='Exposed Variables',
+                                      default_open=True,
+                                      before=self._event_graph_collapsing_header if is_insert else 0)
 
-    def reinit_collapsing_header(self, header_id: int, header_type: str):
-        # try:
-        dpg.delete_item(header_id)
-        # except:
-        #     pass
-        self.init_collapsing_header(header_type)
+    def _init_event_graph_collapsing_header(self, is_insert=False):
+        self._event_graph_collapsing_header = \
+            dpg.add_collapsing_header(parent=self._splitter_id,
+                                      label='Event Graph',
+                                      default_open=True,
+                                      before=self._variable_collapsing_header if is_insert else 0)
+        with dpg.item_handler_registry():
+            dpg.add_item_clicked_handler(button=dpg.mvMouseButton_Right,
+                                         callback=self.event_graph_header_right_click_menu,
+                                         user_data=('', self.event_default_name))
+        dpg.bind_item_handler_registry(self._event_graph_collapsing_header, dpg.last_container())
+        self._create_add_event_button()
+
+    def _init_variable_collapsing_header(self):
+        self._variable_collapsing_header = dpg.add_collapsing_header(parent=self._splitter_id,
+                                                                     label='Variables', tag='__var_header',
+                                                                     default_open=True)
+        with dpg.item_handler_registry():
+            dpg.add_item_clicked_handler(button=dpg.mvMouseButton_Right,
+                                         callback=self.variable_header_right_click_menu,
+                                         user_data=self.var_default_name)
+        dpg.bind_item_handler_registry(self._variable_collapsing_header, dpg.last_container())
+        self._create_add_var_button()
 
     def event_graph_header_right_click_menu(self, sender, app_data, user_data, instant_add=False):
         _current_node_editor_instance = self._parent_instance.current_node_editor_instance
