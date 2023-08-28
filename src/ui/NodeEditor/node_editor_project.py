@@ -300,6 +300,11 @@ class NodeEditor:
         self.splitter_panel.var_dict = self.current_node_editor_instance.splitter_var_dict
         self.splitter_panel.exposed_var_dict = deepcopy(self.current_node_editor_instance.var_dict)
 
+    def clean_splitter_items(self):
+        self.splitter_panel.event_dict = {}
+        self.splitter_panel.var_dict = {}
+        self.splitter_panel.exposed_var_dict = {}
+
     def clean_old_node_graph_registry_item(self, _old_node_editor_instance):
         _old_tab_name = dpg.get_item_label(self.current_tab_id)
         if self._node_editor_tab_dict.get(_old_tab_name, None) is not None:
@@ -475,6 +480,8 @@ class NodeEditor:
         log_on_return_message(self.logger, action, return_message)
 
     def _open_new_project(self, project_file_path: Path) -> Tuple[int, object]:
+        if not project_file_path.exists():
+            return 4, f'Project file {project_file_path} not found!'
         self._clean_current_project()
         self._init_flag = True
         self._batch_import_tools_to_project(project_file_path)
@@ -486,6 +493,7 @@ class NodeEditor:
         tuple_list = list(self._node_editor_tab_dict.items())
         for tab_name, tab_info in tuple_list:
             self._delete_tab(tab_info, tab_name)
+        self.clean_splitter_items()
 
     def _batch_import_tools_to_project(self, project_file_path: Path):
         project_dict = json_load_from_file_path(project_file_path)
@@ -494,11 +502,12 @@ class NodeEditor:
         _first_tab_id = 0
         for tool_name, tool_path in project_dict.items():
             self.callback_add_tab('project_open', tool_name, (0, self.tab_bar_id))
-            if i == 0:
-                _first_tab_id = self._node_editor_tab_dict[tool_name]['id']
             self.current_node_editor_instance = self._node_editor_tab_dict[tool_name]['node_editor_instance']
             self.current_node_editor_instance.callback_tool_import('project_open', {
                 'file_path_name': project_file_path.parent / tool_path})
+            if i == 0:
+                _first_tab_id = self._node_editor_tab_dict[tool_name]['id']
+            self.clean_splitter_items()
             i += 1
         self.callback_tab_bar_change(0, _first_tab_id, is_open_project=True)
 

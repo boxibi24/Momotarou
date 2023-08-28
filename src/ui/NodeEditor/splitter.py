@@ -327,12 +327,6 @@ class Splitter:
             if splitter_id is None:
                 continue
             dpg.delete_item(splitter_id)
-        # if parent_id == self._variable_collapsing_header:
-        #     self.reinit_collapsing_header(parent_id, 'Variable')
-        # elif parent_id == self._event_graph_collapsing_header:
-        #     self.reinit_collapsing_header(parent_id, 'Event Graph')
-        # elif parent_id == self._exposed_var_collapsing_header:
-        #     self.reinit_collapsing_header(parent_id, 'Exposed variable')
 
     def add_var(self, sender, app_data, user_data, refresh=None, var_tag='',
                 default_value=None, var_type=None, default_is_exposed_flag=False, regex=None):

@@ -169,23 +169,23 @@ def log_on_return_message(logger, action: str, return_message=(0, '')):
     return_code = return_message[0]
     message = return_message[1]
     if return_code == 0:
-        logger.info(f'{action} was skipped!')
+        logger.info(f'{action} was skipped.')
         if message:
             logger.debug(message)
     elif return_code == 1:
-        logger.info(f'{action} performed successfully')
+        logger.info(f'{action} performed successfully.')
         if message:
             logger.debug(message)
     elif return_code == 2:
-        logger.info(f'{action} was performed partially')
+        logger.info(f'{action} was performed partially.')
         if message:
             logger.debug(message)
     elif return_code == 3:
-        logger.info(f'{action} did not performed. Failure encountered. Please check the log for details')
+        logger.info(f'{action} did not perform. Failure encountered. Please check the log for details.')
         if message:
             logger.error(message)
     elif return_code == 4:
-        logger.info(f'{action} did not performed. Exception encountered')
+        logger.info(f'{action} did not perform. Exception encountered.')
         if message:
             logger.error(message)
 
