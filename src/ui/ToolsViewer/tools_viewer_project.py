@@ -95,7 +95,7 @@ class ToolsViewer:
         Open new project
         """
         project_file_path = tkinter_file_dialog()
-        if project_file_path == '.':
+        if project_file_path == Path('.'):
             return
         self._clean_current_project()
         self._batch_open_tools_in_project(project_file_path)
