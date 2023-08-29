@@ -13,6 +13,7 @@ from core.classes.node import NodeModule
 from ui.NodeEditor.node_utils import construct_var_node_label, construct_module_name_from_var_action_and_type
 from collections import OrderedDict
 import os
+import subprocess
 from pathlib import Path
 import shutil
 from importlib import import_module
@@ -71,7 +72,7 @@ class NodeEditor:
         self._node_editor_tab_dict = OrderedDict([])
         # Tuple to store current node editor boundaries position
         self._node_editor_bb = [(), ()]
-        self.project_name = 'MyRUTProject'
+        self.project_name = 'MyMomotarouProject'
 
         # ------- LOGGING ______
         self.logging_queue = logging_queue
@@ -84,7 +85,8 @@ class NodeEditor:
         # Add handler registry
         self._add_handler_registry()
         # Cache this project to local appdata
-        self.project_folder_path = self._create_cache_project_folder()
+        self.project_folder_path = CACHE_DIR / self.project_name
+        self._create_cache_project_folder()
         # Thread pool
         self.thread_pool = ThreadPool()
         # Initialization done
@@ -475,7 +477,10 @@ class NodeEditor:
 
     def callback_project_open(self, sender, app_data):
         project_file_path = Path(app_data['file_path_name'])
-        action = dpg.get_item_label(sender)
+        if sender:
+            action = dpg.get_item_label(sender)
+        else:
+            action = 'Project Open'
         return_message = self._open_new_project(project_file_path)
         log_on_return_message(self.logger, action, return_message)
 
@@ -512,9 +517,10 @@ class NodeEditor:
         self.callback_tab_bar_change(0, _first_tab_id, is_open_project=True)
 
     def callback_project_save(self, sender):
+        # TODO:Cache and default project folder
         # If project is still temp, prompt to save project as another location
-        if self.project_folder_path == CACHE_DIR:
-            return callback_project_save_as()
+        # if self.project_folder_path == CACHE_DIR:
+        #     return callback_project_save_as()
         action = dpg.get_item_label(sender)
         return_message = self._project_save_to_folder()
         log_on_return_message(self.logger, action, return_message)
@@ -597,3 +603,9 @@ class NodeEditor:
 
     def _pop_output_log_window(self):
         dpg.configure_item(self.output_log_id, show=True)
+
+    def callback_save_and_open_project_in_toolsviewer(self, sender):
+        project_file_path = self.project_folder_path / '{}.mproject'.format(self.project_name)
+        self.callback_project_save(sender)
+        subprocess.Popen(f'../ToolsViewer/ToolsViewer.exe --project_path {project_file_path.as_posix()}')
+        self.logger.info(f'**** Opening project {self.project_name} in ToolsViewer ****')

@@ -39,10 +39,14 @@ def setup_dpg_icon():
     dpg.set_viewport_small_icon(icon_path.as_posix())
 
 
-def initialize_tools_viewer_project(setting_dict: dict, logger_queue: Queue, is_debug_mode: bool):
+def initialize_tools_viewer_project(setting_dict: dict, logger_queue: Queue,
+                                    is_debug_mode: bool, project_path: str):
     tools_viewer_project: ToolsViewer = _initialize_primary_window_as_node_graph(setting_dict,
                                                                                  logger_queue,
                                                                                  is_debug_mode)
+
+    if project_path:
+        tools_viewer_project.callback_project_open(0, {'file_path_name': project_path})
     render_dpg_frame()
 
     _on_close_project(tools_viewer_project)

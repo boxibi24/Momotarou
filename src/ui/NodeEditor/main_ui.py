@@ -38,10 +38,13 @@ def setup_dpg_icon():
     dpg.set_viewport_small_icon(icon_path.as_posix())
 
 
-def initialize_node_editor_project(setting_dict: dict, packages_list: list, logger_queue: Queue, is_debug_mode: bool):
+def initialize_node_editor_project(setting_dict: dict, packages_list: list,
+                                   logger_queue: Queue, is_debug_mode: bool, project_path: str):
     node_editor_project: NodeEditor = _initialize_primary_window_as_node_graph(setting_dict, packages_list,
                                                                                logger_queue,
                                                                                is_debug_mode)
+    if project_path:
+        node_editor_project.callback_project_open(0, {'file_path_name': project_path})
     render_dpg_frame(node_editor_project)
 
     _on_close_project(node_editor_project)

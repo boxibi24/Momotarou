@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Tuple
 
 from libs.constants import CACHE_DIR
+import subprocess
 
 
 class ToolsViewer:
@@ -38,7 +39,7 @@ class ToolsViewer:
 
         # ------ ATTRIBUTES -----
         self.current_tab_name = None
-        self.project_name = 'MyRUTProject'
+        self.project_name = 'MyMomotarouProject'
         self.project_folder_path = CACHE_DIR
         if setting_dict is None:
             self._setting_dict = {}
@@ -90,11 +91,14 @@ class ToolsViewer:
                 self.current_tab_name = tab_name
                 break
 
-    def callback_project_open(self):
+    def callback_project_open(self, sender, app_data):
         """
         Open new project
         """
-        project_file_path = tkinter_file_dialog()
+        if app_data:
+            project_file_path = Path(app_data['file_path_name'])
+        else:
+            project_file_path = tkinter_file_dialog()
         if project_file_path == Path('.'):
             return
         self._clean_current_project()
@@ -161,6 +165,11 @@ class ToolsViewer:
             'id': tab_id,
             'tool_path': tool_abs_path
         }})
+
+    def callback_project_open_in_node_editor(self):
+        project_file_path = self.project_folder_path / '{}.mproject'.format(self.project_name)
+        subprocess.Popen(f'../NodeEditor/NodeEditor.exe --project_path {project_file_path.as_posix()}')
+        self.logger.info(f'**** Opening project {self.project_name} in NodeEditor ****')
 
     def callback_execute_event(self, sender, app_data, user_data):
         event_tag = user_data

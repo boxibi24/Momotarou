@@ -15,7 +15,7 @@ from ui.ToolsViewer.main_ui import initialize_dpg, setup_dpg_font, setup_dpg_ico
 
 
 def main():
-    setting_file_path, packages_file_path, is_debug_mode = parse_argument()
+    setting_file_path, packages_file_path, is_debug_mode, project_path = parse_argument()
     logger, logger_queue, queue_listener = setup_logger(is_debug_mode)
     logger.info("***** Load Config *****")
     setting_dict = json_load_from_file_path(setting_file_path)
@@ -24,7 +24,7 @@ def main():
     setup_dpg_font()
     setup_dpg_icon()
     logger.info('**** Initialize Node Editor Project *****')
-    initialize_tools_viewer_project(setting_dict, logger_queue, is_debug_mode)
+    initialize_tools_viewer_project(setting_dict, logger_queue, is_debug_mode, project_path)
     logger.info('**** DearPyGui Terminated! *****')
     _on_terminate_project(queue_listener)
 
@@ -39,8 +39,9 @@ def parse_argument():
     setting_file_path = args.setting
     packages_file_path = args.packages
     is_debug_mode = args.is_debug_mode
+    project_path = args.project_path
 
-    return setting_file_path, packages_file_path, is_debug_mode
+    return setting_file_path, packages_file_path, is_debug_mode, project_path
 
 
 def get_arg():
@@ -68,6 +69,11 @@ def get_arg():
     parser.add_argument(
         "--is_debug_mode",
         action='store_true'
+    )
+
+    parser.add_argument(
+        "--project_path",
+        type=str,
     )
 
     args = parser.parse_args()

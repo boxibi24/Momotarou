@@ -59,12 +59,12 @@ def dpg_get_value(tag: str):
 def json_load_from_file_path(file_path) -> dict:
     if file_path == '.':
         return {}
-    with open(file_path, 'r') as fp:
-        try:
+    try:
+        with open(file_path, 'r') as fp:
             return_dict = json.load(fp)
             return return_dict
-        except FileNotFoundError:
-            return {}
+    except FileNotFoundError:
+        return {}
 
 
 def json_write_to_file_path(file_path, value: dict):

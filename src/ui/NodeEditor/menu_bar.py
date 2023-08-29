@@ -156,8 +156,13 @@ def initialize_menu_bar(node_editor_project, setting_dict: dict):
         with dpg.menu(label='Build'):
             dpg.add_menu_item(
                 tag='Menu_Compile_Tool',
-                label='Compile',
+                label='Compile current tool',
                 callback=node_editor_project.callback_compile_current_node_graph
+            )
+            dpg.add_menu_item(
+                tag='Menu_Open_Project_In_ToolsViewer',
+                label='Save and open project in ToolsViewer',
+                callback=node_editor_project.callback_save_and_open_project_in_toolsviewer
             )
         with dpg.menu(label='Help'):
             dpg.add_menu_item(
