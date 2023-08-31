@@ -115,43 +115,9 @@ class BaseNode:
     def setting_dict(self) -> dict:
         return self._setting_dict
 
-    @setting_dict.setter
-    def setting_dict(self, value):
-        self._setting_dict = value
-
-    # @property
-    # def is_dirty(self) -> bool:
-    #     return self._is_dirty
-
-    # @is_dirty.setter
-    # def is_dirty(self, value: bool):
-    #     self._is_dirty = value
-    #     # Go down the chain of succeeding nodes to mark them as 'dirty'
-    #     for link in self._succeeding_data_link_list:
-    #         # Get the target node
-    #         target_node = link.destination_node_instance
-    #         # Mark it status as 'dirty'
-    #         target_node.is_dirty = True
-
-    # @property
-    # def is_executed(self) -> bool:
-    #     return self._is_executed
-    #
-    # @is_executed.setter
-    # def is_executed(self, value: bool):
-    #     self._is_executed = value
-
     @property
     def internal_data(self) -> dict:
         return self._internal_data
-
-    # @property
-    # def succeeding_data_link_list(self) -> list:
-    #     return self._succeeding_data_link_list
-
-    # @succeeding_data_link_list.setter
-    # def succeeding_data_link_list(self, value: list):
-    #     self._succeeding_data_link_list = value
 
     @property
     def id(self) -> int:
@@ -164,7 +130,6 @@ class BaseNode:
                  pos=None,
                  import_path=None,
                  node_tag=None,
-                 # succeeding_data_link_list=None,
                  label='',
                  internal_data=None
                  ):
@@ -177,7 +142,6 @@ class BaseNode:
             self._pos = [0, 0]
         else:
             self._pos = pos
-        # Override node_label if param label is not None
         if label:
             self.node_label = label
         self._parent = parent
@@ -197,16 +161,6 @@ class BaseNode:
             self._internal_data = {}
         else:
             self._internal_data = internal_data
-        # if succeeding_data_link_list:
-        #     self._succeeding_data_link_list = succeeding_data_link_list
-        # else:
-        #     self._succeeding_data_link_list = []
-        # ____FLAGS____
-        # if self.node_type & NodeTypeFlag.Event:
-        #     self._is_dirty = False
-        # else:
-        #     self._is_dirty = True
-        # self._is_executed = False
 
     def construct_pin(self, pin_type, label='', callback=None):
         """
@@ -236,9 +190,6 @@ class BaseNode:
             }))
             if pin_type != InputPinType.Exec:
                 self._pin_list[-1].update({'value': dpg_get_value(pin.value_tag)})
-            # Update internal data
-            # if pin_type != InputPinType.Exec:
-            #     self._internal_data.update({pin.label: pin.default_data})
         else:
             attribute_type = dpg.mvNode_Attr_Output
             pin_class = get_pin_class(pin_type)
@@ -263,9 +214,6 @@ class BaseNode:
             # therefore prompt KeyErrorException
             if pin_type != OutputPinType.Exec:
                 self._pin_list[-1].update({'default_value': dpg_get_value(pin.value_tag)})
-            # Update internal data
-            # if pin_type != InputPinType.Exec:
-            #     self._internal_data.update({pin.label: pin.default_data})
 
     def initialize_node(self, parent, label, pos=None):
         """
@@ -325,7 +273,8 @@ class BaseNode:
                                          callback=self.node_right_click_menu)
         dpg.bind_item_handler_registry(self._node_id, dpg.last_container())
 
-    def node_right_click_menu(self):
+    @staticmethod
+    def node_right_click_menu():
         with dpg.window(
             popup=True,
             autosize=True,
@@ -362,35 +311,6 @@ class BaseNode:
         assert not hasattr(super(), 'Run')
         return {}
 
-    # def query_input_value(self,
-    #                       link
-    #                       ):
-    #     """
-    #     Update input pins' values with the connection info to preceding nodes
-    #     """
-    #     assert not hasattr(super(), 'query_input_values')
-    #     if link.source_pin_type is not OutputPinType.Exec:
-    #         source_value = dpg_get_value(link.source_pin_instance.value_tag)
-    #         dpg_set_value(link.destination_pin_instance.value_tag, source_value)
-    #         return source_value
-    #
-    # def refresh_output_pin_value(self):
-    #     for pin_label, default_value in self._default_output_value_dict.items():
-    #         self._internal_data[pin_label] = default_value
-    #     self.update_output_pin_value()
-    #
-    # def update_custom_pin_value(self,
-    #                             link):
-    #     """
-    #     Skip primitive pin value storage and query value from node's internal data
-    #     """
-    #     assert not hasattr(super(), 'update_custom_pin_value')
-    #     if link.source_pin_type is not OutputPinType.Exec:
-    #         # Try to get value from previous node's internal data instead if the pin's value is None
-    #         # this case happens when the pin is of user created Pin Class
-    #         source_value = link.source_node_instance.internal_data.get(link.source_pin_instance.label, None)
-    #         self._internal_data.update({link.destination_pin_instance.label: source_value})
-
     def on_node_deletion(self, **kwargs):
         assert not hasattr(super(), 'Close')
 
@@ -400,36 +320,6 @@ class BaseNode:
                 pin_value = dpg.get_value(pin_info['pin_instance'].value_tag)
                 if pin_value is not None:
                     self._internal_data.update({pin_info['label']: pin_value})
-    #
-    # def compute_internal_output_data(self):
-    #     # First update the input values
-    #     for pin_info in self._pin_list:
-    #         if pin_info['meta_type'] == PinMetaType.DataIn and \
-    #             pin_info['pin_instance'].connected_link_list:
-    #             queried_value = self.query_input_value(pin_info['pin_instance'].connected_link_list[0])
-    #             # In case of custom pin, skip pin value data query
-    #             if queried_value is None:
-    #                 self.update_custom_pin_value(pin_info['pin_instance'].connected_link_list[0])
-    #     # Update the internal data with the new inputs values first
-    #     self.update_internal_input_data()
-    #     # Compute new output values from node's Run()
-    #     self.run(self._internal_data)
-    #     # Update the whole internal data again
-    #     # self._internal_data.update(computed_internal_data_dict)
-    #     # Update the output pins' value with fresh internal data
-    #     self.update_output_pin_value()
-    #     # After computing for all outputs, mark this node as clean
-    #     self._is_dirty = False
-    #     # This node is executed!
-    #     self._is_executed = True
-
-    # def update_output_pin_value(self):
-    #     for pin_info in self._pin_list:
-    #         if pin_info['meta_type'] == PinMetaType.DataOut:
-    #             for key, value in self._internal_data.items():
-    #                 if key == pin_info['label']:
-    #                     dpg_set_value(pin_info['pin_instance'].value_tag, value)
-    #                     break
 
     def on_pin_value_change(self, sender):
         # self.is_dirty = True

@@ -1,4 +1,5 @@
 from enum import IntFlag, IntEnum, auto, Enum
+import dearpygui.dearpygui as dpg
 
 
 class NodeTypeFlag(IntFlag):
@@ -48,3 +49,13 @@ class PinMetaType(IntEnum):
     DataOut = auto()
     FlowIn = auto()
     FlowOut = auto()
+
+
+class CombinationKeyboardInput(Enum):
+    CtrlShift = auto()
+    CtrlAlt = auto()
+    AltShift = auto()
+    Shift = auto()
+    Alt = auto()
+    Ctrl = auto()
+    Default = auto()

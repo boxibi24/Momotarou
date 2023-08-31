@@ -1,3 +1,4 @@
 {
-    "Perforce": "tools/Perforce.mtool"
+    "Perforce": "tools/Perforce.mtool",
+    "Maya": "tools/Maya.mtool"
 }

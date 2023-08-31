@@ -1,5 +1,6 @@
 import dearpygui.dearpygui as dpg
 from ui.NodeEditor.node_utils import delete_selected_node
+from core.enum_types import CombinationKeyboardInput
 
 
 def add_keyboard_handler_registry(node_editor):
@@ -7,8 +8,9 @@ def add_keyboard_handler_registry(node_editor):
     Add input handler from keyboard
     """
     with dpg.handler_registry(tag='__node_editor_keyboard_handler'):
-        # Delete key
         dpg.add_key_press_handler(key=dpg.mvKey_Delete, user_data=node_editor)
+        dpg.add_key_press_handler(key=dpg.mvKey_Z, user_data=node_editor)
+        dpg.add_key_press_handler(key=dpg.mvKey_Y, user_data=node_editor)
 
 
 def add_mouse_handler_registry(node_editor):
@@ -56,22 +58,11 @@ def mouse_left_click_handler(node_editor):
     selected_node = dpg.get_selected_nodes(node_editor.current_node_editor_instance.id)
     if selected_node:
         node_editor.detail_panel.refresh_ui_with_selected_node_info()
-
-    if dpg.is_key_down(key=dpg.mvKey_Control) and dpg.is_key_down(key=dpg.mvKey_Shift):  # Ctrl + Shift pressed
-        pass
-    elif dpg.is_key_down(key=dpg.mvKey_Control) and dpg.is_key_down(key=dpg.mvKey_Alt):  # Ctrl + Alt
-        pass
-    elif dpg.is_key_down(key=dpg.mvKey_Alt) and dpg.is_key_down(key=dpg.mvKey_Shift):  # Alt + Shift
-        pass
-    elif dpg.is_key_down(key=dpg.mvKey_Shift):  # Shift pressed
-        pass
-    elif dpg.is_key_down(key=dpg.mvKey_Alt):  # Alt pressed
+    if get_current_key_press_combination() == CombinationKeyboardInput.Alt:
         selected_links = dpg.get_selected_links(node_editor.current_node_editor_instance.id)
         if selected_links:
             node_editor.current_node_editor_instance.callback_delink('', selected_links[0])
-    elif dpg.is_key_down(key=dpg.mvKey_Control):  # Ctrl pressed
-        pass
-    else:  # Normal click
+    elif get_current_key_press_combination() == CombinationKeyboardInput.Default:
         selected_nodes = dpg.get_selected_nodes(node_editor.current_node_editor_instance.id)
         cache_last_selected_node_pos(node_editor, selected_nodes)
         if not is_cursor_inside_node_graph(node_editor.node_editor_bb) and selected_nodes:
@@ -79,19 +70,7 @@ def mouse_left_click_handler(node_editor):
 
 
 def mouse_right_click_handler(node_editor):
-    if dpg.is_key_down(key=dpg.mvKey_Control) and dpg.is_key_down(key=dpg.mvKey_Shift):  # Ctrl + Shift pressed
-        pass
-    elif dpg.is_key_down(key=dpg.mvKey_Control) and dpg.is_key_down(key=dpg.mvKey_Alt):  # Ctrl + Alt
-        pass
-    elif dpg.is_key_down(key=dpg.mvKey_Alt) and dpg.is_key_down(key=dpg.mvKey_Shift):  # Alt + Shift
-        pass
-    elif dpg.is_key_down(key=dpg.mvKey_Shift):  # Shift pressed
-        pass
-    elif dpg.is_key_down(key=dpg.mvKey_Alt):  # Alt pressed
-        pass
-    elif dpg.is_key_down(key=dpg.mvKey_Control):  # Ctrl pressed
-        pass
-    else:  # Normal click
+    if get_current_key_press_combination() == CombinationKeyboardInput.Default:
         selected_nodes = dpg.get_selected_nodes(node_editor.current_node_editor_instance.id)
         # Show node selection list
         if not selected_nodes and \
@@ -118,12 +97,18 @@ def is_cursor_inside_node_graph(ng_bb) -> bool:
 
 
 def key_press_handler(node_editor):
-    if dpg.is_key_pressed(dpg.mvKey_Delete):
+    if dpg.is_key_pressed(dpg.mvKey_Delete) and get_current_key_press_combination() == CombinationKeyboardInput.Default:
         # Delete selected nodes
         selected_node_list_len = len(dpg.get_selected_nodes(node_editor.current_node_editor_instance.id))
         if selected_node_list_len > 0:
             for i in range(selected_node_list_len):
                 delete_selected_node(node_editor)
+    if dpg.is_key_pressed(dpg.mvKey_Z) and get_current_key_press_combination() == CombinationKeyboardInput.Ctrl:
+        # Undo action
+        node_editor.callback_undo_action(0)
+    if dpg.is_key_pressed(dpg.mvKey_Y) and get_current_key_press_combination() == CombinationKeyboardInput.Ctrl:
+        # Undo action
+        node_editor.callback_redo_action(0)
 
 
 def cache_last_selected_node_pos(node_editor, selected_nodes):
@@ -131,3 +116,20 @@ def cache_last_selected_node_pos(node_editor, selected_nodes):
     # This is the best method I can think of
     if selected_nodes:
         node_editor.current_node_editor_instance.last_pos = dpg.get_item_pos(selected_nodes[0])
+
+
+def get_current_key_press_combination() -> CombinationKeyboardInput:
+    if dpg.is_key_down(key=dpg.mvKey_Control) and dpg.is_key_down(key=dpg.mvKey_Shift):  # Ctrl + Shift pressed
+        return CombinationKeyboardInput.CtrlShift
+    elif dpg.is_key_down(key=dpg.mvKey_Control) and dpg.is_key_down(key=dpg.mvKey_Alt):  # Ctrl + Alt
+        return CombinationKeyboardInput.CtrlAlt
+    elif dpg.is_key_down(key=dpg.mvKey_Alt) and dpg.is_key_down(key=dpg.mvKey_Shift):  # Alt + Shift
+        return CombinationKeyboardInput.AltShift
+    elif dpg.is_key_down(key=dpg.mvKey_Shift):  # Shift pressed
+        return CombinationKeyboardInput.Shift
+    elif dpg.is_key_down(key=dpg.mvKey_Alt):  # Alt pressed
+        return CombinationKeyboardInput.Alt
+    elif dpg.is_key_down(key=dpg.mvKey_Control):  # Ctrl pressed
+        return CombinationKeyboardInput.Ctrl
+    else:
+        return CombinationKeyboardInput.Default

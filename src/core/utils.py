@@ -1,3 +1,4 @@
+import functools
 import re
 import json
 import logging
@@ -169,25 +170,25 @@ def log_on_return_message(logger, action: str, return_message=(0, '')):
     return_code = return_message[0]
     message = return_message[1]
     if return_code == 0:
-        logger.info(f'{action} was skipped.')
+        logger.warning(f'{action} was skipped.')
         if message:
-            logger.debug(message)
+            logger.warning(message)
     elif return_code == 1:
         logger.info(f'{action} performed successfully.')
         if message:
             logger.debug(message)
     elif return_code == 2:
-        logger.info(f'{action} was performed partially.')
+        logger.warning(f'{action} was performed partially.')
         if message:
-            logger.debug(message)
+            logger.warning(message)
     elif return_code == 3:
-        logger.info(f'{action} did not perform. Failure encountered. Please check the log for details.')
+        logger.error(f'{action} did not perform. Failure encountered. Please check the log for details.')
         if message:
             logger.error(message)
     elif return_code == 4:
-        logger.info(f'{action} did not perform. Exception encountered.')
+        logger.critical(f'{action} did not perform. Exception encountered.')
         if message:
-            logger.error(message)
+            logger.critical(message)
 
 
 def construct_tool_path_from_tools_path_and_tool_name(tools_path: Path, tool_name: str) -> str:
@@ -245,3 +246,23 @@ def is_var_type_of_string_based(var_type: str) -> bool:
     if var_type in ['String', 'Password', 'MultilineString']:
         return True
     return False
+
+
+def create_directory_if_not_existed(directory: Path):
+    if not directory.parent.exists():
+        directory.parent.mkdir()
+    if not directory.exists():
+        directory.mkdir()
+
+
+def cache_project_files(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        node_editor_project = args[0].parent_instance
+        return_value = func(*args, **kwargs)
+        if not node_editor_project.init_flag:
+            node_editor_project.undo_streak = 0
+            node_editor_project.project_save_to_folder(is_cache=True)
+        return return_value
+
+    return wrapper

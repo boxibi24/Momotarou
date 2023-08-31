@@ -21,10 +21,10 @@ from copy import deepcopy
 import traceback
 from core.utils import create_queueHandler_logger, json_load_from_file_path, json_write_to_file_path, generate_uuid, \
     log_on_return_message, construct_tool_path_from_tools_path_and_tool_name, convert_python_path_to_import_path, \
-    is_string_contains_special_characters, warn_file_dialog_and_reshow_widget, clear_file_dialog_children
+    is_string_contains_special_characters, warn_file_dialog_and_reshow_widget, create_directory_if_not_existed
 from core.data_loader import refresh_core_data_with_json_dict
 from core.executor import execute_event
-from libs.constants import CACHE_DIR
+from libs.constants import CACHE_DIR, INTERMEDIATE_DIR
 
 INTERNAL_NODE_CATEGORY = '_internal'
 EVENT_IMPORT_PATH = ''
@@ -46,6 +46,26 @@ class NodeEditor:
     @property
     def node_editor_tab_dict(self) -> OrderedDict:
         return self._node_editor_tab_dict
+
+    @property
+    def cache_revision_path_list(self) -> list:
+        # Remove cache dir if the list length exceeds maximum capacity
+        if len(self._cache_revision_path_list) >= self._setting_dict['MAX_CACHE_REVISIONS']:
+            to_remove_dir: Path = self._cache_revision_path_list.pop(0)
+            shutil.rmtree(to_remove_dir)
+        return self._cache_revision_path_list
+
+    @property
+    def init_flag(self) -> bool:
+        return self._init_flag
+
+    @property
+    def undo_streak(self) -> int:
+        return self._undo_streak
+
+    @undo_streak.setter
+    def undo_streak(self, value: int):
+        self._undo_streak = value
 
     def __init__(
         self,
@@ -73,6 +93,8 @@ class NodeEditor:
         # Tuple to store current node editor boundaries position
         self._node_editor_bb = [(), ()]
         self.project_name = 'MyMomotarouProject'
+        self._cache_revision_path_list = []
+        self._undo_streak = 0
 
         # ------- LOGGING ______
         self.logging_queue = logging_queue
@@ -86,7 +108,7 @@ class NodeEditor:
         self._add_handler_registry()
         # Cache this project to local appdata
         self.project_folder_path = CACHE_DIR / self.project_name
-        self._create_cache_project_folder()
+        self._create_localappdata_storage_dir()
         # Thread pool
         self.thread_pool = ThreadPool()
         # Initialization done
@@ -246,9 +268,9 @@ class NodeEditor:
         for handler in dpg.get_item_children("__node_editor_mouse_handler", 1):
             dpg.set_item_callback(handler, event_handler)
 
-    def callback_tab_bar_change(self, sender, app_data, is_open_project=False):
+    def callback_tab_bar_change(self, sender, app_data):
         tab_id = app_data
-        if not is_open_project:
+        if self._init_flag is False:
             self.clean_old_node_graph_registry_item(self.current_node_editor_instance)
         self.update_current_tab_id_and_instance(tab_id)
         self.detail_panel.refresh_ui_with_selected_node_info()
@@ -443,13 +465,13 @@ class NodeEditor:
             self.logger.exception('Could not query _internal modules:')
             return -1
 
-    def _create_cache_project_folder(self):
+    def _create_localappdata_storage_dir(self):
         if CACHE_DIR.parent.exists():
             shutil.rmtree(CACHE_DIR.parent)
         CACHE_DIR.parent.mkdir()
         CACHE_DIR.mkdir()
-        self._project_save_to_folder()
-        return CACHE_DIR
+        INTERMEDIATE_DIR.mkdir()
+        self.project_save_to_folder()
 
     def callback_project_save_as(self, sender, app_data):
         project_path = Path(app_data['file_path_name'])
@@ -464,7 +486,7 @@ class NodeEditor:
             warn_file_dialog_and_reshow_widget(file_dialog_tag, return_message[1])
             return log_on_return_message(self.logger, action, return_message)
         self._update_project_data(project_path)
-        return_message = self._project_save_to_folder()
+        return_message = self.project_save_to_folder()
         log_on_return_message(self.logger, action, return_message)
 
     def _update_project_data(self, project_path: Path):
@@ -487,11 +509,16 @@ class NodeEditor:
     def _open_new_project(self, project_file_path: Path) -> Tuple[int, object]:
         if not project_file_path.exists():
             return 4, f'Project file {project_file_path} not found!'
-        self._clean_current_project()
-        self._init_flag = True
-        self._batch_import_tools_to_project(project_file_path)
-        self._update_project_data(project_file_path.parent)
-        self._init_flag = False
+        try:
+            self._init_flag = True
+            self._clean_current_project()
+            self._batch_import_tools_to_project(project_file_path)
+            self._update_project_data(project_file_path.parent)
+        except:
+            self._init_flag = False
+            return 4, traceback.format_exc()
+        finally:
+            self._init_flag = False
         return 1, ''
 
     def _clean_current_project(self):
@@ -500,7 +527,7 @@ class NodeEditor:
             self._delete_tab(tab_info, tab_name)
         self.clean_splitter_items()
 
-    def _batch_import_tools_to_project(self, project_file_path: Path):
+    def _batch_import_tools_to_project(self, project_file_path: Path, default_opening_tab_name=''):
         project_dict = json_load_from_file_path(project_file_path)
         i = 0
         _first_imported_node_editor_instance = None
@@ -514,25 +541,96 @@ class NodeEditor:
                 _first_tab_id = self._node_editor_tab_dict[tool_name]['id']
             self.clean_splitter_items()
             i += 1
-        self.callback_tab_bar_change(0, _first_tab_id, is_open_project=True)
+        if default_opening_tab_name:
+            self._select_default_opening_tab(default_opening_tab_name)
+        else:
+            self.callback_tab_bar_change(0, _first_tab_id)
+
+    def _select_default_opening_tab(self, default_opening_tab_name: str):
+        default_opening_tab_id = self._get_tab_id_from_label(default_opening_tab_name)
+        dpg.set_value(self.tab_bar_id, default_opening_tab_id)
+        self.callback_tab_bar_change(0, default_opening_tab_id)
+
+    def _get_tab_id_from_label(self, search_tab_label: str) -> int:
+        for tab_label, tab_info in self._node_editor_tab_dict.items():
+            if search_tab_label == tab_label:
+                return tab_info['id']
+        return list(self._node_editor_tab_dict.values())[0]['id']
+
+    def callback_undo_action(self, sender):
+        if sender:
+            action = dpg.get_item_label(sender)
+        else:
+            action = 'Undo action'
+        return_message = self._open_project_to_revision(is_undo=True)
+        log_on_return_message(self.logger, action, return_message)
+
+    def _open_project_to_revision(self, is_undo: bool):
+        try:
+            self._init_flag = True
+            cached_project_file_path = self._get_cached_project_file_path(is_undo)
+            if cached_project_file_path is None:
+                return 0, ''
+            current_tab_label = dpg.get_item_label(self.current_tab_id)
+            self._clean_current_project()
+            self._batch_import_tools_to_project(cached_project_file_path, current_tab_label)
+        except:
+            return 4, traceback.format_exc()
+        finally:
+            self._init_flag = False
+        return 1, ''
+
+    def _get_cached_project_file_path(self, is_undo: bool):
+        print(self.undo_streak)
+        if is_undo:
+            if self.undo_streak == len(self._cache_revision_path_list) :
+                return None
+            self.undo_streak += 1
+            index = - self.undo_streak
+        else:
+            if self.undo_streak == 0:
+                return None
+            self.undo_streak -= 1
+            index = - self.undo_streak + 1
+        return self._cache_revision_path_list[index] / (self.project_name + '.mproject')
+
+    def callback_redo_action(self, sender):
+        if sender:
+            action = dpg.get_item_label(sender)
+        else:
+            action = 'Redo action'
+        return_message = self._open_project_to_revision(is_undo=False)
+        log_on_return_message(self.logger, action, return_message)
 
     def callback_project_save(self, sender):
         # TODO:Cache and default project folder
         # If project is still temp, prompt to save project as another location
         # if self.project_folder_path == CACHE_DIR:
         #     return callback_project_save_as()
-        action = dpg.get_item_label(sender)
-        return_message = self._project_save_to_folder()
+        if sender:
+            action = dpg.get_item_label(sender)
+        else:
+            action = 'Save project'
+        return_message = self.project_save_to_folder()
         log_on_return_message(self.logger, action, return_message)
 
-    def _project_save_to_folder(self) -> Tuple[int, object]:
-        try:
-            self.refresh_node_editor_dict()
-            self._delete_tool_files_if_not_used()
-            self._construct_project_folder()
-        except Exception:
-            return 4, traceback.format_exc()
+    def project_save_to_folder(self, is_cache=False) -> Tuple[int, object]:
+        if is_cache:
+            try:
+                self._cache_project_states()
+            except Exception:
+                return 4, traceback.format_exc()
+        else:
+            try:
+                self._save_project_to_folder()
+            except Exception:
+                return 4, traceback.format_exc()
         return 1, ''
+
+    def _save_project_to_folder(self):
+        self.refresh_node_editor_dict()
+        self._delete_tool_files_if_not_used()
+        self._construct_project_folder_and_save()
 
     def _delete_tool_files_if_not_used(self):
         tools_path = self.project_folder_path / 'tools'
@@ -542,36 +640,38 @@ class NodeEditor:
             if self._node_editor_tab_dict.get(tool_file.name, None) is None:
                 tool_file.unlink()
 
-    def _construct_project_folder(self):
-        self._construct_tools_folder()
-        self._save_project_file()
+    def _construct_project_folder_and_save(self):
+        tools_path = self.project_folder_path / 'tools'
+        self._construct_tools_folder(tools_path)
+        project_file_path = self.project_folder_path / (self.project_name + '.mproject')
+        self._save_project_file(project_file_path)
 
-    def _construct_tools_folder(self):
-        self._create_tools_path_if_not_existed()
+    def _construct_tools_folder(self, tools_path: Path):
+        create_directory_if_not_existed(tools_path)
         for child_node_graph_name, child_node_graph_info in self._node_editor_tab_dict.items():
-            child_node_graph_path = self._get_tool_path_from_tool_name(child_node_graph_name)
+            child_node_graph_path = construct_tool_path_from_tools_path_and_tool_name(tools_path, child_node_graph_name)
             child_node_graph_info['node_editor_instance'].callback_tool_save('',
                                                                              {'file_path_name': child_node_graph_path})
 
-    def _create_tools_path_if_not_existed(self):
-        tools_path = self.project_folder_path / 'tools'
-        if not tools_path.parent.exists():
-            tools_path.parent.mkdir()
-        if not tools_path.exists():
-            tools_path.mkdir()
-
-    def _get_tool_path_from_tool_name(self, tool_name: str) -> str:
-        tools_path = self.project_folder_path / 'tools'
-        return construct_tool_path_from_tools_path_and_tool_name(tools_path, tool_name)
-
-    def _save_project_file(self):
+    def _save_project_file(self, project_file_path: Path):
         tools_path = Path('tools')
         tool_list = []
         for tool_name in self._node_editor_tab_dict.keys():
             tool_path = construct_tool_path_from_tools_path_and_tool_name(tools_path, tool_name)
             tool_list.append((tool_name, tool_path))
-        project_file_path = self.project_folder_path / (self.project_name + '.mproject')
         json_write_to_file_path(project_file_path, OrderedDict(tool_list))
+
+    def _cache_project_states(self):
+        self.refresh_node_editor_dict()
+        self._construct_cache_folder_and_save_project_states()
+
+    def _construct_cache_folder_and_save_project_states(self):
+        cache_revision_dir = CACHE_DIR / generate_uuid()
+        tools_path = cache_revision_dir / 'tools'
+        self._construct_tools_folder(tools_path)
+        project_file_path = cache_revision_dir / (self.project_name + '.mproject')
+        self._save_project_file(project_file_path)
+        self.cache_revision_path_list.append(cache_revision_dir)
 
     def refresh_node_graph_bounding_box(self):
         # Update node graph bounding box to restrict right click menu only shows when cursor is inside of it
@@ -585,7 +685,7 @@ class NodeEditor:
             pass
 
     def callback_compile_current_node_graph(self):
-        cache_file_path = CACHE_DIR / (__name__ + '.mtool')
+        cache_file_path = CACHE_DIR.parent / 'Intermediate' / (dpg.get_item_label(self.current_tab_id) + '.mtool')
         action = 'Compile node graph'
         self.current_node_editor_instance.callback_tool_save('',
                                                              app_data={'file_path_name': cache_file_path})

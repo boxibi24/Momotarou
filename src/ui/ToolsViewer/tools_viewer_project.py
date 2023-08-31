@@ -40,7 +40,7 @@ class ToolsViewer:
         # ------ ATTRIBUTES -----
         self.current_tab_name = None
         self.project_name = 'MyMomotarouProject'
-        self.project_folder_path = CACHE_DIR
+        self.project_folder_path = CACHE_DIR / self.project_name
         if setting_dict is None:
             self._setting_dict = {}
         else:

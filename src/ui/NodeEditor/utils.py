@@ -160,5 +160,3 @@ def sort_flow_link_dict(flow_link_list: list):
     # Add nodes that do not appear in the connection list (input nodes, etc.)
     # index = 0
     return OrderedDict(flow_list)
-
-

@@ -114,7 +114,7 @@ def callback_cancel_file_dialog():
 
 def initialize_menu_bar(node_editor_project, setting_dict: dict):
     with dpg.menu_bar(label='Main Menu', tag='__menu_bar'):
-        # Export/Import file
+        # File
         with dpg.menu(label='File'):
             dpg.add_menu_item(
                 tag='Menu_Project_Open',
@@ -147,13 +147,27 @@ def initialize_menu_bar(node_editor_project, setting_dict: dict):
                 label='Import .mtool to current tab',
                 callback=callback_ng_file_import_menu
             )
+        # Edit
+        with dpg.menu(label='Edit'):
+            dpg.add_menu_item(
+                tag='Menu_Edit_Undo',
+                label='Undo',
+                callback=node_editor_project.callback_undo_action
+            )
+            dpg.add_menu_item(
+                tag='Menu_Edit_Redo',
+                label='Redo',
+                callback=node_editor_project.callback_redo_action
+            )
+        # View
         with dpg.menu(label='View'):
             dpg.add_menu_item(
                 tag='Menu_Save_Viewport',
                 label='Save Current Viewport',
                 callback=lambda: save_init
             )
-        with dpg.menu(label='Build'):
+        # Debug
+        with dpg.menu(label='Debug'):
             dpg.add_menu_item(
                 tag='Menu_Compile_Tool',
                 label='Compile current tool',

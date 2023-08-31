@@ -4,8 +4,8 @@ from core.enum_types import InputPinType, OutputPinType
 from ui.NodeEditor.node_utils import *
 from multiprocessing import Queue
 from core.utils import create_queueHandler_logger, extract_var_name_from_node_info, json_load_from_file_path, \
-    generate_uuid, log_on_return_message, get_var_default_value_on_type, is_var_type_of_primitive_types,\
-    is_var_type_of_string_based
+    generate_uuid, log_on_return_message, get_var_default_value_on_type, is_var_type_of_primitive_types, \
+    is_var_type_of_string_based, cache_project_files
 
 
 class DPGNodeEditor:
@@ -529,6 +529,7 @@ class DPGNodeEditor:
         return_message = self.add_link_from_sourcePin_to_destinationPin(source_pin_tag, destination_pin_tag)
         log_on_return_message(self.logger, 'Link Node', return_message)
 
+    @cache_project_files
     def add_link_from_sourcePin_to_destinationPin(self, source_pin_tag, destination_pin_tag) -> Tuple[int, str]:
 
         prepared_link_info = self._construct_link_info_from_source_and_destination_pin_tag(source_pin_tag,
@@ -567,7 +568,7 @@ class DPGNodeEditor:
             self.logger.warning("Cannot connect pins with different types")
             return False
         # Cannot connect exec pin to wildcard pins also
-        elif link_info.source_pin_info.pin_type == OutputPinType.Exec and\
+        elif link_info.source_pin_info.pin_type == OutputPinType.Exec and \
             link_info.destination_pin_info.pin_type == InputPinType.WildCard:
             self.logger.warning("Cannot connect exec pin to wildcard")
             return False
