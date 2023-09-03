@@ -255,14 +255,25 @@ def create_directory_if_not_existed(directory: Path):
         directory.mkdir()
 
 
-def cache_project_files(func):
+def cache_undo_action(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        node_editor_project = args[0].parent_instance
+        node_editor_project = args[0].node_editor_project_instance
         return_value = func(*args, **kwargs)
         if not node_editor_project.init_flag:
-            node_editor_project.undo_streak = 0
+            node_editor_project.reset_undo_streak()
             node_editor_project.project_save_to_folder(is_cache=True)
         return return_value
 
+    return wrapper
+
+
+def trigger_init_flag(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        node_editor_project = args[0]
+        node_editor_project.init_flag = True
+        return_value = func(*args, **kwargs)
+        node_editor_project.init_flag = False
+        return return_value
     return wrapper

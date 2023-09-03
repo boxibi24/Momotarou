@@ -5,7 +5,7 @@ from ui.NodeEditor.node_utils import *
 from multiprocessing import Queue
 from core.utils import create_queueHandler_logger, extract_var_name_from_node_info, json_load_from_file_path, \
     generate_uuid, log_on_return_message, get_var_default_value_on_type, is_var_type_of_primitive_types, \
-    is_var_type_of_string_based, cache_project_files
+    is_var_type_of_string_based, cache_undo_action
 
 
 class DPGNodeEditor:
@@ -71,8 +71,8 @@ class DPGNodeEditor:
         return self._splitter_var_dict
 
     def __init__(self,
-                 parent_tab,
-                 parent_instance,
+                 node_editor_project_tab,
+                 node_editor_project_instance,
                  setting_dict=None,
                  use_debug_print=False,
                  logging_queue=Queue(),
@@ -86,8 +86,8 @@ class DPGNodeEditor:
             self._setting_dict = setting_dict
         # ----- PARENT ITEMS -----
         # Shared splitter panel from master app
-        self.parent_instance = parent_instance
-        self.splitter_panel = parent_instance.splitter_panel
+        self.node_editor_project_instance = node_editor_project_instance
+        self.splitter_panel = node_editor_project_instance.splitter_panel
         # ----- ATTRIBUTES ------
         self.last_pos = (0, 0)
         self._node_instance_dict = {}
@@ -109,80 +109,52 @@ class DPGNodeEditor:
             delink_callback=self.callback_delink,
             minimap=True,
             minimap_location=dpg.mvNodeMiniMap_Location_BottomRight,
-            parent=parent_tab
+            parent=node_editor_project_tab
         )
         self._tag = generate_uuid()
         # ------ LOGGER ----------
-        self.logger = create_queueHandler_logger(__name__ + '_' + dpg.get_item_label(parent_tab),
+        self.logger = create_queueHandler_logger(__name__ + '_' + dpg.get_item_label(node_editor_project_tab),
                                                  logging_queue, self._use_debug_print)
 
-        self.logger.info('***** Child Node Editor initialized! *****')
+        if not self.node_editor_project_instance.init_flag:
+            self.logger.info('***** Child Node Editor initialized! *****')
 
-    def add_node_from_module(self, node_module, pos=(0, 0), override_label='', var_tag=''):
+    def delete_logger(self):
+        while self.logger.hasHandlers():
+            self.logger.removeHandler(self.logger.handlers[0])
+        del self.logger
+
+    @cache_undo_action
+    def add_node_from_module(self, node_module, pos=(0, 0), override_label=''):
         """
         Callback function of adding a node from menu bar
 
         :param node_module: imported node module
         :param pos: spawn position of the node
         :param override_label: label of the node, if left to blank the node will use its default node label
-        :param var_tag: if this node is variable, will use var_tag to find its initialized references to its value and type
         :return: added node instance
         """
-        intermediate_node = self._prepare_intermediate_node(node_module, pos, override_label, var_tag)
+        intermediate_node = self._prepare_intermediate_node(node_module, pos, override_label)
         node = intermediate_node.create_node()
         self._store_new_node_data(node)
         return node
 
-    def _prepare_intermediate_node(self, node_module, pos, label: str, var_tag: str):
+    def _prepare_intermediate_node(self, node_module, pos, label: str):
         """
         Prepare an intermediate node
 
         :param node_module: the imported module of the node
         :param pos: spawn position of the node
         :param label: label of the node, if left to blank the node will use its default node label
-        :param var_tag: if this node is variable, will use var_tag to find its initialized references to its value and type
         :return: intermediate node instance
         """
-        intermediate_node = self._initialize_intermediate_node(node_module, label, var_tag)
+        intermediate_node = self._initialize_node_instance_from_import_module(node_module, label)
         self._set_intermediate_node_position(intermediate_node, pos)
         # Clear node selection after adding a node to avoid last_pos being overriden
         dpg.clear_selected_nodes(node_editor=self.id)
         return intermediate_node
 
-    def _initialize_intermediate_node(self, node_module, label='', var_tag=''):
-        """
-        Initialize an intermediate node instance that can later be called its create_node method for node initialization
-
-        :param node_module: the imported module of the intermediate node
-        :param label: label of the variable node
-        :param var_tag: tag of the variable node
-        :return: An intermediate node holds a create_node() method that when called spawns the actual node
-        """
-        if node_module.node_type & NodeTypeFlag.Variable:
-            intermediate_node = self._initialize_var_node_instance_from_import_module(node_module, label, var_tag)
-        else:
-            intermediate_node = self._initialize_standard_node_instance_from_import_module(node_module, label)
-        return intermediate_node
-
-    def _initialize_var_node_instance_from_import_module(self, node_module, var_label, var_tag):
-        """
-        Initialize an intermediate variable node
-
-        :param node_module: imported intermediate variable node module
-        :param var_label: variable label
-        :param var_tag: variable tag
-        :return: intermediate variable node
-        """
-        intermediate_node = node_module.python_module.Node(
-            parent=self.id,
-            setting_dict=self._setting_dict,
-            pos=[0, 0],
-            label=var_label,
-            import_path=node_module.import_path
-        )
-        return intermediate_node
-
-    def _initialize_standard_node_instance_from_import_module(self, node_module, label):
+    def _initialize_node_instance_from_import_module(self, node_module, label):
         """
         Initialize an intermediate standard node
 
@@ -286,8 +258,9 @@ class DPGNodeEditor:
         self._refresh_node_editor_data()
         tobe_exported_dict = self._construct_export_dict()
         return_message = save_dict_to_json(tobe_exported_dict, file_path)
-        log_on_return_message(logger=self.logger, action=action,
-                              return_message=return_message)
+        if sender == 'NG_file_save':
+            log_on_return_message(logger=self.logger, action=action,
+                                  return_message=return_message)
 
     def _refresh_node_editor_data(self):
         """
@@ -357,12 +330,7 @@ class DPGNodeEditor:
         :param app_data: DPG item's data
         """
 
-        # First clear out everything from the current node graph
-        # self.clear_all_data()
-        # Add new tab
-        self.parent_instance.add_node_graph_tab_ask_name('', '', is_open_tool=True, import_path=app_data)
-        # # # Then perform file JSON import
-        # self.callback_tool_import(sender, app_data)
+        self.node_editor_project_instance.add_node_graph_tab_ask_name('', '', is_open_tool=True, import_path=app_data)
 
     def clear_all_data(self):
         """
@@ -380,10 +348,10 @@ class DPGNodeEditor:
         self.logger.info('**** Cleared current node graph ****')
 
     def return_current_node_editor_and_set_it_to_newly_added_tab(self):
-        tab_name_list = list(self.parent_instance.node_editor_tab_dict.keys())
-        stored_node_editor_instance = self.parent_instance.current_node_editor_instance
-        self.parent_instance.current_node_editor_instance = \
-            self.parent_instance.node_editor_tab_dict[tab_name_list[-1]]['node_editor_instance']
+        tab_name_list = list(self.node_editor_project_instance.node_editor_tab_dict.keys())
+        stored_node_editor_instance = self.node_editor_project_instance.current_node_editor_instance
+        self.node_editor_project_instance.current_node_editor_instance = \
+            self.node_editor_project_instance.node_editor_tab_dict[tab_name_list[-1]]['node_editor_instance']
         return stored_node_editor_instance
 
     def callback_tool_import(self, sender, app_data):
@@ -400,7 +368,8 @@ class DPGNodeEditor:
             action = 'Tool Import'
         _file_path = app_data['file_path_name']
         return_message = self._tool_import(_file_path)
-        log_on_return_message(self.logger, action, return_message)
+        if not self.node_editor_project_instance.init_flag:
+            log_on_return_message(self.logger, action, return_message)
 
     def _tool_import(self, file_path):  # Import means to append the existing node graph
         """
@@ -488,9 +457,7 @@ class DPGNodeEditor:
                                                                                  instant_add=True)
         elif node_module.node_type & NodeTypeFlag.Variable:
             added_node = self.add_node_from_module(node_module, reconstruct_node_pos_from_imported_info(node_info),
-                                                   override_label=node_info['label'],
-                                                   var_tag=self._get_var_tag_from_var_name(
-                                                       extract_var_name_from_node_info(node_info)))
+                                                   override_label=node_info['label'])
         else:
             added_node = self.add_node_from_module(node_module, reconstruct_node_pos_from_imported_info(node_info))
         return added_node
@@ -504,12 +471,7 @@ class DPGNodeEditor:
         :rtype: tuple(str, Any)
         """
         node_category = get_node_category_from_import_path(import_path)
-        return self.parent_instance.menu_construct_dict[node_category][import_path]
-
-    def _get_var_tag_from_var_name(self, var_name: str) -> str:
-        for var_tag, var_info in self._var_dict.items():
-            if var_info['name'][0] == var_name:
-                return var_tag
+        return self.node_editor_project_instance.menu_construct_dict[node_category][import_path]
 
     def _batch_import_link(self, link_list: list, pin_mapping_dict: dict):
         """
@@ -527,9 +489,10 @@ class DPGNodeEditor:
         source_pin_tag = dpg.get_item_alias(app_data[0])
         destination_pin_tag = dpg.get_item_alias(app_data[1])
         return_message = self.add_link_from_sourcePin_to_destinationPin(source_pin_tag, destination_pin_tag)
-        log_on_return_message(self.logger, 'Link Node', return_message)
+        if not self.node_editor_project_instance.init_flag:
+            log_on_return_message(self.logger, 'Link Node', return_message)
 
-    @cache_project_files
+    @cache_undo_action
     def add_link_from_sourcePin_to_destinationPin(self, source_pin_tag, destination_pin_tag) -> Tuple[int, str]:
 
         prepared_link_info = self._construct_link_info_from_source_and_destination_pin_tag(source_pin_tag,
@@ -644,6 +607,7 @@ class DPGNodeEditor:
             if link.link_id == link_id:
                 return link, False
 
+    @cache_undo_action
     def remove_data_link(self, link: Link):
         self._remove_data_link_in_all_data_bases(link)
         self._reflect_remove_data_link_on_connected_pins(link)
@@ -683,6 +647,7 @@ class DPGNodeEditor:
         # Set target pin's connected link instance to None
         link.destination_pin_instance.connected_link_list.clear()
 
+    @cache_undo_action
     def remove_flow_link(self, link: Link):
         self._remove_flow_link_in_all_data_bases(link)
         self._reflect_remove_flow_link_on_connected_pins(link)
@@ -703,6 +668,7 @@ class DPGNodeEditor:
         if link.source_node_instance.node_type == NodeTypeFlag.Event:
             self.tobe_exported_event_dict.pop(link.source_node_instance.node_tag)
 
+    @cache_undo_action
     def add_var(self, var_info: dict, default_value=None, default_is_exposed_flag=False, regex=None):
         # Save one for the splitter's var_dict
         self._splitter_var_dict.update(var_info)

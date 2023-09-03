@@ -103,9 +103,10 @@ def callback_file_dialog(sender, app_data, user_data):
     elif sender == 'NG_file_save':
         user_data.current_node_editor_instance.callback_tool_save(sender, app_data)
     elif sender == 'NG_file_open':
-        user_data.current_node_editor_instance.callback_tool_open(sender, app_data)
+        user_data.callback_add_tab_and_import_tool(sender, app_data['file_name'].split('.')[0],
+                                                   (0, app_data))
     elif sender == 'NG_file_import':
-        user_data.current_node_editor_instance.callback_tool_import(sender, app_data)
+        user_data.callback_import_tool_to_current_tab(sender, app_data)
 
 
 def callback_cancel_file_dialog():
