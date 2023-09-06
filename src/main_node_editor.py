@@ -9,7 +9,7 @@ from logging.handlers import QueueHandler, QueueListener
 from multiprocessing import Queue
 from typing import Tuple
 
-from libs.constants import NODE_EDITOR_APP_NAME
+from libs.constants import NODE_EDITOR_APP_NAME, CACHE_DIR
 from libs.p4util import setup_p4_logger
 from ui.NodeEditor.main_ui import initialize_node_editor_project, setup_dpg_font, setup_dpg_icon, initialize_dpg
 from core.executor import setup_executor_logger
@@ -30,7 +30,7 @@ def main():
     logger.info('**** Initialize Node Editor Project *****')
     initialize_node_editor_project(setting_dict, packages_list, logger_queue, is_debug_mode, project_path)
     logger.info('**** DearPyGui Terminated! *****')
-    _on_terminate_project(queue_listener)
+    on_terminate_application(queue_listener)
 
 
 def parse_argument():
@@ -171,12 +171,11 @@ def _construct_and_add_queue_handler_to_logger(logger: Logger, *args: Handler) -
     return logger_queue, ql
 
 
-def _on_terminate_project(queue_listener: QueueListener):
+def on_terminate_application(queue_listener: QueueListener):
     queue_listener.stop()
     # Kill child processes if still alive
     this_proc = os.getpid()
     kill_proc_tree(this_proc)
-
 
 def kill_proc_tree(pid):
     parent = psutil.Process(pid)

@@ -3,7 +3,7 @@ from copy import deepcopy
 from core.enum_types import InputPinType, OutputPinType
 from ui.NodeEditor.node_utils import *
 from multiprocessing import Queue
-from core.utils import create_queueHandler_logger, extract_var_name_from_node_info, json_load_from_file_path, \
+from core.utils import create_queueHandler_logger, json_load_from_file_path, \
     generate_uuid, log_on_return_message, get_var_default_value_on_type, is_var_type_of_primitive_types, \
     is_var_type_of_string_based, cache_undo_action
 
@@ -89,6 +89,7 @@ class DPGNodeEditor:
         self.node_editor_project_instance = node_editor_project_instance
         self.splitter_panel = node_editor_project_instance.splitter_panel
         # ----- ATTRIBUTES ------
+        self._tab_id = node_editor_project_tab
         self.last_pos = (0, 0)
         self._node_instance_dict = {}
         self._node_dict = {'nodes': []}
@@ -718,3 +719,9 @@ class DPGNodeEditor:
         registry_id = self.item_registry_dict[item_tag]
         dpg.delete_item(registry_id)
         self.item_registry_dict.pop(item_tag)
+
+    def get_cached_user_inputs(self) -> dict:
+        cached_file_path = self.node_editor_project_instance.cached_user_inputs_file_path
+        user_inputs_data = json_load_from_file_path(cached_file_path)
+        tab_label = dpg.get_item_label(self._tab_id)
+        return user_inputs_data.get(tab_label, {})

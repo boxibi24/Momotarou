@@ -8,6 +8,10 @@ def callback_project_save_as():
     dpg.show_item('project_save_as')
 
 
+def callback_project_new_menu():
+    dpg.show_item('project_new')
+
+
 def callback_project_open_menu():
     dpg.show_item('project_open')
 

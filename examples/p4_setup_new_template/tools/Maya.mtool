@@ -3,5 +3,48 @@
     "flows": [],
     "data_links": [],
     "events": {},
-    "vars": {}
+    "vars": {
+        "aad108a34c9b11ee858b54bf647df350": {
+            "name": [
+                "Username"
+            ],
+            "type": [
+                "String"
+            ],
+            "value": [
+                null
+            ],
+            "default_value": [
+                ""
+            ],
+            "is_exposed": [
+                true
+            ],
+            "regex": [
+                ".+"
+            ],
+            "user_input_box_tag": "ac0f32ad4c9b11ee832754bf647df350"
+        },
+        "ab2a237d4c9b11eebf8b54bf647df350": {
+            "name": [
+                "Password"
+            ],
+            "type": [
+                "Password"
+            ],
+            "value": [
+                null
+            ],
+            "default_value": [
+                ""
+            ],
+            "is_exposed": [
+                true
+            ],
+            "regex": [
+                ".+"
+            ],
+            "user_input_box_tag": "ad014d334c9b11ee876954bf647df350"
+        }
+    }
 }

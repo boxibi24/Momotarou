@@ -12,6 +12,7 @@ from time import perf_counter
 from uuid import uuid1
 from typing import Union
 from misc import color as color
+from libs.constants import LAST_SESSIONS_DIR, RECENT_PROJECTS_STORAGE_FILE_PATH
 
 from dearpygui import dearpygui as dpg
 
@@ -276,4 +277,21 @@ def trigger_init_flag(func):
         return_value = func(*args, **kwargs)
         node_editor_project.init_flag = False
         return return_value
+
     return wrapper
+
+
+def get_last_session_data(project_name: str) -> dict:
+    last_session_file_path = LAST_SESSIONS_DIR / project_name / '.json'
+    if not last_session_file_path.exists():
+        return {}
+    return json_load_from_file_path(last_session_file_path)
+
+
+def get_last_project_file_path() -> str:
+    last_project_info = json_load_from_file_path(RECENT_PROJECTS_STORAGE_FILE_PATH)
+    return last_project_info['last_project']['project_file_path']
+
+
+def save_this_session_data():
+    pass

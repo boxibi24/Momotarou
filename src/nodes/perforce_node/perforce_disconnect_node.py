@@ -18,8 +18,6 @@ class Node(BaseNode):
     def run(internal_data_dict):
         p4 = internal_data_dict.get('P4 Inst', None)
         if p4 is None:
-            return -1
-        try:
-            p4.disconnect()
-        except P4Exception as e:
-            return 4, e
+            raise RuntimeError("P4 Inst could not be None")
+        p4.disconnect()
+

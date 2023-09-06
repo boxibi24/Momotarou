@@ -1,6 +1,6 @@
 import dearpygui.dearpygui as dpg
 from ui.NodeEditor.utils import callback_ng_file_open_menu, callback_ng_file_import_menu, callback_ng_file_save_menu, \
-    callback_project_open_menu, callback_project_save_as
+    callback_project_open_menu, callback_project_save_as, callback_project_new_menu
 import webbrowser
 
 
@@ -10,6 +10,21 @@ def initialize_file_dialog(node_editor_project):
     :param node_editor_project: Node editor instance
     :return:
     """
+    # New project dialog
+    with dpg.file_dialog(
+        directory_selector=True,
+        show=False,
+        modal=True,
+        height=int(dpg.get_viewport_height() / 2),
+        width=int(dpg.get_viewport_width() / 2),
+        default_filename='MyRUTProject',
+        callback=callback_file_dialog,
+        id='project_new',
+        label='New project',
+        user_data=node_editor_project,
+        cancel_callback=callback_cancel_file_dialog
+    ):
+        pass
 
     # Open project dialog
     with dpg.file_dialog(
@@ -39,7 +54,7 @@ def initialize_file_dialog(node_editor_project):
         id='project_save_as',
         label='Save project as',
         user_data=node_editor_project,
-        default_filename=node_editor_project.project_name,
+        default_filename='MyRUTProject',
         cancel_callback=callback_cancel_file_dialog
     ):
         pass
@@ -96,7 +111,9 @@ def initialize_file_dialog(node_editor_project):
 
 
 def callback_file_dialog(sender, app_data, user_data):
-    if sender == 'project_open':
+    if sender == 'project_new':
+        user_data.callback_project_new(sender, app_data)
+    elif sender == 'project_open':
         user_data.callback_project_open(sender, app_data)
     elif sender == 'project_save_as':
         user_data.callback_project_save_as(sender, app_data)
@@ -117,6 +134,11 @@ def initialize_menu_bar(node_editor_project, setting_dict: dict):
     with dpg.menu_bar(label='Main Menu', tag='__menu_bar'):
         # File
         with dpg.menu(label='File'):
+            dpg.add_menu_item(
+                tag='Menu_Project_New',
+                label='New project',
+                callback=callback_project_new_menu
+            )
             dpg.add_menu_item(
                 tag='Menu_Project_Open',
                 label='Open project',

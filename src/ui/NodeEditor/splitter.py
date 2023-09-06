@@ -10,6 +10,7 @@ from ui.NodeEditor.item_right_click_menus import variable_right_click_menu, even
 from ui.NodeEditor.input_handler import delete_selected_node
 from ui.NodeEditor.node_utils import create_list_from_dict_values, auto_increment_matched_name_in_dpg_container, \
     get_index_in_dict_from_matched_tag_and_key, apply_dict_order_on_source_and_destination_index
+from pprint import pprint
 
 
 class Splitter:
@@ -67,7 +68,7 @@ class Splitter:
         self._variable_collapsing_header = None
         self._event_graph_collapsing_header = None
         self._exposed_var_collapsing_header = None
-        self._parent_instance = parent_instance
+        self.node_editor_project_instance = parent_instance
         self._old_event_dict = OrderedDict([])
         self._old_var_dict = OrderedDict([])
         self._old_exposed_var_dict = OrderedDict([])
@@ -99,7 +100,7 @@ class Splitter:
 
         ) as self._splitter_id:
             self.fresh_init_collapsing_headers()
-        self._parent_instance.logger.debug('**** Initialized Splitter ****')
+        self.node_editor_project_instance.logger.debug('**** Initialized Splitter ****')
 
     def fresh_init_collapsing_headers(self):
         self._init_exposed_var_collapsing_header()
@@ -138,14 +139,14 @@ class Splitter:
         self._create_add_var_button()
 
     def event_graph_header_right_click_menu(self, sender, app_data, user_data, instant_add=False):
-        _current_node_editor_instance = self._parent_instance.current_node_editor_instance
+        _current_node_editor_instance = self.node_editor_project_instance.current_node_editor_instance
         new_event_tag = '__event' + generate_uuid()
         override_pos = user_data[0]
 
         non_matching_name = auto_increment_matched_name_in_dpg_container(user_data[1],
                                                                          self._event_graph_collapsing_header)
         if instant_add:
-            added_node = self._parent_instance.current_editor_add_event_node(non_matching_name, override_pos)
+            added_node = self.node_editor_project_instance.current_editor_add_event_node(non_matching_name, override_pos)
             return added_node
         else:
             with dpg.window(
@@ -159,7 +160,7 @@ class Splitter:
             ):
                 _selectable_id = dpg.add_selectable(label='Add',
                                                     tag=new_event_tag,
-                                                    callback=self._parent_instance.callback_current_editor_add_node,
+                                                    callback=self.node_editor_project_instance.callback_current_editor_add_node,
                                                     user_data=('', non_matching_name)
                                                     )
 
@@ -190,9 +191,9 @@ class Splitter:
             self._add_event_splitter_item(_event_tag, _event_name)
 
     def _add_event_splitter_item(self, event_tag: str, event_name: str):
-        _current_node_editor_instance = self._parent_instance.current_node_editor_instance
-        _detail_panel_inst = self._parent_instance.detail_panel
-        callback_user_data = (event_tag, self._parent_instance)
+        _current_node_editor_instance = self.node_editor_project_instance.current_node_editor_instance
+        _detail_panel_inst = self.node_editor_project_instance.detail_panel
+        callback_user_data = (event_tag, self.node_editor_project_instance)
         with dpg.table(parent=self._event_graph_collapsing_header,
                        header_row=False, no_pad_outerX=True,
                        before=self._event_add_button_id,
@@ -224,7 +225,7 @@ class Splitter:
                                             'selectable_id': event_selectable})
 
     def drop_callback_reorder_event(self, sender, app_data):
-        _current_node_editor_instance = self._parent_instance.current_node_editor_instance
+        _current_node_editor_instance = self.node_editor_project_instance.current_node_editor_instance
         _source_event_tag = app_data
         _destination_event_tag = self._get_event_tag_from_dpg_id(sender)
         source_event_index = get_index_in_dict_from_matched_tag_and_key(_source_event_tag, self._event_dict)
@@ -249,7 +250,7 @@ class Splitter:
         self._add_exposed_var_splitter_items()
 
     def _add_exposed_var_splitter_items(self):
-        _current_node_editor_instance = self._parent_instance.current_node_editor_instance
+        _current_node_editor_instance = self.node_editor_project_instance.current_node_editor_instance
         for key, value in self._exposed_var_dict.items():
             _var_tag = key
             _var_name = value['name'][0]
@@ -261,7 +262,7 @@ class Splitter:
                     dpg.add_table_column(no_reorder=True, no_resize=True, width_fixed=True)
                     with dpg.table_row():
                         _selectable_id = dpg.add_selectable(label=_var_name,
-                                                            callback=self._parent_instance.detail_panel.callback_show_var_detail,
+                                                            callback=self.node_editor_project_instance.detail_panel.callback_show_var_detail,
                                                             user_data=_var_tag,
                                                             payload_type='__exposed_var',
                                                             drop_callback=self.drop_callback_reorder_var,
@@ -270,13 +271,23 @@ class Splitter:
                                               drag_data=_var_tag,
                                               payload_type='__exposed_var'):
                             dpg.add_text(_var_name)
-                        _user_input_box_tag = add_user_input_box(var_type=value['type'][0], width=250)
-                        _current_node_editor_instance.register_var_user_input_box_tag(_var_tag, _user_input_box_tag)
+                        exposed_var_user_input_box_tag =\
+                            _current_node_editor_instance.var_dict[_var_tag].get('user_input_box_tag', None)
+                        if exposed_var_user_input_box_tag is not None:
+                            cached_user_input_value =\
+                                _current_node_editor_instance.get_cached_user_inputs().get(_var_name, None)
+                            _user_input_box_tag = add_user_input_box(var_type=value['type'][0],
+                                                                     width=250,
+                                                                     tag=exposed_var_user_input_box_tag,
+                                                                     default_value=cached_user_input_value)
+                        else:
+                            _user_input_box_tag = add_user_input_box(var_type=value['type'][0], width=250)
+                            _current_node_editor_instance.register_var_user_input_box_tag(_var_tag, _user_input_box_tag)
                 self._exposed_var_dict[_var_tag].update({'splitter_id': splitter_selectable_item,
                                                          'selectable_id': _selectable_id})
 
     def drop_callback_reorder_var(self, sender, app_data):
-        _current_node_editor_instance = self._parent_instance.current_node_editor_instance
+        _current_node_editor_instance = self.node_editor_project_instance.current_node_editor_instance
         _source_var_tag = app_data
         _destination_var_tag = self._get_var_tag_from_dpg_id(sender)
         _source_var_index = get_index_in_dict_from_matched_tag_and_key(_source_var_tag, self._exposed_var_dict)
@@ -333,7 +344,7 @@ class Splitter:
         """
         Add new variable
         """
-        _current_node_editor_instance = self._parent_instance.current_node_editor_instance
+        _current_node_editor_instance = self.node_editor_project_instance.current_node_editor_instance
         non_matching_name = auto_increment_matched_name_in_dpg_container(user_data, self._variable_collapsing_header)
         if not refresh:
             new_var_tag = generate_uuid()
@@ -351,16 +362,16 @@ class Splitter:
         self._update_splitter_var_dict_data_on_add_new_var(new_var_info)
 
         if not refresh:
-            self._parent_instance.current_node_editor_instance.add_var(new_var_info,
-                                                                       default_value, default_is_exposed_flag, regex)
+            self.node_editor_project_instance.current_node_editor_instance.add_var(new_var_info,
+                                                                                   default_value, default_is_exposed_flag, regex)
         # Update old var dict cache
         self._old_var_dict = deepcopy(self._var_dict)
 
         _current_node_editor_instance.logger.debug('***** Added new var on Splitter ****')
 
     def _add_splitter_var_dpg_item(self, var_name: str, var_tag: str) -> Tuple[int, int, str]:
-        _current_node_editor_instance = self._parent_instance.current_node_editor_instance
-        callback_user_data = (var_tag, self._parent_instance)
+        _current_node_editor_instance = self.node_editor_project_instance.current_node_editor_instance
+        callback_user_data = (var_tag, self.node_editor_project_instance)
         with dpg.table(label=var_name, header_row=False, no_pad_outerX=True,
                        parent=self._variable_collapsing_header,
                        before=self._var_add_button_id) as var_splitter_id:
@@ -370,7 +381,7 @@ class Splitter:
             with dpg.table_row():
                 # Variable selectable
                 _selectable_id = dpg.add_selectable(label=var_name,
-                                                    callback=self._parent_instance.detail_panel.callback_show_var_detail,
+                                                    callback=self.node_editor_project_instance.detail_panel.callback_show_var_detail,
                                                     user_data=var_tag,
                                                     indent=20)
                 with dpg.drag_payload(parent=_selectable_id,
@@ -440,7 +451,7 @@ class Splitter:
         self._var_type_update_handler(var_tag, new_var_type)
 
     def _var_type_update_handler(self, var_tag: str, new_var_type: str):
-        _current_node_editor_instance = self._parent_instance.current_node_editor_instance
+        _current_node_editor_instance = self.node_editor_project_instance.current_node_editor_instance
         var_name = _current_node_editor_instance.var_dict[var_tag]['name'][0]
 
         if self._is_found_var_node_matches_name(var_name):
@@ -449,7 +460,7 @@ class Splitter:
             self.var_type_update(var_tag, new_var_type)
 
     def _is_found_var_node_matches_name(self, check_var_name: str) -> bool:
-        _current_node_editor_instance = self._parent_instance.current_node_editor_instance
+        _current_node_editor_instance = self.node_editor_project_instance.current_node_editor_instance
         for node in _current_node_editor_instance.node_instance_dict.values():
             if node.node_type & NodeTypeFlag.Variable and \
                 check_var_name == remove_node_type_from_node_label(node.node_label):
@@ -470,7 +481,7 @@ class Splitter:
     def callback_replace_node_of_new_type(self, sender, app_data, user_data):
         # Delete the modal window first
         dpg.delete_item(user_data[1])
-        _current_node_editor_instance = self._parent_instance.current_node_editor_instance
+        _current_node_editor_instance = self.node_editor_project_instance.current_node_editor_instance
         var_tag = user_data[0][0]
         new_var_type = user_data[0][1]
         var_name = self._get_variable_name_from_tag(var_tag)
@@ -487,7 +498,7 @@ class Splitter:
     def var_type_update(self, var_tag, new_type):
         _var_tag = var_tag
         _new_var_type = new_type
-        _current_node_editor_instance = self._parent_instance.current_node_editor_instance
+        _current_node_editor_instance = self.node_editor_project_instance.current_node_editor_instance
         _var_name = _current_node_editor_instance.var_dict[_var_tag]['name'][0]
 
         self._combo_dict[_var_tag][1][0] = _new_var_type
@@ -498,25 +509,25 @@ class Splitter:
         # Refresh the exposed variable window
         self.exposed_var_dict = deepcopy(_current_node_editor_instance.var_dict)
         # Also emulate a details callback to refresh show var detail
-        self._parent_instance.detail_panel.callback_show_var_detail('', '', user_data=_var_tag)
+        self.node_editor_project_instance.detail_panel.callback_show_var_detail('', '', user_data=_var_tag)
 
         _current_node_editor_instance.logger.info(f'Updated new type for var of name {_var_name}: {_new_var_type}')
 
     def _get_variable_name_from_tag(self, var_tag) -> str:
-        return self._parent_instance.current_node_editor_instance.var_dict[var_tag]['name'][0]
+        return self.node_editor_project_instance.current_node_editor_instance.var_dict[var_tag]['name'][0]
 
     def _replace_get_var_node_with_new_type(self, node, new_var_type: str, var_tag: str):
-        _current_node_editor_instance = self._parent_instance.current_node_editor_instance
+        _current_node_editor_instance = self.node_editor_project_instance.current_node_editor_instance
         _node_pos = dpg.get_item_pos(node.id)
         # Delete the node
-        delete_selected_node(self._parent_instance, node_id=node.id)
-        var_module = self._parent_instance.get_variable_module_from_var_type_and_action(new_var_type, True)
+        delete_selected_node(self.node_editor_project_instance, node_id=node.id)
+        var_module = self.node_editor_project_instance.get_variable_module_from_var_type_and_action(new_var_type, True)
         _current_node_editor_instance.add_node_from_module(var_module, _node_pos, node.node_label, var_tag)
 
     def _replace_set_var_node_with_new_type(self, node, new_var_type: str, var_tag: str):
-        _current_node_editor_instance = self._parent_instance.current_node_editor_instance
+        _current_node_editor_instance = self.node_editor_project_instance.current_node_editor_instance
         _node_pos = dpg.get_item_pos(node.id)
         # Delete the node
-        delete_selected_node(self._parent_instance, node_id=node.id)
-        var_module = self._parent_instance.get_variable_module_from_var_type_and_action(new_var_type, False)
+        delete_selected_node(self.node_editor_project_instance, node_id=node.id)
+        var_module = self.node_editor_project_instance.get_variable_module_from_var_type_and_action(new_var_type, False)
         _current_node_editor_instance.add_node_from_module(var_module, _node_pos, node.node_label, var_tag)

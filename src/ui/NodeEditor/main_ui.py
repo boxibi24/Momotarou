@@ -3,8 +3,10 @@ from ui.NodeEditor.node_editor_project import NodeEditor
 from ui.NodeEditor.menu_bar import initialize_file_dialog, initialize_menu_bar
 from multiprocessing import Queue
 from pathlib import Path
-from libs.constants import NODE_EDITOR_APP_NAME
-from core.utils import camel_case_split
+from libs.constants import NODE_EDITOR_APP_NAME, CACHE_DIR, LAST_SESSIONS_DIR, RECENT_PROJECTS_STORAGE_FILE_PATH, \
+    INTERMEDIATE_DIR
+from core.utils import camel_case_split, get_last_project_file_path, json_write_to_file_path
+import shutil
 
 
 def initialize_dpg(editor_width: int, editor_height: int):
@@ -40,14 +42,67 @@ def setup_dpg_icon():
 
 def initialize_node_editor_project(setting_dict: dict, packages_list: list,
                                    logger_queue: Queue, is_debug_mode: bool, project_path: str):
+    create_localappdata_storage_dir()
     node_editor_project: NodeEditor = _initialize_primary_window_as_node_graph(setting_dict, packages_list,
                                                                                logger_queue,
                                                                                is_debug_mode)
     if project_path:
         node_editor_project.callback_project_open(0, {'file_path_name': project_path})
+    else:
+        last_project_file_path = get_last_project_file_path()
+        if last_project_file_path:
+            node_editor_project.callback_project_open(0, {'file_path_name': last_project_file_path})
+
     render_dpg_frame(node_editor_project)
 
     _on_close_project(node_editor_project)
+
+
+def create_localappdata_storage_dir():
+    init_cache_dir()
+    init_intermediate_dir()
+    init_recent_projects_storage()
+
+
+def init_cache_dir():
+    if not CACHE_DIR.parent.exists():
+        CACHE_DIR.parent.mkdir()
+    if not CACHE_DIR.exists():
+        CACHE_DIR.mkdir()
+    else:
+        refresh_cache_dir()
+
+
+def refresh_cache_dir():
+    shutil.rmtree(CACHE_DIR)
+    CACHE_DIR.mkdir()
+
+
+def init_intermediate_dir():
+    if not INTERMEDIATE_DIR.parent.exists():
+        INTERMEDIATE_DIR.parent.mkdir()
+    if not INTERMEDIATE_DIR.exists():
+        INTERMEDIATE_DIR.mkdir()
+
+
+def init_recent_projects_storage():
+    if not LAST_SESSIONS_DIR.parent.exists():
+        LAST_SESSIONS_DIR.parent.mkdir()
+    if not LAST_SESSIONS_DIR.exists():
+        LAST_SESSIONS_DIR.mkdir()
+        init_recent_project_file()
+    if not RECENT_PROJECTS_STORAGE_FILE_PATH.exists():
+        init_recent_project_file()
+
+
+def init_recent_project_file():
+    json_write_to_file_path(RECENT_PROJECTS_STORAGE_FILE_PATH, {
+        "last_project": {
+            "project_name": "",
+            "project_file_path": ""
+        },
+        "recent_projects": []
+    })
 
 
 def _initialize_primary_window_as_node_graph(setting_dict: dict, packages_list: list, logger_queue: Queue,
@@ -83,8 +138,12 @@ def _update_log_window():
 
 
 def _on_close_project(node_editor_project: NodeEditor):
+    node_editor_project.update_cached_user_inputs_files_with_current_tab()
+    node_editor_project.cache_as_last_project()
     for node in node_editor_project.current_node_editor_instance.node_instance_dict.values():
         node.on_node_deletion()
     node_editor_project.thread_pool.close()
     node_editor_project.thread_pool.join()
+    # Remove cache folder
+    shutil.rmtree(CACHE_DIR)
     dpg.destroy_context()
