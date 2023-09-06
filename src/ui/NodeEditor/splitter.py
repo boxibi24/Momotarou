@@ -275,7 +275,7 @@ class Splitter:
                             _current_node_editor_instance.var_dict[_var_tag].get('user_input_box_tag', None)
                         if exposed_var_user_input_box_tag is not None:
                             cached_user_input_value =\
-                                _current_node_editor_instance.get_cached_user_inputs().get(_var_name, None)
+                                self.node_editor_project_instance.get_cached_user_inputs().get(_var_name, None)
                             _user_input_box_tag = add_user_input_box(var_type=value['type'][0],
                                                                      width=250,
                                                                      tag=exposed_var_user_input_box_tag,

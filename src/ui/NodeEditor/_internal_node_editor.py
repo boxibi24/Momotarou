@@ -720,8 +720,3 @@ class DPGNodeEditor:
         dpg.delete_item(registry_id)
         self.item_registry_dict.pop(item_tag)
 
-    def get_cached_user_inputs(self) -> dict:
-        cached_file_path = self.node_editor_project_instance.cached_user_inputs_file_path
-        user_inputs_data = json_load_from_file_path(cached_file_path)
-        tab_label = dpg.get_item_label(self._tab_id)
-        return user_inputs_data.get(tab_label, {})

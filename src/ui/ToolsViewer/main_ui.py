@@ -3,8 +3,8 @@ from ui.ToolsViewer.tools_viewer_project import ToolsViewer
 from multiprocessing import Queue
 from pathlib import Path
 from ui.ToolsViewer.menu_bar import initialize_menu_bar
-from libs.constants import TOOLS_VIEWER_APP_NAME
-from core.utils import camel_case_split
+from libs.constants import TOOLS_VIEWER_APP_NAME, RECENT_PROJECTS_STORAGE_FILE_PATH, LAST_SESSIONS_DIR
+from core.utils import camel_case_split, get_last_project_file_path, json_write_to_file_path
 
 
 def initialize_dpg(editor_width: int, editor_height: int):
@@ -41,15 +41,44 @@ def setup_dpg_icon():
 
 def initialize_tools_viewer_project(setting_dict: dict, logger_queue: Queue,
                                     is_debug_mode: bool, project_path: str):
+    create_localappdata_storage_dir()
     tools_viewer_project: ToolsViewer = _initialize_primary_window_as_node_graph(setting_dict,
                                                                                  logger_queue,
                                                                                  is_debug_mode)
 
     if project_path:
         tools_viewer_project.callback_project_open(0, {'file_path_name': project_path})
+    else:
+        last_project_file_path = get_last_project_file_path()
+        if last_project_file_path:
+            tools_viewer_project.callback_project_open(0, {'file_path_name': last_project_file_path})
     render_dpg_frame()
 
     _on_close_project(tools_viewer_project)
+
+
+def create_localappdata_storage_dir():
+    init_recent_projects_storage()
+
+
+def init_recent_projects_storage():
+    if not LAST_SESSIONS_DIR.parent.exists():
+        LAST_SESSIONS_DIR.parent.mkdir()
+    if not LAST_SESSIONS_DIR.exists():
+        LAST_SESSIONS_DIR.mkdir()
+        init_recent_project_file()
+    if not RECENT_PROJECTS_STORAGE_FILE_PATH.exists():
+        init_recent_project_file()
+
+
+def init_recent_project_file():
+    json_write_to_file_path(RECENT_PROJECTS_STORAGE_FILE_PATH, {
+        "last_project": {
+            "project_name": "",
+            "project_file_path": ""
+        },
+        "recent_projects": []
+    })
 
 
 def _initialize_primary_window_as_node_graph(setting_dict: dict, logger_queue: Queue,
@@ -83,6 +112,8 @@ def _update_log_window():
 
 
 def _on_close_project(tools_viewer_project: ToolsViewer):
+    tools_viewer_project.update_cached_user_inputs_files_with_current_tab()
+    tools_viewer_project.cache_as_last_project()
     tools_viewer_project.thread_pool.close()
     tools_viewer_project.thread_pool.join()
     dpg.destroy_context()

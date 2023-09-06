@@ -179,7 +179,7 @@ class NodeEditor:
                     # Splitter
                     self.splitter_panel = Splitter(parent_instance=self)
                     # Node Graph
-                    with dpg.tab_bar(reorderable=True, callback=self.callback_tab_bar_change) as self.tab_bar_id:
+                    with dpg.tab_bar(reorderable=True, callback=self.callback_on_tab_bar_change) as self.tab_bar_id:
                         self.current_tab_id, self.current_node_editor_instance = \
                             self.callback_add_tab('', app_data='Default', user_data=(0, self.tab_bar_id))
 
@@ -277,6 +277,11 @@ class NodeEditor:
     def callback_import_tool_to_current_tab(self, sender, app_data):
         self.current_node_editor_instance.callback_tool_import(sender, app_data)
 
+    def get_cached_user_inputs(self) -> dict:
+        user_inputs_data = json_load_from_file_path(self.cached_user_inputs_file_path)
+        tab_label = dpg.get_item_label(self.current_tab_id)
+        return user_inputs_data.get(tab_label, {})
+
     def _add_handler_registry(self):
         """
         Add all input handler registry and their callback
@@ -301,13 +306,14 @@ class NodeEditor:
             if not exposed_var_info['is_exposed'][0]:
                 continue
             exposed_var_name = exposed_var_info['name'][0]
+            # TODO: double check to reduce this code
             user_input_value = dpg_get_value(
                 self.current_node_editor_instance.var_dict[exposed_var_tag]['user_input_box_tag'])
             exposed_var_dict.update({exposed_var_name: user_input_value})
 
         return {dpg.get_item_label(self.current_tab_id): exposed_var_dict}
 
-    def callback_tab_bar_change(self, sender, app_data):
+    def callback_on_tab_bar_change(self, sender, app_data):
         tab_id = app_data
         if self._init_flag is False:
             try:
@@ -620,7 +626,7 @@ class NodeEditor:
         if default_opening_tab_name:
             self._select_default_opening_tab(default_opening_tab_name)
         else:
-            self.callback_tab_bar_change(0, _first_tab_id)
+            self.callback_on_tab_bar_change(0, _first_tab_id)
 
     def _select_default_opening_tab(self, default_opening_tab_name: str):
         default_opening_tab_id = self._get_tab_id_from_label(default_opening_tab_name)

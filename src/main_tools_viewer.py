@@ -26,7 +26,7 @@ def main():
     logger.info('**** Initialize Node Editor Project *****')
     initialize_tools_viewer_project(setting_dict, logger_queue, is_debug_mode, project_path)
     logger.info('**** DearPyGui Terminated! *****')
-    _on_terminate_project(queue_listener)
+    on_terminate_application(queue_listener)
 
 
 def parse_argument():
@@ -166,7 +166,7 @@ def _construct_and_add_queue_handler_to_logger(logger: Logger, *args: Handler) -
     return logger_queue, ql
 
 
-def _on_terminate_project(queue_listener: QueueListener):
+def on_terminate_application(queue_listener: QueueListener):
     queue_listener.stop()
     # Kill child processes if still alive
     this_proc = os.getpid()
