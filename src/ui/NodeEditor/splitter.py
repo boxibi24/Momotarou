@@ -489,9 +489,9 @@ class Splitter:
         for node in node_list:
             if node.node_type & NodeTypeFlag.Variable and var_name == remove_node_type_from_node_label(node.node_label):
                 if node.node_type == NodeTypeFlag.SetVariable:
-                    self._replace_set_var_node_with_new_type(node, new_var_type, var_tag)
+                    self._replace_set_var_node_with_new_type(node, new_var_type)
                 else:
-                    self._replace_get_var_node_with_new_type(node, new_var_type, var_tag)
+                    self._replace_get_var_node_with_new_type(node, new_var_type)
         # Finally reflect new type changes to the databases
         self.var_type_update(var_tag, new_var_type)
 
@@ -516,18 +516,18 @@ class Splitter:
     def _get_variable_name_from_tag(self, var_tag) -> str:
         return self.node_editor_project_instance.current_node_editor_instance.var_dict[var_tag]['name'][0]
 
-    def _replace_get_var_node_with_new_type(self, node, new_var_type: str, var_tag: str):
+    def _replace_get_var_node_with_new_type(self, node, new_var_type: str):
         _current_node_editor_instance = self.node_editor_project_instance.current_node_editor_instance
         _node_pos = dpg.get_item_pos(node.id)
         # Delete the node
         delete_selected_node(self.node_editor_project_instance, node_id=node.id)
         var_module = self.node_editor_project_instance.get_variable_module_from_var_type_and_action(new_var_type, True)
-        _current_node_editor_instance.add_node_from_module(var_module, _node_pos, node.node_label, var_tag)
+        _current_node_editor_instance.add_node_from_module(var_module, _node_pos, node.node_label)
 
-    def _replace_set_var_node_with_new_type(self, node, new_var_type: str, var_tag: str):
+    def _replace_set_var_node_with_new_type(self, node, new_var_type: str):
         _current_node_editor_instance = self.node_editor_project_instance.current_node_editor_instance
         _node_pos = dpg.get_item_pos(node.id)
         # Delete the node
         delete_selected_node(self.node_editor_project_instance, node_id=node.id)
         var_module = self.node_editor_project_instance.get_variable_module_from_var_type_and_action(new_var_type, False)
-        _current_node_editor_instance.add_node_from_module(var_module, _node_pos, node.node_label, var_tag)
+        _current_node_editor_instance.add_node_from_module(var_module, _node_pos, node.node_label)

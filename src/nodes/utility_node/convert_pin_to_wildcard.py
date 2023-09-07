@@ -3,18 +3,17 @@ from core.enum_types import NodeTypeFlag, InputPinType, OutputPinType
 
 
 class Node(BaseNode):
-    """Int Addition"""
+    """Convert any given pin to a WildCard output pin"""
 
     # Define class members
     ver = '0.0.1'
-    node_label = 'Add Int'
+    node_label = 'Convert Output pin to WildCard'
     node_type = NodeTypeFlag.Pure
     pin_dict = {
-        'A': InputPinType.Int,
-        'B': InputPinType.Int,
-        'Sum': OutputPinType.Int
+        'Pin to convert': InputPinType.WildCard,
+        'WildCard out': OutputPinType.WildCard
     }
 
     @staticmethod
     def run(internal_data_dict):
-        internal_data_dict.update({'Sum': int(internal_data_dict.get('A', 0)) + int(internal_data_dict.get('B', 0))})
+        internal_data_dict['Pin to convert'] = internal_data_dict['WildCard in']

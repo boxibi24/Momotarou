@@ -48,6 +48,10 @@ else
 fi # [[ "$@" == "" ]]
 
 cp -r nodes ./dist/NodeEditor
+cp -r ../examples ./dist/NodeEditor
 cp -r nodes ./dist/ToolsViewer
+cp -r ../examples ./dist/ToolsViewer
 
 cd ..
+
+

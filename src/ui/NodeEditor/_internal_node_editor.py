@@ -528,7 +528,8 @@ class DPGNodeEditor:
         :rtype: bool
         """
         if not (link_info.source_pin_info.pin_type == link_info.destination_pin_info.pin_type or
-                link_info.destination_pin_info.pin_type == InputPinType.WildCard):
+                link_info.destination_pin_info.pin_type == InputPinType.WildCard or
+                link_info.source_pin_info.pin_type == InputPinType.WildCard):
             self.logger.warning("Cannot connect pins with different types")
             return False
         # Cannot connect exec pin to wildcard pins also
