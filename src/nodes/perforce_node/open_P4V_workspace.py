@@ -17,4 +17,4 @@ class Node(BaseNode):
     @staticmethod
     def run(internal_data_dict):
         p4 = internal_data_dict.get('P4 Inst', None)
-        subprocess.Popen(f'p4v -c {p4.client} -u {p4.user} -C {p4.charset} -p {p4.port}', shell=True)
+        subprocess.Popen(f'start "Open P4V" p4v -c {p4.client} -u {p4.user} -C {p4.charset} -p {p4.port}', shell=True)
