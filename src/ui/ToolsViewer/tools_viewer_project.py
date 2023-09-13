@@ -208,7 +208,7 @@ class ToolsViewer:
         }})
 
     def callback_project_open_in_node_editor(self):
-        subprocess.Popen(f'../NodeEditor/NodeEditor.exe --project_path {self.file_path.as_posix()}')
+        subprocess.Popen(f'../NodeEditor/NodeEditor.exe --project_path "{self.file_path.as_posix()}"')
         self.logger.info(f'**** Opening project {self.project_name} in NodeEditor ****')
 
     def callback_execute_event(self, sender, app_data, user_data):

@@ -1,22 +1,27 @@
 import argparse
-import os
 import json
 import logging
-import psutil
-
+import os
 from logging import Logger, Formatter, Handler
 from logging.handlers import QueueHandler, QueueListener
 from multiprocessing import Queue
 from typing import Tuple
 
-from libs.constants import NODE_EDITOR_APP_NAME, CACHE_DIR
-from libs.p4util import setup_p4_logger
-from ui.NodeEditor.main_ui import initialize_node_editor_project, setup_dpg_font, setup_dpg_icon, initialize_dpg
+import psutil
+import requests
+
 from core.executor import setup_executor_logger
 from core.utils import json_load_from_file_path
+from libs.constants import NODE_EDITOR_APP_NAME
+from libs.p4util import setup_p4_logger
+from ui.NodeEditor.main_ui import initialize_node_editor_project, setup_dpg_font, setup_dpg_icon, initialize_dpg
 
 
 def main():
+    # s = requests.Session()
+    # s.verify = r"G:\gitlab\momotarou\src\certs\gitlab.crt"
+    # a = requests.get("https://vngitlab.virtuosgames.com/api/v4/projects", cert="certs/gitlab.pem")
+    # print(a)
     setting_file_path, packages_file_path, is_debug_mode, project_path = parse_argument()
     logger, logger_queue, queue_listener = setup_logger(is_debug_mode)
     logger.info("***** Load Config *****")
@@ -176,6 +181,7 @@ def on_terminate_application(queue_listener: QueueListener):
     # Kill child processes if still alive
     this_proc = os.getpid()
     kill_proc_tree(this_proc)
+
 
 def kill_proc_tree(pid):
     parent = psutil.Process(pid)

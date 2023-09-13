@@ -4,7 +4,7 @@
     "data_links": [],
     "events": {},
     "vars": {
-        "80580f034d6d11eeabc954bf647df350": {
+        "83f83056515611eeb52354bf647df350": {
             "name": [
                 "Username"
             ],
@@ -23,9 +23,9 @@
             "regex": [
                 ".+"
             ],
-            "user_input_box_tag": "80580f054d6d11ee930054bf647df350"
+            "user_input_box_tag": "83f8575e515611ee94da54bf647df350"
         },
-        "80580f044d6d11ee893f54bf647df350": {
+        "83f83057515611eebf6f54bf647df350": {
             "name": [
                 "Password"
             ],
@@ -44,7 +44,7 @@
             "regex": [
                 ".+"
             ],
-            "user_input_box_tag": "80580f064d6d11eea8fa54bf647df350"
+            "user_input_box_tag": "83f8575f515611eeac7954bf647df350"
         }
     }
 }

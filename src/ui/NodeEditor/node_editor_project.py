@@ -811,5 +811,5 @@ class NodeEditor:
     def callback_save_and_open_project_in_toolsviewer(self, sender):
         project_file_path = self.file_path
         self.callback_project_save(sender)
-        subprocess.Popen(f'../ToolsViewer/ToolsViewer.exe --project_path {project_file_path.as_posix()}')
+        subprocess.Popen(f'../ToolsViewer/ToolsViewer.exe --project_path "{project_file_path.as_posix()}"')
         self.logger.info(f'**** Opening project {self.project_name} in ToolsViewer ****')

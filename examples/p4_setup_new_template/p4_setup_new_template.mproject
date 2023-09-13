@@ -1,4 +1,5 @@
 {
     "Perforce": "tools/Perforce.mtool",
-    "Maya": "tools/Maya.mtool"
+    "Maya": "tools/Maya.mtool",
+    "Unreal": "tools/Unreal.mtool"
 }
