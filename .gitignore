@@ -137,3 +137,9 @@ dmypy.json
 /src/docs/source/generated/
 /src/docs/source/_autosummary/
 /src/dpg.ini
+
+# Visual Studio
+.vs/
+bin/
+obj/
+temp/

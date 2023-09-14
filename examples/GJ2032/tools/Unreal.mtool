@@ -1,0 +1,816 @@
+{
+    "nodes": [
+        {
+            "uuid": "7b788c69509811eea2fe54bf647df350",
+            "label": "Get Project Name",
+            "pins": [
+                {
+                    "uuid": "7b788c6a509811eeabf354bf647df350",
+                    "label": "String out",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 17,
+            "import_path": "nodes._internal.get_string_var",
+            "position": {
+                "x": -1737,
+                "y": 798
+            }
+        },
+        {
+            "uuid": "7b788c6d509811eea11554bf647df350",
+            "label": "Concatenate String",
+            "pins": [
+                {
+                    "uuid": "7b78b37f509811eeaa2d54bf647df350",
+                    "label": "A",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                },
+                {
+                    "uuid": "7b78b381509811ee85c254bf647df350",
+                    "label": "B",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "_"
+                },
+                {
+                    "uuid": "7b78b383509811eeacb754bf647df350",
+                    "label": "String out",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 1,
+            "import_path": "nodes.string_utility_node.concatenate_string_node",
+            "position": {
+                "x": -1423,
+                "y": 810
+            }
+        },
+        {
+            "uuid": "7b78b386509811ee9d6e54bf647df350",
+            "label": "Concatenate String",
+            "pins": [
+                {
+                    "uuid": "7b78b387509811ee9b5b54bf647df350",
+                    "label": "A",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                },
+                {
+                    "uuid": "7b78b389509811eea95a54bf647df350",
+                    "label": "B",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                },
+                {
+                    "uuid": "7b78b38b509811eea60e54bf647df350",
+                    "label": "String out",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 1,
+            "import_path": "nodes.string_utility_node.concatenate_string_node",
+            "position": {
+                "x": -1125,
+                "y": 919
+            }
+        },
+        {
+            "uuid": "7b78b38e509811ee980b54bf647df350",
+            "label": "Concatenate String",
+            "pins": [
+                {
+                    "uuid": "7b78b38f509811ee898254bf647df350",
+                    "label": "A",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                },
+                {
+                    "uuid": "7b78b391509811ee808554bf647df350",
+                    "label": "B",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "_"
+                },
+                {
+                    "uuid": "7b78b393509811ee8fe054bf647df350",
+                    "label": "String out",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 1,
+            "import_path": "nodes.string_utility_node.concatenate_string_node",
+            "position": {
+                "x": -852,
+                "y": 944
+            }
+        },
+        {
+            "uuid": "7b78b396509811eeb73a54bf647df350",
+            "label": "Concatenate String",
+            "pins": [
+                {
+                    "uuid": "7b78b397509811ee989654bf647df350",
+                    "label": "A",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                },
+                {
+                    "uuid": "7b78b399509811eebb1654bf647df350",
+                    "label": "B",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                },
+                {
+                    "uuid": "7b78b39b509811ee8b7254bf647df350",
+                    "label": "String out",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 1,
+            "import_path": "nodes.string_utility_node.concatenate_string_node",
+            "position": {
+                "x": -575,
+                "y": 1047
+            }
+        },
+        {
+            "uuid": "7b78da83509811ee97ac54bf647df350",
+            "label": "Get OS envar",
+            "pins": [
+                {
+                    "uuid": "7b78da84509811ee810154bf647df350",
+                    "label": "Env var",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "COMPUTERNAME"
+                },
+                {
+                    "uuid": "7b78da86509811ee8bd654bf647df350",
+                    "label": "Value",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 1,
+            "import_path": "nodes.os_node.os_get_envar_node",
+            "position": {
+                "x": -849,
+                "y": 1185
+            }
+        },
+        {
+            "uuid": "7b78da89509811ee91ee54bf647df350",
+            "label": "Get OS envar",
+            "pins": [
+                {
+                    "uuid": "7b78da8a509811ee8b9154bf647df350",
+                    "label": "Env var",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "USERNAME"
+                },
+                {
+                    "uuid": "7b78da8c509811eebec954bf647df350",
+                    "label": "Value",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 1,
+            "import_path": "nodes.os_node.os_get_envar_node",
+            "position": {
+                "x": -879,
+                "y": 683
+            }
+        },
+        {
+            "uuid": "7b78da8f509811eea42154bf647df350",
+            "label": "Set OS envar",
+            "pins": [
+                {
+                    "uuid": "7b78da90509811ee997354bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b78da91509811ee972054bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b78da92509811ee897d54bf647df350",
+                    "label": "Env var",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "P4CLIENT"
+                },
+                {
+                    "uuid": "7b78da94509811eebba354bf647df350",
+                    "label": "Value",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                }
+            ],
+            "type": 3,
+            "import_path": "nodes.os_node.os_set_envar_node",
+            "position": {
+                "x": 175,
+                "y": 887
+            }
+        },
+        {
+            "uuid": "7b78da97509811ee99d254bf647df350",
+            "label": "Perforce Construct",
+            "pins": [
+                {
+                    "uuid": "7b78da98509811eea0f254bf647df350",
+                    "label": "User",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                },
+                {
+                    "uuid": "7b78da9a509811ee90c554bf647df350",
+                    "label": "Password",
+                    "meta_type": 1,
+                    "type": 7,
+                    "value": ""
+                },
+                {
+                    "uuid": "7b78da9c509811eeb9a954bf647df350",
+                    "label": "Port",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "VNSGNSP4SRV:1666"
+                },
+                {
+                    "uuid": "7b79019f509811eea7f554bf647df350",
+                    "label": "Charset",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "none"
+                },
+                {
+                    "uuid": "7b7901a1509811ee82c354bf647df350",
+                    "label": "Client",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                },
+                {
+                    "uuid": "7b7901a3509811ee964b54bf647df350",
+                    "label": "P4 Inst",
+                    "meta_type": 2,
+                    "type": 10,
+                    "default_value": null
+                }
+            ],
+            "type": 1,
+            "import_path": "nodes.construct_node.construct_perforce_node",
+            "position": {
+                "x": -264,
+                "y": 633
+            }
+        },
+        {
+            "uuid": "7b7901a6509811eea7eb54bf647df350",
+            "label": "Get LDAP Password",
+            "pins": [
+                {
+                    "uuid": "7b7901a7509811eebea154bf647df350",
+                    "label": "Password out",
+                    "meta_type": 2,
+                    "type": 7,
+                    "default_value": ""
+                }
+            ],
+            "type": 17,
+            "import_path": "nodes._internal.get_password_var",
+            "position": {
+                "x": -595,
+                "y": 841
+            }
+        },
+        {
+            "uuid": "7b7901aa509811ee82ef54bf647df350",
+            "label": "Get Client Path",
+            "pins": [
+                {
+                    "uuid": "7b7901ab509811eeb61254bf647df350",
+                    "label": "Depot path",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "//UnrealProjects/RND/dev-tu.nguyen_b/EGJ2023/setEnvironment.bat"
+                },
+                {
+                    "uuid": "7b7901ad509811ee826454bf647df350",
+                    "label": "P4 inst",
+                    "meta_type": 1,
+                    "type": 10,
+                    "value": null
+                },
+                {
+                    "uuid": "7b7901af509811ee97b754bf647df350",
+                    "label": "Client path",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 1,
+            "import_path": "nodes.perforce_node.perforce_get_client_path",
+            "position": {
+                "x": 160,
+                "y": 550
+            }
+        },
+        {
+            "uuid": "7b7901b2509811eeb76f54bf647df350",
+            "label": "Print",
+            "pins": [
+                {
+                    "uuid": "7b7901b3509811eebd9b54bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b7901b4509811ee8d6b54bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b7901b5509811ee98ea54bf647df350",
+                    "label": "Wildcard",
+                    "meta_type": 1,
+                    "type": 6,
+                    "value": ""
+                },
+                {
+                    "uuid": "7b7901b7509811eeac4c54bf647df350",
+                    "label": "String",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 3,
+            "import_path": "nodes.exec_node.print_node",
+            "position": {
+                "x": 833,
+                "y": 317
+            }
+        },
+        {
+            "uuid": "7b7901ba509811eeb5c254bf647df350",
+            "label": "Concatenate String",
+            "pins": [
+                {
+                    "uuid": "7b79289b509811eeb4cc54bf647df350",
+                    "label": "A",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                },
+                {
+                    "uuid": "7b79289d509811eeb1fe54bf647df350",
+                    "label": "B",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "_"
+                },
+                {
+                    "uuid": "7b79289f509811ee86a254bf647df350",
+                    "label": "String out",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 1,
+            "import_path": "nodes.string_utility_node.concatenate_string_node",
+            "position": {
+                "x": -270,
+                "y": 1136
+            }
+        },
+        {
+            "uuid": "7b7928a2509811eea3ca54bf647df350",
+            "label": "Concatenate String",
+            "pins": [
+                {
+                    "uuid": "7b7928a3509811ee891f54bf647df350",
+                    "label": "A",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                },
+                {
+                    "uuid": "7b7928a5509811eead9854bf647df350",
+                    "label": "B",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "project"
+                },
+                {
+                    "uuid": "7b7928a7509811eea7f954bf647df350",
+                    "label": "String out",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 1,
+            "import_path": "nodes.string_utility_node.concatenate_string_node",
+            "position": {
+                "x": 51,
+                "y": 1235
+            }
+        },
+        {
+            "uuid": "7b7928aa509811ee9e8254bf647df350",
+            "label": "Print",
+            "pins": [
+                {
+                    "uuid": "7b7928ab509811eeaa7854bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b7928ac509811eea3e754bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b7928ad509811eea02354bf647df350",
+                    "label": "Wildcard",
+                    "meta_type": 1,
+                    "type": 6,
+                    "value": ""
+                },
+                {
+                    "uuid": "7b7928af509811eeac3d54bf647df350",
+                    "label": "String",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 3,
+            "import_path": "nodes.exec_node.print_node",
+            "position": {
+                "x": -278,
+                "y": 297
+            }
+        },
+        {
+            "uuid": "7b7928b2509811ee957f54bf647df350",
+            "label": "Perforce login",
+            "pins": [
+                {
+                    "uuid": "7b7928b3509811eeb3ad54bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b7928b4509811ee9de754bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b7928b5509811ee9e0c54bf647df350",
+                    "label": "P4 Inst",
+                    "meta_type": 1,
+                    "type": 10,
+                    "value": null
+                },
+                {
+                    "uuid": "7b794fb2509811eea85754bf647df350",
+                    "label": "Successful login?",
+                    "meta_type": 2,
+                    "type": 8,
+                    "default_value": false
+                }
+            ],
+            "type": 3,
+            "import_path": "nodes.perforce_node.perforce_login_node",
+            "position": {
+                "x": 43,
+                "y": 297
+            }
+        },
+        {
+            "uuid": "7b794fb5509811ee84ef54bf647df350",
+            "label": "Print",
+            "pins": [
+                {
+                    "uuid": "7b794fb6509811eeb2d354bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b794fb7509811eea8f354bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b794fb8509811eea81254bf647df350",
+                    "label": "Wildcard",
+                    "meta_type": 1,
+                    "type": 6,
+                    "value": "Failed to login"
+                },
+                {
+                    "uuid": "7b794fba509811ee833254bf647df350",
+                    "label": "String",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 3,
+            "import_path": "nodes.exec_node.print_node",
+            "position": {
+                "x": 817,
+                "y": 644
+            }
+        },
+        {
+            "uuid": "7b794fbd509811ee93df54bf647df350",
+            "label": "Branch",
+            "pins": [
+                {
+                    "uuid": "7b794fbe509811eeaff254bf647df350",
+                    "label": "Exec in",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b794fbf509811ee862654bf647df350",
+                    "label": "Condition",
+                    "meta_type": 1,
+                    "type": 8,
+                    "value": false
+                },
+                {
+                    "uuid": "7b794fc1509811eeb86954bf647df350",
+                    "label": "True",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b794fc2509811ee871754bf647df350",
+                    "label": "False",
+                    "meta_type": 4,
+                    "type": 5
+                }
+            ],
+            "type": 5,
+            "import_path": "nodes.flow_control_node.node_branch",
+            "position": {
+                "x": 405,
+                "y": 314
+            }
+        },
+        {
+            "uuid": "7b794fc4509811ee994e54bf647df350",
+            "label": "Get parent directory of file path",
+            "pins": [
+                {
+                    "uuid": "7b794fc5509811eeabf854bf647df350",
+                    "label": "Directory",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                },
+                {
+                    "uuid": "7b794fc7509811eeb28d54bf647df350",
+                    "label": "Parent Directory",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 1,
+            "import_path": "nodes.utility_node.get_parent_dir_of_path",
+            "position": {
+                "x": 462,
+                "y": 624
+            }
+        },
+        {
+            "uuid": "7b7976c2509811eeb60854bf647df350",
+            "label": "Event Open Unreal Editor",
+            "pins": [
+                {
+                    "uuid": "7b7976c3509811ee945654bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b7976c4509811ee937054bf647df350",
+                    "label": "Temp",
+                    "meta_type": 2,
+                    "type": null,
+                    "default_value": null
+                }
+            ],
+            "type": 8,
+            "import_path": "nodes._internal.event_node",
+            "position": {
+                "x": -550,
+                "y": 390
+            }
+        }
+    ],
+    "flows": [
+        [
+            "7b7976c3509811ee945654bf647df350",
+            "7b7928ab509811eeaa7854bf647df350"
+        ],
+        [
+            "7b7928ac509811eea3e754bf647df350",
+            "7b7928b3509811eeb3ad54bf647df350"
+        ],
+        [
+            "7b7928b4509811ee9de754bf647df350",
+            "7b794fbe509811eeaff254bf647df350"
+        ],
+        [
+            "7b794fc2509811ee871754bf647df350",
+            "7b794fb6509811eeb2d354bf647df350"
+        ],
+        [
+            "7b794fc1509811eeb86954bf647df350",
+            "7b7901b3509811eebd9b54bf647df350"
+        ]
+    ],
+    "data_links": [
+        [
+            "7b788c6a509811eeabf354bf647df350",
+            "7b78b37f509811eeaa2d54bf647df350"
+        ],
+        [
+            "7b78b383509811eeacb754bf647df350",
+            "7b78b387509811ee9b5b54bf647df350"
+        ],
+        [
+            "7b78b38b509811eea60e54bf647df350",
+            "7b78b38f509811ee898254bf647df350"
+        ],
+        [
+            "7b78b393509811ee8fe054bf647df350",
+            "7b78b397509811ee989654bf647df350"
+        ],
+        [
+            "7b78da86509811ee8bd654bf647df350",
+            "7b78b399509811eebb1654bf647df350"
+        ],
+        [
+            "7b78da8c509811eebec954bf647df350",
+            "7b78da98509811eea0f254bf647df350"
+        ],
+        [
+            "7b7901a7509811eebea154bf647df350",
+            "7b78da9a509811ee90c554bf647df350"
+        ],
+        [
+            "7b7901a3509811ee964b54bf647df350",
+            "7b7901ad509811ee826454bf647df350"
+        ],
+        [
+            "7b78b39b509811ee8b7254bf647df350",
+            "7b79289b509811eeb4cc54bf647df350"
+        ],
+        [
+            "7b78da8c509811eebec954bf647df350",
+            "7b78b389509811eea95a54bf647df350"
+        ],
+        [
+            "7b79289f509811ee86a254bf647df350",
+            "7b7928a3509811ee891f54bf647df350"
+        ],
+        [
+            "7b7928a7509811eea7f954bf647df350",
+            "7b7901a1509811ee82c354bf647df350"
+        ],
+        [
+            "7b7901a3509811ee964b54bf647df350",
+            "7b7928b5509811ee9e0c54bf647df350"
+        ],
+        [
+            "7b794fb2509811eea85754bf647df350",
+            "7b794fbf509811ee862654bf647df350"
+        ],
+        [
+            "7b7928a7509811eea7f954bf647df350",
+            "7b7928ad509811eea02354bf647df350"
+        ],
+        [
+            "7b7901af509811ee97b754bf647df350",
+            "7b794fc5509811eeabf854bf647df350"
+        ],
+        [
+            "7b794fc7509811eeb28d54bf647df350",
+            "7b7901b5509811ee98ea54bf647df350"
+        ]
+    ],
+    "events": {
+        "7b7976c2509811eeb60854bf647df350": "7b7928aa509811ee9e8254bf647df350"
+    },
+    "vars": {
+        "7b78654f509811eeb6b554bf647df350": {
+            "name": [
+                "Project Name"
+            ],
+            "type": [
+                "String"
+            ],
+            "value": [
+                null
+            ],
+            "default_value": [
+                "GJ2023"
+            ],
+            "is_exposed": [
+                false
+            ],
+            "regex": [
+                ".+"
+            ]
+        },
+        "7b786550509811ee98b554bf647df350": {
+            "name": [
+                "LDAP Password"
+            ],
+            "type": [
+                "Password"
+            ],
+            "value": [
+                null
+            ],
+            "default_value": [
+                ""
+            ],
+            "is_exposed": [
+                true
+            ],
+            "regex": [
+                ".+"
+            ],
+            "user_input_box_tag": "7b788c66509811eeb8e254bf647df350"
+        },
+        "7b788c65509811ee8cf854bf647df350": {
+            "name": [
+                "Unreal Installation Directory"
+            ],
+            "type": [
+                "String"
+            ],
+            "value": [
+                null
+            ],
+            "default_value": [
+                ""
+            ],
+            "is_exposed": [
+                true
+            ],
+            "regex": [
+                ".+"
+            ],
+            "user_input_box_tag": "7b788c67509811ee876754bf647df350"
+        }
+    }
+}

@@ -1,0 +1,25 @@
+<Project Sdk="WixToolset.Sdk/4.0.0">
+  <PropertyGroup>
+    <OutputName>Momotarou</OutputName>
+  </PropertyGroup>
+  <ItemGroup>
+    <HarvestDirectory Include="../dist">
+      <ComponentGroupName>AppComponents</ComponentGroupName>
+      <DirectoryRefId>INSTALLFOLDER</DirectoryRefId>
+      <SuppressRootDirectory>true</SuppressRootDirectory>
+      <Transforms>RemoveExeComponentsTransform.xslt</Transforms>
+    </HarvestDirectory>
+    <BindPath Include="../dist" />
+    <BindPath Include="../dist/NodeEditor" />
+    <BindPath Include="../dist/ToolsViewer" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="RemoveExeComponentsTransform.xslt" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="WixToolset.Heat" Version="4.0.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="WixToolset.UI.wixext" Version="4.0.1" />
+  </ItemGroup>
+</Project>

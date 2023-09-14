@@ -1,0 +1,1695 @@
+{
+    "nodes": [
+        {
+            "uuid": "7b75dea0509811eeb98954bf647df350",
+            "label": "Perforce Construct",
+            "pins": [
+                {
+                    "uuid": "7b75dea1509811eeb62e54bf647df350",
+                    "label": "User",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                },
+                {
+                    "uuid": "7b75dea3509811ee971354bf647df350",
+                    "label": "Password",
+                    "meta_type": 1,
+                    "type": 7,
+                    "value": ""
+                },
+                {
+                    "uuid": "7b75dea5509811eea7a254bf647df350",
+                    "label": "Port",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "VNSGNSP4SRV:1666"
+                },
+                {
+                    "uuid": "7b75dea7509811ee8a6f54bf647df350",
+                    "label": "Charset",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "none"
+                },
+                {
+                    "uuid": "7b75dea9509811ee946754bf647df350",
+                    "label": "Client",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                },
+                {
+                    "uuid": "7b7605b2509811ee948d54bf647df350",
+                    "label": "P4 Inst",
+                    "meta_type": 2,
+                    "type": 10,
+                    "default_value": null
+                }
+            ],
+            "type": 1,
+            "import_path": "nodes.construct_node.construct_perforce_node",
+            "position": {
+                "x": -286,
+                "y": 754
+            }
+        },
+        {
+            "uuid": "7b7605b5509811eead9454bf647df350",
+            "label": "Get LDAP Password",
+            "pins": [
+                {
+                    "uuid": "7b7605b6509811eebe5e54bf647df350",
+                    "label": "Password out",
+                    "meta_type": 2,
+                    "type": 7,
+                    "default_value": ""
+                }
+            ],
+            "type": 17,
+            "import_path": "nodes._internal.get_password_var",
+            "position": {
+                "x": -751,
+                "y": 830
+            }
+        },
+        {
+            "uuid": "7b7605b9509811ee829054bf647df350",
+            "label": "Get Project Name",
+            "pins": [
+                {
+                    "uuid": "7b7605ba509811ee9d8654bf647df350",
+                    "label": "String out",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 17,
+            "import_path": "nodes._internal.get_string_var",
+            "position": {
+                "x": -1628,
+                "y": 816
+            }
+        },
+        {
+            "uuid": "7b7605bd509811eeac4054bf647df350",
+            "label": "Concatenate String",
+            "pins": [
+                {
+                    "uuid": "7b7605be509811eea77a54bf647df350",
+                    "label": "A",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                },
+                {
+                    "uuid": "7b7605c0509811eea19854bf647df350",
+                    "label": "B",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "_"
+                },
+                {
+                    "uuid": "7b7605c2509811ee900954bf647df350",
+                    "label": "String out",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 1,
+            "import_path": "nodes.string_utility_node.concatenate_string_node",
+            "position": {
+                "x": -1389,
+                "y": 820
+            }
+        },
+        {
+            "uuid": "7b7605c5509811eeb15454bf647df350",
+            "label": "Concatenate String",
+            "pins": [
+                {
+                    "uuid": "7b7605c6509811ee804754bf647df350",
+                    "label": "A",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                },
+                {
+                    "uuid": "7b7605c8509811eeb2d054bf647df350",
+                    "label": "B",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                },
+                {
+                    "uuid": "7b7605ca509811eea53554bf647df350",
+                    "label": "String out",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 1,
+            "import_path": "nodes.string_utility_node.concatenate_string_node",
+            "position": {
+                "x": -1118,
+                "y": 851
+            }
+        },
+        {
+            "uuid": "7b7605cd509811ee8da354bf647df350",
+            "label": "Set P4Inst",
+            "pins": [
+                {
+                    "uuid": "7b7605ce509811eea6bf54bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b762cb4509811ee8b7354bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b762cb5509811eea8fb54bf647df350",
+                    "label": "P4Inst in",
+                    "meta_type": 1,
+                    "type": 10,
+                    "value": null
+                },
+                {
+                    "uuid": "7b762cb7509811ee80e854bf647df350",
+                    "label": "P4Inst out",
+                    "meta_type": 2,
+                    "type": 10,
+                    "default_value": null
+                }
+            ],
+            "type": 19,
+            "import_path": "nodes._internal.set_perforceinstance_var",
+            "position": {
+                "x": 490,
+                "y": 16
+            }
+        },
+        {
+            "uuid": "7b762cba509811ee9b7054bf647df350",
+            "label": "Create P4V workspace",
+            "pins": [
+                {
+                    "uuid": "7b762cbb509811ee8b4554bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b762cbc509811ee938e54bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b762cbd509811eebb7754bf647df350",
+                    "label": "P4 Inst",
+                    "meta_type": 1,
+                    "type": 10,
+                    "value": null
+                },
+                {
+                    "uuid": "7b762cbf509811ee9df754bf647df350",
+                    "label": "Options",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "noallwrite noclobber nocompress unlocked nomodtime rmdir"
+                },
+                {
+                    "uuid": "7b762cc1509811ee871854bf647df350",
+                    "label": "Submit Options",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "revertunchanged"
+                },
+                {
+                    "uuid": "7b762cc3509811eebf1354bf647df350",
+                    "label": "P4ROOT",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "G:\\test"
+                },
+                {
+                    "uuid": "7b762cc5509811ee8fe154bf647df350",
+                    "label": "P4STREAM",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "//TRAINNING/P4VTraining"
+                },
+                {
+                    "uuid": "7b762cc7509811eeb59e54bf647df350",
+                    "label": "P4 Inst out",
+                    "meta_type": 2,
+                    "type": 10,
+                    "default_value": null
+                }
+            ],
+            "type": 3,
+            "import_path": "nodes.perforce_node.create_workspace_node",
+            "position": {
+                "x": 1516,
+                "y": -24
+            }
+        },
+        {
+            "uuid": "7b762cca509811ee9b7154bf647df350",
+            "label": "Perforce login",
+            "pins": [
+                {
+                    "uuid": "7b762ccb509811eebd4754bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b762ccc509811eea56f54bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b762ccd509811eeb47154bf647df350",
+                    "label": "P4 Inst",
+                    "meta_type": 1,
+                    "type": 10,
+                    "value": null
+                },
+                {
+                    "uuid": "7b762ccf509811eea0a854bf647df350",
+                    "label": "Successful login?",
+                    "meta_type": 2,
+                    "type": 8,
+                    "default_value": false
+                }
+            ],
+            "type": 3,
+            "import_path": "nodes.perforce_node.perforce_login_node",
+            "position": {
+                "x": 810,
+                "y": 19
+            }
+        },
+        {
+            "uuid": "7b762cd2509811eea0e454bf647df350",
+            "label": "Concatenate String",
+            "pins": [
+                {
+                    "uuid": "7b762cd3509811ee8d4454bf647df350",
+                    "label": "A",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                },
+                {
+                    "uuid": "7b762cd5509811ee8d1a54bf647df350",
+                    "label": "B",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "_"
+                },
+                {
+                    "uuid": "7b7653ca509811eeb5df54bf647df350",
+                    "label": "String out",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 1,
+            "import_path": "nodes.string_utility_node.concatenate_string_node",
+            "position": {
+                "x": -852,
+                "y": 944
+            }
+        },
+        {
+            "uuid": "7b7653cd509811ee87bb54bf647df350",
+            "label": "Concatenate String",
+            "pins": [
+                {
+                    "uuid": "7b7653ce509811eeaead54bf647df350",
+                    "label": "A",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                },
+                {
+                    "uuid": "7b7653d0509811ee92b654bf647df350",
+                    "label": "B",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                },
+                {
+                    "uuid": "7b7653d2509811ee8ad854bf647df350",
+                    "label": "String out",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 1,
+            "import_path": "nodes.string_utility_node.concatenate_string_node",
+            "position": {
+                "x": -534,
+                "y": 1000
+            }
+        },
+        {
+            "uuid": "7b7653d5509811ee87b454bf647df350",
+            "label": "Get OS envar",
+            "pins": [
+                {
+                    "uuid": "7b767ae1509811eeaa6354bf647df350",
+                    "label": "Env var",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "COMPUTERNAME"
+                },
+                {
+                    "uuid": "7b767ae3509811eeb8c854bf647df350",
+                    "label": "Value",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 1,
+            "import_path": "nodes.os_node.os_get_envar_node",
+            "position": {
+                "x": -885,
+                "y": 1169
+            }
+        },
+        {
+            "uuid": "7b767ae6509811ee9aad54bf647df350",
+            "label": "Branch",
+            "pins": [
+                {
+                    "uuid": "7b767ae7509811eeb0a654bf647df350",
+                    "label": "Exec in",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b767ae8509811eea70254bf647df350",
+                    "label": "Condition",
+                    "meta_type": 1,
+                    "type": 8,
+                    "value": false
+                },
+                {
+                    "uuid": "7b767aea509811eeb94f54bf647df350",
+                    "label": "True",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b767aeb509811eeab6254bf647df350",
+                    "label": "False",
+                    "meta_type": 4,
+                    "type": 5
+                }
+            ],
+            "type": 5,
+            "import_path": "nodes.flow_control_node.node_branch",
+            "position": {
+                "x": 1246,
+                "y": 37
+            }
+        },
+        {
+            "uuid": "7b767aed509811ee89a154bf647df350",
+            "label": "Print",
+            "pins": [
+                {
+                    "uuid": "7b767aee509811ee929d54bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b767aef509811ee8afb54bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b767af0509811ee83d954bf647df350",
+                    "label": "Wildcard",
+                    "meta_type": 1,
+                    "type": 6,
+                    "value": "Failed to connect"
+                },
+                {
+                    "uuid": "7b767af2509811ee8fd254bf647df350",
+                    "label": "String",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 3,
+            "import_path": "nodes.exec_node.print_node",
+            "position": {
+                "x": 1514,
+                "y": 344
+            }
+        },
+        {
+            "uuid": "7b767af5509811ee847254bf647df350",
+            "label": "Set P4Inst",
+            "pins": [
+                {
+                    "uuid": "7b767af6509811ee8f5954bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b767af7509811ee982254bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b767af8509811eeb14154bf647df350",
+                    "label": "P4Inst in",
+                    "meta_type": 1,
+                    "type": 10,
+                    "value": null
+                },
+                {
+                    "uuid": "7b767afa509811eeb14f54bf647df350",
+                    "label": "P4Inst out",
+                    "meta_type": 2,
+                    "type": 10,
+                    "default_value": null
+                }
+            ],
+            "type": 19,
+            "import_path": "nodes._internal.set_perforceinstance_var",
+            "position": {
+                "x": 580,
+                "y": 483
+            }
+        },
+        {
+            "uuid": "7b76a1e3509811ee900654bf647df350",
+            "label": "Perforce Sync",
+            "pins": [
+                {
+                    "uuid": "7b76a1e4509811eeb0b454bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b76a1e5509811eebe7b54bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b76a1e6509811eea05554bf647df350",
+                    "label": "P4 Inst",
+                    "meta_type": 1,
+                    "type": 10,
+                    "value": null
+                },
+                {
+                    "uuid": "7b76a1e8509811eea9c254bf647df350",
+                    "label": "Sync path",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                }
+            ],
+            "type": 3,
+            "import_path": "nodes.perforce_node.perforce_sync_node",
+            "position": {
+                "x": 1496,
+                "y": 552
+            }
+        },
+        {
+            "uuid": "7b76a1eb509811ee805854bf647df350",
+            "label": "Set P4Inst",
+            "pins": [
+                {
+                    "uuid": "7b76a1ec509811eea6f354bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b76a1ed509811eea4c254bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b76a1ee509811eeb19054bf647df350",
+                    "label": "P4Inst in",
+                    "meta_type": 1,
+                    "type": 10,
+                    "value": null
+                },
+                {
+                    "uuid": "7b76a1f0509811ee825d54bf647df350",
+                    "label": "P4Inst out",
+                    "meta_type": 2,
+                    "type": 10,
+                    "default_value": null
+                }
+            ],
+            "type": 19,
+            "import_path": "nodes._internal.set_perforceinstance_var",
+            "position": {
+                "x": 541,
+                "y": 976
+            }
+        },
+        {
+            "uuid": "7b76a1f3509811eea4a554bf647df350",
+            "label": "Get Sync paths",
+            "pins": [
+                {
+                    "uuid": "7b76a1f4509811eeb8df54bf647df350",
+                    "label": "MStr out",
+                    "meta_type": 2,
+                    "type": 9,
+                    "default_value": ""
+                }
+            ],
+            "type": 17,
+            "import_path": "nodes._internal.get_multilinestring_var",
+            "position": {
+                "x": 894,
+                "y": 1213
+            }
+        },
+        {
+            "uuid": "7b76a1f7509811ee9d0a54bf647df350",
+            "label": "Construct string array from multiline",
+            "pins": [
+                {
+                    "uuid": "7b76a1f8509811eea1c254bf647df350",
+                    "label": "Multiline",
+                    "meta_type": 1,
+                    "type": 9,
+                    "value": ""
+                },
+                {
+                    "uuid": "7b76a1fa509811eeb26154bf647df350",
+                    "label": "String array",
+                    "meta_type": 2,
+                    "type": 11,
+                    "default_value": null
+                }
+            ],
+            "type": 1,
+            "import_path": "nodes.construct_node.construct_string_array_from_multiline_node",
+            "position": {
+                "x": 1188,
+                "y": 1191
+            }
+        },
+        {
+            "uuid": "7b76a1fd509811eebb9d54bf647df350",
+            "label": "For each loop",
+            "pins": [
+                {
+                    "uuid": "7b76a1fe509811eeb2c154bf647df350",
+                    "label": "Exec",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b76a1ff509811eebe4a54bf647df350",
+                    "label": "String Array",
+                    "meta_type": 1,
+                    "type": 11,
+                    "value": null
+                },
+                {
+                    "uuid": "7b76a201509811ee83f654bf647df350",
+                    "label": "Loop Body",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b76a202509811ee8b7754bf647df350",
+                    "label": "Array Str Element",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                },
+                {
+                    "uuid": "7b76c8fc509811eeb34354bf647df350",
+                    "label": "Array Index",
+                    "meta_type": 2,
+                    "type": 4,
+                    "default_value": 0
+                },
+                {
+                    "uuid": "7b76c8fe509811ee974d54bf647df350",
+                    "label": "Completed",
+                    "meta_type": 4,
+                    "type": 5
+                }
+            ],
+            "type": 5,
+            "import_path": "nodes.flow_control_node.node_for_each",
+            "position": {
+                "x": 1452,
+                "y": 987
+            }
+        },
+        {
+            "uuid": "7b76c900509811ee92ad54bf647df350",
+            "label": "Perforce Sync",
+            "pins": [
+                {
+                    "uuid": "7b76c901509811ee80cf54bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b76c902509811eea30154bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b76c903509811eea1a954bf647df350",
+                    "label": "P4 Inst",
+                    "meta_type": 1,
+                    "type": 10,
+                    "value": null
+                },
+                {
+                    "uuid": "7b76c905509811eeb66f54bf647df350",
+                    "label": "Sync path",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                }
+            ],
+            "type": 3,
+            "import_path": "nodes.perforce_node.perforce_sync_node",
+            "position": {
+                "x": 2190,
+                "y": 1039
+            }
+        },
+        {
+            "uuid": "7b76c908509811ee87a554bf647df350",
+            "label": "Print",
+            "pins": [
+                {
+                    "uuid": "7b76c909509811ee9ca154bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b76c90a509811ee896a54bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b76c90b509811ee823754bf647df350",
+                    "label": "Wildcard",
+                    "meta_type": 1,
+                    "type": 6,
+                    "value": "Finished sync essential"
+                },
+                {
+                    "uuid": "7b76c90d509811eeb60354bf647df350",
+                    "label": "String",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 3,
+            "import_path": "nodes.exec_node.print_node",
+            "position": {
+                "x": 2255,
+                "y": 1265
+            }
+        },
+        {
+            "uuid": "7b76c910509811ee9ffa54bf647df350",
+            "label": "Get P4Inst",
+            "pins": [
+                {
+                    "uuid": "7b76c911509811eeaf7b54bf647df350",
+                    "label": "P4Inst out",
+                    "meta_type": 2,
+                    "type": 10,
+                    "default_value": null
+                }
+            ],
+            "type": 17,
+            "import_path": "nodes._internal.get_perforceinstance_var",
+            "position": {
+                "x": 1505,
+                "y": 1316
+            }
+        },
+        {
+            "uuid": "7b76c914509811ee9f5f54bf647df350",
+            "label": "Open P4V workspace",
+            "pins": [
+                {
+                    "uuid": "7b76f009509811eea53154bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b76f00a509811eebb7654bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b76f00b509811eeb5d454bf647df350",
+                    "label": "P4 Inst",
+                    "meta_type": 1,
+                    "type": 10,
+                    "value": null
+                }
+            ],
+            "type": 3,
+            "import_path": "nodes.perforce_node.open_P4V_workspace",
+            "position": {
+                "x": 1689,
+                "y": 1515
+            }
+        },
+        {
+            "uuid": "7b76f00e509811eeae2d54bf647df350",
+            "label": "Set P4Inst",
+            "pins": [
+                {
+                    "uuid": "7b76f00f509811ee816f54bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b76f010509811eea04554bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b76f011509811ee996154bf647df350",
+                    "label": "P4Inst in",
+                    "meta_type": 1,
+                    "type": 10,
+                    "value": null
+                },
+                {
+                    "uuid": "7b76f013509811eeb6a754bf647df350",
+                    "label": "P4Inst out",
+                    "meta_type": 2,
+                    "type": 10,
+                    "default_value": null
+                }
+            ],
+            "type": 19,
+            "import_path": "nodes._internal.set_perforceinstance_var",
+            "position": {
+                "x": 735,
+                "y": 1503
+            }
+        },
+        {
+            "uuid": "7b76f016509811ee8cc954bf647df350",
+            "label": "Get P4Inst",
+            "pins": [
+                {
+                    "uuid": "7b76f017509811eea28254bf647df350",
+                    "label": "P4Inst out",
+                    "meta_type": 2,
+                    "type": 10,
+                    "default_value": null
+                }
+            ],
+            "type": 17,
+            "import_path": "nodes._internal.get_perforceinstance_var",
+            "position": {
+                "x": 1327,
+                "y": 1782
+            }
+        },
+        {
+            "uuid": "7b76f01a509811ee91c754bf647df350",
+            "label": "Get P4Inst",
+            "pins": [
+                {
+                    "uuid": "7b76f01b509811eeb87654bf647df350",
+                    "label": "P4Inst out",
+                    "meta_type": 2,
+                    "type": 10,
+                    "default_value": null
+                }
+            ],
+            "type": 17,
+            "import_path": "nodes._internal.get_perforceinstance_var",
+            "position": {
+                "x": 1197,
+                "y": -176
+            }
+        },
+        {
+            "uuid": "7b76f01e509811ee8edf54bf647df350",
+            "label": "Print",
+            "pins": [
+                {
+                    "uuid": "7b76f01f509811ee881454bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b76f020509811eebab754bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b76f021509811eeb0f354bf647df350",
+                    "label": "Wildcard",
+                    "meta_type": 1,
+                    "type": 6,
+                    "value": ""
+                },
+                {
+                    "uuid": "7b76f023509811eeb36554bf647df350",
+                    "label": "String",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 3,
+            "import_path": "nodes.exec_node.print_node",
+            "position": {
+                "x": 1898,
+                "y": 929
+            }
+        },
+        {
+            "uuid": "7b76f026509811ee999a54bf647df350",
+            "label": "Perforce login",
+            "pins": [
+                {
+                    "uuid": "7b771718509811eeac0354bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b771719509811eeab2c54bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b77171a509811eebcf554bf647df350",
+                    "label": "P4 Inst",
+                    "meta_type": 1,
+                    "type": 10,
+                    "value": null
+                },
+                {
+                    "uuid": "7b77171c509811eebe2954bf647df350",
+                    "label": "Successful login?",
+                    "meta_type": 2,
+                    "type": 8,
+                    "default_value": false
+                }
+            ],
+            "type": 3,
+            "import_path": "nodes.perforce_node.perforce_login_node",
+            "position": {
+                "x": 880,
+                "y": 503
+            }
+        },
+        {
+            "uuid": "7b77171f509811eea93554bf647df350",
+            "label": "Branch",
+            "pins": [
+                {
+                    "uuid": "7b771720509811ee886354bf647df350",
+                    "label": "Exec in",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b771721509811eea6ea54bf647df350",
+                    "label": "Condition",
+                    "meta_type": 1,
+                    "type": 8,
+                    "value": false
+                },
+                {
+                    "uuid": "7b771723509811ee9f4554bf647df350",
+                    "label": "True",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b771724509811eea81154bf647df350",
+                    "label": "False",
+                    "meta_type": 4,
+                    "type": 5
+                }
+            ],
+            "type": 5,
+            "import_path": "nodes.flow_control_node.node_branch",
+            "position": {
+                "x": 1237,
+                "y": 519
+            }
+        },
+        {
+            "uuid": "7b771726509811ee8fea54bf647df350",
+            "label": "Print",
+            "pins": [
+                {
+                    "uuid": "7b771727509811ee844254bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b771728509811eeac9554bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b771729509811eea4a554bf647df350",
+                    "label": "Wildcard",
+                    "meta_type": 1,
+                    "type": 6,
+                    "value": "failed to login"
+                },
+                {
+                    "uuid": "7b77172b509811ee8e1a54bf647df350",
+                    "label": "String",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 3,
+            "import_path": "nodes.exec_node.print_node",
+            "position": {
+                "x": 1504,
+                "y": 720
+            }
+        },
+        {
+            "uuid": "7b77172e509811ee85ca54bf647df350",
+            "label": "Perforce login",
+            "pins": [
+                {
+                    "uuid": "7b77172f509811ee987654bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b771730509811eeb73354bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b771731509811ee9a9c54bf647df350",
+                    "label": "P4 Inst",
+                    "meta_type": 1,
+                    "type": 10,
+                    "value": null
+                },
+                {
+                    "uuid": "7b771733509811ee89bb54bf647df350",
+                    "label": "Successful login?",
+                    "meta_type": 2,
+                    "type": 8,
+                    "default_value": false
+                }
+            ],
+            "type": 3,
+            "import_path": "nodes.perforce_node.perforce_login_node",
+            "position": {
+                "x": 830,
+                "y": 997
+            }
+        },
+        {
+            "uuid": "7b771736509811eebf5a54bf647df350",
+            "label": "Branch",
+            "pins": [
+                {
+                    "uuid": "7b773e27509811eeac6754bf647df350",
+                    "label": "Exec in",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b773e28509811ee8d3954bf647df350",
+                    "label": "Condition",
+                    "meta_type": 1,
+                    "type": 8,
+                    "value": false
+                },
+                {
+                    "uuid": "7b773e2a509811eeb5f454bf647df350",
+                    "label": "True",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b773e2b509811ee82f554bf647df350",
+                    "label": "False",
+                    "meta_type": 4,
+                    "type": 5
+                }
+            ],
+            "type": 5,
+            "import_path": "nodes.flow_control_node.node_branch",
+            "position": {
+                "x": 1137,
+                "y": 983
+            }
+        },
+        {
+            "uuid": "7b773e2d509811eeb44254bf647df350",
+            "label": "Print",
+            "pins": [
+                {
+                    "uuid": "7b773e2e509811ee93b054bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b773e2f509811ee818154bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b773e30509811eead3e54bf647df350",
+                    "label": "Wildcard",
+                    "meta_type": 1,
+                    "type": 6,
+                    "value": "failed to login"
+                },
+                {
+                    "uuid": "7b773e32509811eeb59b54bf647df350",
+                    "label": "String",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 3,
+            "import_path": "nodes.exec_node.print_node",
+            "position": {
+                "x": 1255,
+                "y": 1340
+            }
+        },
+        {
+            "uuid": "7b773e35509811eeb71754bf647df350",
+            "label": "Perforce login",
+            "pins": [
+                {
+                    "uuid": "7b773e36509811ee8ea854bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b773e37509811eea91054bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b773e38509811eeadba54bf647df350",
+                    "label": "P4 Inst",
+                    "meta_type": 1,
+                    "type": 10,
+                    "value": null
+                },
+                {
+                    "uuid": "7b773e3a509811ee83a554bf647df350",
+                    "label": "Successful login?",
+                    "meta_type": 2,
+                    "type": 8,
+                    "default_value": false
+                }
+            ],
+            "type": 3,
+            "import_path": "nodes.perforce_node.perforce_login_node",
+            "position": {
+                "x": 966,
+                "y": 1537
+            }
+        },
+        {
+            "uuid": "7b773e3d509811ee8a0854bf647df350",
+            "label": "Print",
+            "pins": [
+                {
+                    "uuid": "7b773e3e509811eeaec654bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b773e3f509811eea34254bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b773e40509811eeb03754bf647df350",
+                    "label": "Wildcard",
+                    "meta_type": 1,
+                    "type": 6,
+                    "value": "Failed"
+                },
+                {
+                    "uuid": "7b773e42509811ee93b554bf647df350",
+                    "label": "String",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 3,
+            "import_path": "nodes.exec_node.print_node",
+            "position": {
+                "x": 1031,
+                "y": 1731
+            }
+        },
+        {
+            "uuid": "7b776538509811eea45154bf647df350",
+            "label": "Branch",
+            "pins": [
+                {
+                    "uuid": "7b7766e5509811eebea554bf647df350",
+                    "label": "Exec in",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b7766e6509811ee841b54bf647df350",
+                    "label": "Condition",
+                    "meta_type": 1,
+                    "type": 8,
+                    "value": false
+                },
+                {
+                    "uuid": "7b7766e8509811eea8e254bf647df350",
+                    "label": "True",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b7766e9509811ee9e9f54bf647df350",
+                    "label": "False",
+                    "meta_type": 4,
+                    "type": 5
+                }
+            ],
+            "type": 5,
+            "import_path": "nodes.flow_control_node.node_branch",
+            "position": {
+                "x": 1370,
+                "y": 1542
+            }
+        },
+        {
+            "uuid": "7b7766eb509811ee970954bf647df350",
+            "label": "Print",
+            "pins": [
+                {
+                    "uuid": "7b777b04509811eeb0df54bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b777b05509811ee98a054bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b777b06509811ee810954bf647df350",
+                    "label": "Wildcard",
+                    "meta_type": 1,
+                    "type": 6,
+                    "value": "Success"
+                },
+                {
+                    "uuid": "7b777b08509811eeb02354bf647df350",
+                    "label": "String",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 3,
+            "import_path": "nodes.exec_node.print_node",
+            "position": {
+                "x": 1997,
+                "y": 1530
+            }
+        },
+        {
+            "uuid": "7b777b0b509811ee825e54bf647df350",
+            "label": "Get OS envar",
+            "pins": [
+                {
+                    "uuid": "7b777b0c509811ee815554bf647df350",
+                    "label": "Env var",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "USERNAME"
+                },
+                {
+                    "uuid": "7b777b0e509811ee895d54bf647df350",
+                    "label": "Value",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 1,
+            "import_path": "nodes.os_node.os_get_envar_node",
+            "position": {
+                "x": -845,
+                "y": 610
+            }
+        },
+        {
+            "uuid": "7b777b12509811ee8cd254bf647df350",
+            "label": "Event Create workspace",
+            "pins": [
+                {
+                    "uuid": "7b777b13509811ee83ba54bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b777b14509811ee8d4854bf647df350",
+                    "label": "Temp",
+                    "meta_type": 2,
+                    "type": null,
+                    "default_value": null
+                }
+            ],
+            "type": 8,
+            "import_path": "nodes._internal.event_node",
+            "position": {
+                "x": 142,
+                "y": 5
+            }
+        },
+        {
+            "uuid": "7b77a203509811eeb3e754bf647df350",
+            "label": "Event Open P4V",
+            "pins": [
+                {
+                    "uuid": "7b77a204509811eeb38754bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b77a205509811eebb6354bf647df350",
+                    "label": "Temp",
+                    "meta_type": 2,
+                    "type": null,
+                    "default_value": null
+                }
+            ],
+            "type": 8,
+            "import_path": "nodes._internal.event_node",
+            "position": {
+                "x": 6,
+                "y": 1481
+            }
+        },
+        {
+            "uuid": "7b77a209509811eea7b754bf647df350",
+            "label": "Event Sync essential",
+            "pins": [
+                {
+                    "uuid": "7b77a20a509811eeabdd54bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "7b77a20b509811ee88fb54bf647df350",
+                    "label": "Temp",
+                    "meta_type": 2,
+                    "type": null,
+                    "default_value": null
+                }
+            ],
+            "type": 8,
+            "import_path": "nodes._internal.event_node",
+            "position": {
+                "x": 305,
+                "y": 943
+            }
+        }
+    ],
+    "flows": [
+        [
+            "7b777b13509811ee83ba54bf647df350",
+            "7b7605ce509811eea6bf54bf647df350"
+        ],
+        [
+            "7b762cb4509811ee8b7354bf647df350",
+            "7b762ccb509811eebd4754bf647df350"
+        ],
+        [
+            "7b762ccc509811eea56f54bf647df350",
+            "7b767ae7509811eeb0a654bf647df350"
+        ],
+        [
+            "7b767aea509811eeb94f54bf647df350",
+            "7b762cbb509811ee8b4554bf647df350"
+        ],
+        [
+            "7b767aeb509811eeab6254bf647df350",
+            "7b767aee509811ee929d54bf647df350"
+        ],
+        [
+            "7b77a20a509811eeabdd54bf647df350",
+            "7b76a1ec509811eea6f354bf647df350"
+        ],
+        [
+            "7b77a204509811eeb38754bf647df350",
+            "7b76f00f509811ee816f54bf647df350"
+        ],
+        [
+            "7b76a201509811ee83f654bf647df350",
+            "7b76f01f509811ee881454bf647df350"
+        ],
+        [
+            "7b76f020509811eebab754bf647df350",
+            "7b76c901509811ee80cf54bf647df350"
+        ],
+        [
+            "7b767af7509811ee982254bf647df350",
+            "7b771718509811eeac0354bf647df350"
+        ],
+        [
+            "7b771719509811eeab2c54bf647df350",
+            "7b771720509811ee886354bf647df350"
+        ],
+        [
+            "7b771723509811ee9f4554bf647df350",
+            "7b76a1e4509811eeb0b454bf647df350"
+        ],
+        [
+            "7b771724509811eea81154bf647df350",
+            "7b771727509811ee844254bf647df350"
+        ],
+        [
+            "7b76a1ed509811eea4c254bf647df350",
+            "7b77172f509811ee987654bf647df350"
+        ],
+        [
+            "7b771730509811eeb73354bf647df350",
+            "7b773e27509811eeac6754bf647df350"
+        ],
+        [
+            "7b773e2a509811eeb5f454bf647df350",
+            "7b76a1fe509811eeb2c154bf647df350"
+        ],
+        [
+            "7b773e2b509811ee82f554bf647df350",
+            "7b773e2e509811ee93b054bf647df350"
+        ],
+        [
+            "7b76c8fe509811ee974d54bf647df350",
+            "7b76c909509811ee9ca154bf647df350"
+        ],
+        [
+            "7b76f010509811eea04554bf647df350",
+            "7b773e36509811ee8ea854bf647df350"
+        ],
+        [
+            "7b773e37509811eea91054bf647df350",
+            "7b7766e5509811eebea554bf647df350"
+        ],
+        [
+            "7b7766e8509811eea8e254bf647df350",
+            "7b76f009509811eea53154bf647df350"
+        ],
+        [
+            "7b7766e9509811ee9e9f54bf647df350",
+            "7b773e3e509811eeaec654bf647df350"
+        ],
+        [
+            "7b76f00a509811eebb7654bf647df350",
+            "7b777b04509811eeb0df54bf647df350"
+        ]
+    ],
+    "data_links": [
+        [
+            "7b7605b6509811eebe5e54bf647df350",
+            "7b75dea3509811ee971354bf647df350"
+        ],
+        [
+            "7b7605ba509811ee9d8654bf647df350",
+            "7b7605be509811eea77a54bf647df350"
+        ],
+        [
+            "7b7605c2509811ee900954bf647df350",
+            "7b7605c6509811ee804754bf647df350"
+        ],
+        [
+            "7b7605b2509811ee948d54bf647df350",
+            "7b762cb5509811eea8fb54bf647df350"
+        ],
+        [
+            "7b762cb7509811ee80e854bf647df350",
+            "7b762ccd509811eeb47154bf647df350"
+        ],
+        [
+            "7b7605ca509811eea53554bf647df350",
+            "7b762cd3509811ee8d4454bf647df350"
+        ],
+        [
+            "7b7653ca509811eeb5df54bf647df350",
+            "7b7653ce509811eeaead54bf647df350"
+        ],
+        [
+            "7b767ae3509811eeb8c854bf647df350",
+            "7b7653d0509811ee92b654bf647df350"
+        ],
+        [
+            "7b76a1f4509811eeb8df54bf647df350",
+            "7b76a1f8509811eea1c254bf647df350"
+        ],
+        [
+            "7b76a1fa509811eeb26154bf647df350",
+            "7b76a1ff509811eebe4a54bf647df350"
+        ],
+        [
+            "7b76a202509811ee8b7754bf647df350",
+            "7b76c905509811eeb66f54bf647df350"
+        ],
+        [
+            "7b76c911509811eeaf7b54bf647df350",
+            "7b76c903509811eea1a954bf647df350"
+        ],
+        [
+            "7b76f017509811eea28254bf647df350",
+            "7b76f00b509811eeb5d454bf647df350"
+        ],
+        [
+            "7b7605b2509811ee948d54bf647df350",
+            "7b76f011509811ee996154bf647df350"
+        ],
+        [
+            "7b7605b2509811ee948d54bf647df350",
+            "7b76a1ee509811eeb19054bf647df350"
+        ],
+        [
+            "7b7605b2509811ee948d54bf647df350",
+            "7b767af8509811eeb14154bf647df350"
+        ],
+        [
+            "7b762ccf509811eea0a854bf647df350",
+            "7b767ae8509811eea70254bf647df350"
+        ],
+        [
+            "7b76f01b509811eeb87654bf647df350",
+            "7b762cbd509811eebb7754bf647df350"
+        ],
+        [
+            "7b7653d2509811ee8ad854bf647df350",
+            "7b75dea9509811ee946754bf647df350"
+        ],
+        [
+            "7b767afa509811eeb14f54bf647df350",
+            "7b77171a509811eebcf554bf647df350"
+        ],
+        [
+            "7b767afa509811eeb14f54bf647df350",
+            "7b76a1e6509811eea05554bf647df350"
+        ],
+        [
+            "7b77171c509811eebe2954bf647df350",
+            "7b771721509811eea6ea54bf647df350"
+        ],
+        [
+            "7b76a1f0509811ee825d54bf647df350",
+            "7b771731509811ee9a9c54bf647df350"
+        ],
+        [
+            "7b771733509811ee89bb54bf647df350",
+            "7b773e28509811ee8d3954bf647df350"
+        ],
+        [
+            "7b76f013509811eeb6a754bf647df350",
+            "7b773e38509811eeadba54bf647df350"
+        ],
+        [
+            "7b773e3a509811ee83a554bf647df350",
+            "7b7766e6509811ee841b54bf647df350"
+        ],
+        [
+            "7b777b0e509811ee895d54bf647df350",
+            "7b7605c8509811eeb2d054bf647df350"
+        ],
+        [
+            "7b777b0e509811ee895d54bf647df350",
+            "7b75dea1509811eeb62e54bf647df350"
+        ]
+    ],
+    "events": {
+        "7b777b12509811ee8cd254bf647df350": "7b7605cd509811ee8da354bf647df350",
+        "7b77a209509811eea7b754bf647df350": "7b76a1eb509811ee805854bf647df350",
+        "7b77a203509811eeb3e754bf647df350": "7b76f00e509811eeae2d54bf647df350"
+    },
+    "vars": {
+        "7b75b78a509811ee938454bf647df350": {
+            "name": [
+                "LDAP Password"
+            ],
+            "type": [
+                "Password"
+            ],
+            "value": [
+                null
+            ],
+            "default_value": [
+                ""
+            ],
+            "is_exposed": [
+                true
+            ],
+            "regex": [
+                ".+"
+            ],
+            "user_input_box_tag": "7b75de9e509811eeb9d954bf647df350"
+        },
+        "7b75b78b509811ee83dc54bf647df350": {
+            "name": [
+                "P4Inst"
+            ],
+            "type": [
+                "PerforceInstance"
+            ],
+            "value": [
+                null
+            ],
+            "default_value": [
+                null
+            ],
+            "is_exposed": [
+                false
+            ],
+            "regex": [
+                null
+            ]
+        },
+        "7b75b78c509811eea06c54bf647df350": {
+            "name": [
+                "Sync paths"
+            ],
+            "type": [
+                "MultilineString"
+            ],
+            "value": [
+                null
+            ],
+            "default_value": [
+                "//TRAINNING/P4VTraining/..."
+            ],
+            "is_exposed": [
+                false
+            ],
+            "regex": [
+                ".+"
+            ]
+        },
+        "7b75de9d509811eeaf4754bf647df350": {
+            "name": [
+                "Project Name"
+            ],
+            "type": [
+                "String"
+            ],
+            "value": [
+                null
+            ],
+            "default_value": [
+                "GJ2023"
+            ],
+            "is_exposed": [
+                false
+            ],
+            "regex": [
+                ".+"
+            ]
+        }
+    }
+}

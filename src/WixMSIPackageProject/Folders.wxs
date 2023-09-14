@@ -1,0 +1,25 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Fragment>
+    <StandardDirectory Id="ProgramFiles6432Folder">
+      <Directory Id="INSTALLFOLDER" Name="!(bind.Property.ProductName)">
+        <Directory Id="INSTALLFOLDERNODEEDITOR" Name="NodeEditor" />
+        <Directory Id="INSTALLFOLDERTOOLSVIEWER" Name="ToolsViewer" />
+      </Directory>
+    </StandardDirectory>
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="ProgramMenuDirNodeEditor" Name="NodeEditor">
+        <Component Id="ProgramMenuDirNodeEditor" Guid="49412D63-EE23-4090-8AC3-55E82E9C51AD">
+          <RemoveFolder Id="ProgramMenuDirNodeEditor" On="uninstall"></RemoveFolder>
+          <RegistryValue Root='HKCU' Key='Software\[Manufacturer]\NodeEditor' Type='string' Value='' KeyPath='yes' />
+        </Component>
+      </Directory>
+      <Directory Id="ProgramMenuDirToolsViewer" Name="ToolsViewer">
+        <Component Id="ProgramMenuDirToolsViewer" Guid="F5D0FC77-8374-4C00-A0EB-61AFE8A43BD0">
+          <RemoveFolder Id="ProgramMenuDirToolsViewer" On="uninstall"></RemoveFolder>
+          <RegistryValue Root='HKCU' Key='Software\[Manufacturer]\ToolsViewer' Type='string' Value='' KeyPath='yes' />
+        </Component>
+      </Directory>
+    </StandardDirectory>
+    <StandardDirectory Id="DesktopFolder" />
+  </Fragment>
+</Wix>

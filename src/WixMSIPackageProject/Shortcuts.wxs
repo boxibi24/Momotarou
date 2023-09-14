@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Fragment>
+      <Component Directory="INSTALLFOLDERNODEEDITOR" Guid="5868d3f4-1f93-454b-931c-ad61796c5c3a" Id="NodeEditorShortcuts">
+        <File Id="NodeEditorEXE" Name="NodeEditor.exe" Source="NodeEditor.exe" KeyPath="yes">
+          <Shortcut Id="startmenuNodeEditor" Directory="ProgramMenuDirNodeEditor" Name="NodeEditor" WorkingDirectory="INSTALLFOLDERNODEEDITOR" Icon="NodeEditorIcon.exe" IconIndex="0" Advertise="yes" />
+          <Shortcut Id="desktopNodeEditor" Directory="DesktopFolder" Name="NodeEditor" WorkingDirectory="INSTALLFOLDERNODEEDITOR" Icon="NodeEditorIcon.exe" IconIndex="0" Advertise="yes" />
+        </File>
+      </Component>
+      <Component Directory="INSTALLFOLDERTOOLSVIEWER" Guid="c7daae83-5030-4e33-bd5f-e6feff08f4db" Id="ToolsViewerShortcuts">
+        <File Id="ToolsViewerEXE" Name="ToolsViewer.exe" Source="ToolsViewer.exe" KeyPath="yes">
+          <Shortcut Id="startmenuToolsViewer" Directory="ProgramMenuDirToolsViewer" Name="ToolsViewer" WorkingDirectory="INSTALLFOLDERTOOLSVIEWER" Icon="ToolsViewerIcon.exe" IconIndex="0" Advertise="yes" />
+          <Shortcut Id="desktopToolsViewer" Directory="DesktopFolder" Name="ToolsViewer" WorkingDirectory="INSTALLFOLDERTOOLSVIEWER" Icon="ToolsViewerIcon.exe" IconIndex="0" Advertise="yes" />
+        </File>
+      </Component>
+    <Icon Id="NodeEditorIcon.exe" SourceFile="icons/NodeEditor.ico"/>
+    <Icon Id="ToolsViewerIcon.exe" SourceFile="icons/ToolsViewer.ico"/>
+  </Fragment>
+</Wix>
