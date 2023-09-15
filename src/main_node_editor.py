@@ -12,7 +12,7 @@ import requests
 
 from core.executor import setup_executor_logger
 from core.utils import json_load_from_file_path
-from libs.constants import NODE_EDITOR_APP_NAME
+from libs.constants import NODE_EDITOR_APP_NAME, LOCALAPPDATA
 from libs.p4util import setup_p4_logger
 from ui.NodeEditor.main_ui import initialize_node_editor_project, setup_dpg_font, setup_dpg_icon, initialize_dpg
 
@@ -21,7 +21,7 @@ def main():
     # s = requests.Session()
     # s.verify = r"G:\gitlab\momotarou\src\certs\gitlab.crt"
     # a = requests.get("https://vngitlab.virtuosgames.com/api/v4/projects", cert="certs/gitlab.pem")
-    # print(a)
+    # print(a.content)
     setting_file_path, packages_file_path, is_debug_mode, project_path = parse_argument()
     logger, logger_queue, queue_listener = setup_logger(is_debug_mode)
     logger.info("***** Load Config *****")
@@ -135,12 +135,11 @@ def _set_logger_level_on_debug_mode(logger: Logger, is_debug_mode: bool):
 
 
 def _get_log_output_dir(logger_name: str) -> str:
-    current_path = os.path.dirname(os.path.abspath(__file__))
-    log_folder = current_path + '/Logs'
+    log_folder = LOCALAPPDATA / 'Logs'
     if not os.path.exists(log_folder):
         os.mkdir(log_folder)
-    log_dir = log_folder + f'/{logger_name}.log'
-    return log_dir
+    log_dir = log_folder / f'{logger_name}.log'
+    return log_dir.as_posix()
 
 
 def _setup_file_handler(logger_name: str, handler_formatter: Formatter) -> Handler:

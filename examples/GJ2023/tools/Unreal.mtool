@@ -1,0 +1,1708 @@
+{
+    "nodes": [
+        {
+            "uuid": "39c17e6152d911ee835654bf647df350",
+            "label": "Get Project Name",
+            "pins": [
+                {
+                    "uuid": "39c17e6252d911ee837b54bf647df350",
+                    "label": "String out",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 17,
+            "import_path": "nodes._internal.get_string_var",
+            "position": {
+                "x": -1863,
+                "y": 382
+            }
+        },
+        {
+            "uuid": "39c17e6552d911ee922754bf647df350",
+            "label": "Concatenate String",
+            "pins": [
+                {
+                    "uuid": "39c17e6652d911ee8de554bf647df350",
+                    "label": "A",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                },
+                {
+                    "uuid": "39c17e6852d911eea63354bf647df350",
+                    "label": "B",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "_"
+                },
+                {
+                    "uuid": "39c17e6a52d911ee93c254bf647df350",
+                    "label": "String out",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 1,
+            "import_path": "nodes.string_utility_node.concatenate_string_node",
+            "position": {
+                "x": -1594,
+                "y": 383
+            }
+        },
+        {
+            "uuid": "39c1a56552d911eeb8aa54bf647df350",
+            "label": "Concatenate String",
+            "pins": [
+                {
+                    "uuid": "39c1a56652d911eeaaab54bf647df350",
+                    "label": "A",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                },
+                {
+                    "uuid": "39c1a56852d911ee9e0a54bf647df350",
+                    "label": "B",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                },
+                {
+                    "uuid": "39c1a56a52d911ee964954bf647df350",
+                    "label": "String out",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 1,
+            "import_path": "nodes.string_utility_node.concatenate_string_node",
+            "position": {
+                "x": -1325,
+                "y": 378
+            }
+        },
+        {
+            "uuid": "39c1a56d52d911ee812954bf647df350",
+            "label": "Concatenate String",
+            "pins": [
+                {
+                    "uuid": "39c1a56e52d911eea0e154bf647df350",
+                    "label": "A",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                },
+                {
+                    "uuid": "39c1a57052d911eeab3b54bf647df350",
+                    "label": "B",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "_"
+                },
+                {
+                    "uuid": "39c1a57252d911eeb19754bf647df350",
+                    "label": "String out",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 1,
+            "import_path": "nodes.string_utility_node.concatenate_string_node",
+            "position": {
+                "x": -1059,
+                "y": 382
+            }
+        },
+        {
+            "uuid": "39c1a57552d911eeab4554bf647df350",
+            "label": "Concatenate String",
+            "pins": [
+                {
+                    "uuid": "39c1a57652d911ee898e54bf647df350",
+                    "label": "A",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                },
+                {
+                    "uuid": "39c1a57852d911eea6fb54bf647df350",
+                    "label": "B",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                },
+                {
+                    "uuid": "39c1a57a52d911eea96f54bf647df350",
+                    "label": "String out",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 1,
+            "import_path": "nodes.string_utility_node.concatenate_string_node",
+            "position": {
+                "x": -746,
+                "y": 416
+            }
+        },
+        {
+            "uuid": "39c1a57d52d911eeaa9954bf647df350",
+            "label": "Get OS envar",
+            "pins": [
+                {
+                    "uuid": "39c1a57e52d911eeac5d54bf647df350",
+                    "label": "Env var",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "COMPUTERNAME"
+                },
+                {
+                    "uuid": "39c1cc8352d911eeaa5954bf647df350",
+                    "label": "Value",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 1,
+            "import_path": "nodes.os_node.os_get_envar_node",
+            "position": {
+                "x": -992,
+                "y": 565
+            }
+        },
+        {
+            "uuid": "39c1cc8652d911eebc4854bf647df350",
+            "label": "Get OS envar",
+            "pins": [
+                {
+                    "uuid": "39c1cc8752d911ee8cf154bf647df350",
+                    "label": "Env var",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "USERNAME"
+                },
+                {
+                    "uuid": "39c1cc8952d911ee9a3254bf647df350",
+                    "label": "Value",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 1,
+            "import_path": "nodes.os_node.os_get_envar_node",
+            "position": {
+                "x": -595,
+                "y": 640
+            }
+        },
+        {
+            "uuid": "39c1cc8c52d911ee8a4f54bf647df350",
+            "label": "Perforce Construct",
+            "pins": [
+                {
+                    "uuid": "39c1cc8d52d911ee894654bf647df350",
+                    "label": "User",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                },
+                {
+                    "uuid": "39c1cc8f52d911ee944054bf647df350",
+                    "label": "Password",
+                    "meta_type": 1,
+                    "type": 7,
+                    "value": ""
+                },
+                {
+                    "uuid": "39c1cc9152d911ee8bdc54bf647df350",
+                    "label": "Port",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "VNSGNSP4SRV:1666"
+                },
+                {
+                    "uuid": "39c1cc9352d911ee955954bf647df350",
+                    "label": "Charset",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "none"
+                },
+                {
+                    "uuid": "39c1cc9552d911ee892c54bf647df350",
+                    "label": "Client",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                },
+                {
+                    "uuid": "39c1cc9752d911eebbbe54bf647df350",
+                    "label": "P4 Inst",
+                    "meta_type": 2,
+                    "type": 10,
+                    "default_value": null
+                }
+            ],
+            "type": 1,
+            "import_path": "nodes.construct_node.construct_perforce_node",
+            "position": {
+                "x": -208,
+                "y": 718
+            }
+        },
+        {
+            "uuid": "39c1cc9a52d911eea77a54bf647df350",
+            "label": "Get LDAP Password",
+            "pins": [
+                {
+                    "uuid": "39c1cc9b52d911ee8d0554bf647df350",
+                    "label": "Password out",
+                    "meta_type": 2,
+                    "type": 7,
+                    "default_value": ""
+                }
+            ],
+            "type": 17,
+            "import_path": "nodes._internal.get_password_var",
+            "position": {
+                "x": -603,
+                "y": 780
+            }
+        },
+        {
+            "uuid": "39c1cc9e52d911eea58d54bf647df350",
+            "label": "Get Client Path",
+            "pins": [
+                {
+                    "uuid": "39c1f39052d911eeb4a154bf647df350",
+                    "label": "Depot path",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "//MegaJam/MJ2023/MJ2023TEAM2/MJ2023/GenerateVisualStudioProject.bat"
+                },
+                {
+                    "uuid": "39c1f39252d911ee8d3854bf647df350",
+                    "label": "P4 inst",
+                    "meta_type": 1,
+                    "type": 10,
+                    "value": null
+                },
+                {
+                    "uuid": "39c1f39452d911eeb1ad54bf647df350",
+                    "label": "Client path",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 1,
+            "import_path": "nodes.perforce_node.perforce_get_client_path",
+            "position": {
+                "x": 863,
+                "y": 886
+            }
+        },
+        {
+            "uuid": "39c1f39752d911eeb1bb54bf647df350",
+            "label": "Perforce login",
+            "pins": [
+                {
+                    "uuid": "39c1f39852d911eea0aa54bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "39c1f39952d911ee950c54bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "39c1f39a52d911ee9f5a54bf647df350",
+                    "label": "P4 Inst",
+                    "meta_type": 1,
+                    "type": 10,
+                    "value": null
+                },
+                {
+                    "uuid": "39c1f39c52d911ee903f54bf647df350",
+                    "label": "Successful login?",
+                    "meta_type": 2,
+                    "type": 8,
+                    "default_value": false
+                }
+            ],
+            "type": 3,
+            "import_path": "nodes.perforce_node.perforce_login_node",
+            "position": {
+                "x": 47,
+                "y": 280
+            }
+        },
+        {
+            "uuid": "39c1f39f52d911eeae2754bf647df350",
+            "label": "Branch",
+            "pins": [
+                {
+                    "uuid": "39c1f3a052d911eea16d54bf647df350",
+                    "label": "Exec in",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "39c1f3a152d911eeb6eb54bf647df350",
+                    "label": "Condition",
+                    "meta_type": 1,
+                    "type": 8,
+                    "value": false
+                },
+                {
+                    "uuid": "39c1f3a352d911eeb0ef54bf647df350",
+                    "label": "True",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "39c1f3a452d911ee8cbb54bf647df350",
+                    "label": "False",
+                    "meta_type": 4,
+                    "type": 5
+                }
+            ],
+            "type": 5,
+            "import_path": "nodes.flow_control_node.node_branch",
+            "position": {
+                "x": 405,
+                "y": 314
+            }
+        },
+        {
+            "uuid": "39c1f3a652d911eead6154bf647df350",
+            "label": "Get parent directory of file path",
+            "pins": [
+                {
+                    "uuid": "39c1f3a752d911eeb93254bf647df350",
+                    "label": "Directory",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                },
+                {
+                    "uuid": "39c1f3a952d911ee9df854bf647df350",
+                    "label": "Parent Directory",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 1,
+            "import_path": "nodes.utility_node.get_parent_dir_of_path",
+            "position": {
+                "x": 1127,
+                "y": 886
+            }
+        },
+        {
+            "uuid": "39c21aa152d911eebf2154bf647df350",
+            "label": "Popup messagebox",
+            "pins": [
+                {
+                    "uuid": "39c21aa252d911eebd3c54bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "39c21aa352d911ee80c854bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "39c21aa452d911ee9a8654bf647df350",
+                    "label": "Title",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "Perforce login"
+                },
+                {
+                    "uuid": "39c21aa652d911ee848554bf647df350",
+                    "label": "Message",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "Perforce login failed! Credential could be incorrect or the account has been locked!"
+                },
+                {
+                    "uuid": "39c21aa852d911eebd1e54bf647df350",
+                    "label": "Show Warning",
+                    "meta_type": 1,
+                    "type": 8,
+                    "value": false
+                },
+                {
+                    "uuid": "39c21aaa52d911ee926454bf647df350",
+                    "label": "Show Error",
+                    "meta_type": 1,
+                    "type": 8,
+                    "value": true
+                },
+                {
+                    "uuid": "39c21aac52d911eeae1554bf647df350",
+                    "label": "User pressed OK",
+                    "meta_type": 2,
+                    "type": 8,
+                    "default_value": false
+                }
+            ],
+            "type": 3,
+            "import_path": "nodes.utility_node.popup_message_node",
+            "position": {
+                "x": 634,
+                "y": 465
+            }
+        },
+        {
+            "uuid": "39c21aaf52d911ee814f54bf647df350",
+            "label": "Set OS envar",
+            "pins": [
+                {
+                    "uuid": "39c21ab052d911ee9b8154bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "39c21ab152d911ee8e1a54bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "39c21ab252d911eebbfa54bf647df350",
+                    "label": "Env var",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "UnrealEngineDir"
+                },
+                {
+                    "uuid": "39c21ab452d911eea79a54bf647df350",
+                    "label": "Value",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                }
+            ],
+            "type": 3,
+            "import_path": "nodes.os_node.os_set_envar_node",
+            "position": {
+                "x": 1021,
+                "y": 352
+            }
+        },
+        {
+            "uuid": "39c21ab752d911eeb37854bf647df350",
+            "label": "Get Unreal Installation Directory",
+            "pins": [
+                {
+                    "uuid": "39c21ab852d911eeb97154bf647df350",
+                    "label": "String out",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 17,
+            "import_path": "nodes._internal.get_string_var",
+            "position": {
+                "x": 766,
+                "y": 212
+            }
+        },
+        {
+            "uuid": "39c241ad52d911ee898e54bf647df350",
+            "label": "CMD",
+            "pins": [
+                {
+                    "uuid": "39c241ae52d911eea0c354bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "39c241af52d911ee91ea54bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "39c241b052d911eeb51554bf647df350",
+                    "label": "String",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "cmd"
+                },
+                {
+                    "uuid": "39c241b252d911eebf3854bf647df350",
+                    "label": "Return",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 3,
+            "import_path": "nodes.exec_node.cmd_node",
+            "position": {
+                "x": 1910,
+                "y": 608
+            }
+        },
+        {
+            "uuid": "39c241b552d911eeb6ad54bf647df350",
+            "label": "Concatenate String",
+            "pins": [
+                {
+                    "uuid": "39c241b652d911ee963b54bf647df350",
+                    "label": "A",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                },
+                {
+                    "uuid": "39c241b852d911eea18c54bf647df350",
+                    "label": "B",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "/openUEEditor.bat"
+                },
+                {
+                    "uuid": "39c241ba52d911ee9cf554bf647df350",
+                    "label": "String out",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 1,
+            "import_path": "nodes.string_utility_node.concatenate_string_node",
+            "position": {
+                "x": 1439,
+                "y": 883
+            }
+        },
+        {
+            "uuid": "39c241bd52d911ee973a54bf647df350",
+            "label": "Concatenate String",
+            "pins": [
+                {
+                    "uuid": "39c241be52d911ee934d54bf647df350",
+                    "label": "A",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "start \"\" "
+                },
+                {
+                    "uuid": "39c241c052d911eead7654bf647df350",
+                    "label": "B",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                },
+                {
+                    "uuid": "39c241c252d911eeaf1c54bf647df350",
+                    "label": "String out",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 1,
+            "import_path": "nodes.string_utility_node.concatenate_string_node",
+            "position": {
+                "x": 1733,
+                "y": 894
+            }
+        },
+        {
+            "uuid": "39c241c552d911eeba4054bf647df350",
+            "label": "Sequence",
+            "pins": [
+                {
+                    "uuid": "39c268be52d911eea80f54bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "39c268bf52d911eebfe954bf647df350",
+                    "label": "Then 0",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "39c268c052d911eea44454bf647df350",
+                    "label": "Then 1",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "39c268c152d911ee860954bf647df350",
+                    "label": "Then 2",
+                    "meta_type": 4,
+                    "type": 5
+                }
+            ],
+            "type": 5,
+            "import_path": "nodes.flow_control_node.node_sequence",
+            "position": {
+                "x": 1718,
+                "y": 247
+            }
+        },
+        {
+            "uuid": "39c268c352d911eeafcc54bf647df350",
+            "label": "Set OS envar",
+            "pins": [
+                {
+                    "uuid": "39c268c452d911ee916d54bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "39c268c552d911eeafed54bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "39c268c652d911eeb8a554bf647df350",
+                    "label": "Env var",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "P4PORT"
+                },
+                {
+                    "uuid": "39c268c852d911eeb1bb54bf647df350",
+                    "label": "Value",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                }
+            ],
+            "type": 3,
+            "import_path": "nodes.os_node.os_set_envar_node",
+            "position": {
+                "x": 2237,
+                "y": -126
+            }
+        },
+        {
+            "uuid": "39c268cb52d911ee827454bf647df350",
+            "label": "Get P4PORT",
+            "pins": [
+                {
+                    "uuid": "39c268cc52d911eea7dc54bf647df350",
+                    "label": "String out",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 17,
+            "import_path": "nodes._internal.get_string_var",
+            "position": {
+                "x": -599,
+                "y": 855
+            }
+        },
+        {
+            "uuid": "39c268cf52d911eeaffd54bf647df350",
+            "label": "Set OS envar",
+            "pins": [
+                {
+                    "uuid": "39c268d052d911ee927954bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "39c268d152d911eeb25c54bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "39c268d252d911ee818254bf647df350",
+                    "label": "Env var",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "P4USER"
+                },
+                {
+                    "uuid": "39c268d452d911ee835e54bf647df350",
+                    "label": "Value",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                }
+            ],
+            "type": 3,
+            "import_path": "nodes.os_node.os_set_envar_node",
+            "position": {
+                "x": 2230,
+                "y": 71
+            }
+        },
+        {
+            "uuid": "39c28fce52d911ee928554bf647df350",
+            "label": "Sequence",
+            "pins": [
+                {
+                    "uuid": "39c28fcf52d911ee96d754bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "39c28fd052d911eea0ae54bf647df350",
+                    "label": "Then 0",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "39c28fd152d911eeb23d54bf647df350",
+                    "label": "Then 1",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "39c28fd252d911eeb41354bf647df350",
+                    "label": "Then 2",
+                    "meta_type": 4,
+                    "type": 5
+                }
+            ],
+            "type": 5,
+            "import_path": "nodes.flow_control_node.node_sequence",
+            "position": {
+                "x": 1398,
+                "y": 348
+            }
+        },
+        {
+            "uuid": "39c28fd452d911ee8e6954bf647df350",
+            "label": "Set OS envar",
+            "pins": [
+                {
+                    "uuid": "39c28fd552d911ee883d54bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "39c28fd652d911ee9ce554bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "39c28fd752d911ee88de54bf647df350",
+                    "label": "Env var",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "P4CLIENT"
+                },
+                {
+                    "uuid": "39c28fd952d911ee9ee554bf647df350",
+                    "label": "Value",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                }
+            ],
+            "type": 3,
+            "import_path": "nodes.os_node.os_set_envar_node",
+            "position": {
+                "x": 2226,
+                "y": 405
+            }
+        },
+        {
+            "uuid": "39c28fdc52d911eeb72754bf647df350",
+            "label": "Get P4Charset",
+            "pins": [
+                {
+                    "uuid": "39c28fdd52d911eeb01554bf647df350",
+                    "label": "String out",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 17,
+            "import_path": "nodes._internal.get_string_var",
+            "position": {
+                "x": -599,
+                "y": 933
+            }
+        },
+        {
+            "uuid": "39c28fe052d911ee8a3f54bf647df350",
+            "label": "Get P4CLIENT",
+            "pins": [
+                {
+                    "uuid": "39c28fe152d911eea3aa54bf647df350",
+                    "label": "String out",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 17,
+            "import_path": "nodes._internal.get_string_var",
+            "position": {
+                "x": -570,
+                "y": 1004
+            }
+        },
+        {
+            "uuid": "39c28fe452d911eeb0fe54bf647df350",
+            "label": "Set P4CLIENT",
+            "pins": [
+                {
+                    "uuid": "39c28fe552d911ee9aef54bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "39c2b6ea52d911eeafb854bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "39c2b6eb52d911ee8fac54bf647df350",
+                    "label": "String in",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                },
+                {
+                    "uuid": "39c2b6ed52d911ee9c1254bf647df350",
+                    "label": "String out",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 19,
+            "import_path": "nodes._internal.set_string_var",
+            "position": {
+                "x": -369,
+                "y": 278
+            }
+        },
+        {
+            "uuid": "39c2b6f052d911ee9cba54bf647df350",
+            "label": "Get OS envar",
+            "pins": [
+                {
+                    "uuid": "39c2b6f152d911ee9afa54bf647df350",
+                    "label": "Env var",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "USERNAME"
+                },
+                {
+                    "uuid": "39c2b6f352d911eea3ac54bf647df350",
+                    "label": "Value",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 1,
+            "import_path": "nodes.os_node.os_get_envar_node",
+            "position": {
+                "x": -1441,
+                "y": 553
+            }
+        },
+        {
+            "uuid": "39c2b6f652d911ee847154bf647df350",
+            "label": "Get P4PORT",
+            "pins": [
+                {
+                    "uuid": "39c2b6f752d911eea42b54bf647df350",
+                    "label": "String out",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 17,
+            "import_path": "nodes._internal.get_string_var",
+            "position": {
+                "x": 1923,
+                "y": -6
+            }
+        },
+        {
+            "uuid": "39c2b6fa52d911ee9f4c54bf647df350",
+            "label": "Get OS envar",
+            "pins": [
+                {
+                    "uuid": "39c2b6fb52d911ee864054bf647df350",
+                    "label": "Env var",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "USERNAME"
+                },
+                {
+                    "uuid": "39c2b6fd52d911eebf8a54bf647df350",
+                    "label": "Value",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 1,
+            "import_path": "nodes.os_node.os_get_envar_node",
+            "position": {
+                "x": 1939,
+                "y": 122
+            }
+        },
+        {
+            "uuid": "39c2b70052d911eeb1f054bf647df350",
+            "label": "Get P4CLIENT",
+            "pins": [
+                {
+                    "uuid": "39c2b70152d911eebcf754bf647df350",
+                    "label": "String out",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 17,
+            "import_path": "nodes._internal.get_string_var",
+            "position": {
+                "x": 1900,
+                "y": 524
+            }
+        },
+        {
+            "uuid": "39c2ddf352d911ee81c754bf647df350",
+            "label": "Set P4CLIENT",
+            "pins": [
+                {
+                    "uuid": "39c2ddf452d911ee827454bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "39c2ddf552d911eeade754bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "39c2ddf652d911ee8d6554bf647df350",
+                    "label": "String in",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                },
+                {
+                    "uuid": "39c2ddf852d911ee8e4c54bf647df350",
+                    "label": "String out",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 19,
+            "import_path": "nodes._internal.set_string_var",
+            "position": {
+                "x": -186,
+                "y": 1177
+            }
+        },
+        {
+            "uuid": "39c2ddfb52d911ee9f5a54bf647df350",
+            "label": "Perforce login",
+            "pins": [
+                {
+                    "uuid": "39c2ddfc52d911ee9d7954bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "39c2ddfd52d911ee8e2f54bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "39c2ddfe52d911eebdfa54bf647df350",
+                    "label": "P4 Inst",
+                    "meta_type": 1,
+                    "type": 10,
+                    "value": null
+                },
+                {
+                    "uuid": "39c2de0052d911eebec554bf647df350",
+                    "label": "Successful login?",
+                    "meta_type": 2,
+                    "type": 8,
+                    "default_value": false
+                }
+            ],
+            "type": 3,
+            "import_path": "nodes.perforce_node.perforce_login_node",
+            "position": {
+                "x": 141,
+                "y": 1201
+            }
+        },
+        {
+            "uuid": "39c2de0352d911ee856154bf647df350",
+            "label": "Branch",
+            "pins": [
+                {
+                    "uuid": "39c2de0452d911ee9c8054bf647df350",
+                    "label": "Exec in",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "39c2de0552d911ee9a1454bf647df350",
+                    "label": "Condition",
+                    "meta_type": 1,
+                    "type": 8,
+                    "value": false
+                },
+                {
+                    "uuid": "39c304fd52d911ee962654bf647df350",
+                    "label": "True",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "39c304fe52d911ee912854bf647df350",
+                    "label": "False",
+                    "meta_type": 4,
+                    "type": 5
+                }
+            ],
+            "type": 5,
+            "import_path": "nodes.flow_control_node.node_branch",
+            "position": {
+                "x": 569,
+                "y": 1222
+            }
+        },
+        {
+            "uuid": "39c3050052d911eea2e754bf647df350",
+            "label": "Popup messagebox",
+            "pins": [
+                {
+                    "uuid": "39c3050152d911ee8edc54bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "39c3050252d911eea75354bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "39c3050352d911eebccc54bf647df350",
+                    "label": "Title",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "Perforce login"
+                },
+                {
+                    "uuid": "39c3050552d911ee926d54bf647df350",
+                    "label": "Message",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "Perforce login failed! Credential could be incorrect or the account has been locked!"
+                },
+                {
+                    "uuid": "39c3050752d911eebe7254bf647df350",
+                    "label": "Show Warning",
+                    "meta_type": 1,
+                    "type": 8,
+                    "value": false
+                },
+                {
+                    "uuid": "39c3050952d911ee9acc54bf647df350",
+                    "label": "Show Error",
+                    "meta_type": 1,
+                    "type": 8,
+                    "value": true
+                },
+                {
+                    "uuid": "39c3050b52d911ee9b6c54bf647df350",
+                    "label": "User pressed OK",
+                    "meta_type": 2,
+                    "type": 8,
+                    "default_value": false
+                }
+            ],
+            "type": 3,
+            "import_path": "nodes.utility_node.popup_message_node",
+            "position": {
+                "x": 733,
+                "y": 1493
+            }
+        },
+        {
+            "uuid": "39c3050e52d911eeb33754bf647df350",
+            "label": "Get Unreal Installation Directory",
+            "pins": [
+                {
+                    "uuid": "39c3050f52d911ee974f54bf647df350",
+                    "label": "String out",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 17,
+            "import_path": "nodes._internal.get_string_var",
+            "position": {
+                "x": 1116,
+                "y": 1447
+            }
+        },
+        {
+            "uuid": "39c3051252d911ee85b054bf647df350",
+            "label": "Set OS envar",
+            "pins": [
+                {
+                    "uuid": "39c32c1552d911eeb8e954bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "39c32c1652d911eeba4d54bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "39c32c1752d911eebc8954bf647df350",
+                    "label": "Env var",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "UnrealEngineDir"
+                },
+                {
+                    "uuid": "39c32c1952d911eead5654bf647df350",
+                    "label": "Value",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                }
+            ],
+            "type": 3,
+            "import_path": "nodes.os_node.os_set_envar_node",
+            "position": {
+                "x": 1220,
+                "y": 1263
+            }
+        },
+        {
+            "uuid": "39c32c1c52d911ee8cbf54bf647df350",
+            "label": "CMD",
+            "pins": [
+                {
+                    "uuid": "39c32c1d52d911ee8cce54bf647df350",
+                    "label": "Exec In",
+                    "meta_type": 3,
+                    "type": 5
+                },
+                {
+                    "uuid": "39c32c1e52d911ee841054bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "39c32c1f52d911ee995e54bf647df350",
+                    "label": "String",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                },
+                {
+                    "uuid": "39c32c2152d911ee919a54bf647df350",
+                    "label": "Return",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 3,
+            "import_path": "nodes.exec_node.cmd_node",
+            "position": {
+                "x": 1639,
+                "y": 1283
+            }
+        },
+        {
+            "uuid": "39c32c2452d911eea11a54bf647df350",
+            "label": "Concatenate String",
+            "pins": [
+                {
+                    "uuid": "39c32c2552d911ee8ca854bf647df350",
+                    "label": "A",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                },
+                {
+                    "uuid": "39c32c2752d911ee99d654bf647df350",
+                    "label": "B",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "/GenerateVisualStudioProject.bat"
+                },
+                {
+                    "uuid": "39c32c2952d911ee94f154bf647df350",
+                    "label": "String out",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 1,
+            "import_path": "nodes.string_utility_node.concatenate_string_node",
+            "position": {
+                "x": 1440,
+                "y": 1053
+            }
+        },
+        {
+            "uuid": "39c3531952d911ee8c5054bf647df350",
+            "label": "Concatenate String",
+            "pins": [
+                {
+                    "uuid": "39c3531a52d911eeb54354bf647df350",
+                    "label": "A",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": "start \"\" "
+                },
+                {
+                    "uuid": "39c3531c52d911eebdc154bf647df350",
+                    "label": "B",
+                    "meta_type": 1,
+                    "type": 1,
+                    "value": ""
+                },
+                {
+                    "uuid": "39c3531e52d911ee924554bf647df350",
+                    "label": "String out",
+                    "meta_type": 2,
+                    "type": 1,
+                    "default_value": ""
+                }
+            ],
+            "type": 1,
+            "import_path": "nodes.string_utility_node.concatenate_string_node",
+            "position": {
+                "x": 1740,
+                "y": 1057
+            }
+        },
+        {
+            "uuid": "39c3532252d911eeb34854bf647df350",
+            "label": "Event Open Unreal Editor",
+            "pins": [
+                {
+                    "uuid": "39c3532352d911eebd8a54bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "39c3532452d911ee8e7654bf647df350",
+                    "label": "Temp",
+                    "meta_type": 2,
+                    "type": null,
+                    "default_value": null
+                }
+            ],
+            "type": 8,
+            "import_path": "nodes._internal.event_node",
+            "position": {
+                "x": -775,
+                "y": 275
+            }
+        },
+        {
+            "uuid": "39c3532852d911eea97254bf647df350",
+            "label": "Event Regenerate Visual Studio project",
+            "pins": [
+                {
+                    "uuid": "39c3532952d911eebdcd54bf647df350",
+                    "label": "Exec Out",
+                    "meta_type": 4,
+                    "type": 5
+                },
+                {
+                    "uuid": "39c37a2c52d911ee9f1d54bf647df350",
+                    "label": "Temp",
+                    "meta_type": 2,
+                    "type": null,
+                    "default_value": null
+                }
+            ],
+            "type": 8,
+            "import_path": "nodes._internal.event_node",
+            "position": {
+                "x": -799,
+                "y": 1180
+            }
+        }
+    ],
+    "flows": [
+        [
+            "39c1f39952d911ee950c54bf647df350",
+            "39c1f3a052d911eea16d54bf647df350"
+        ],
+        [
+            "39c1f3a452d911ee8cbb54bf647df350",
+            "39c21aa252d911eebd3c54bf647df350"
+        ],
+        [
+            "39c268bf52d911eebfe954bf647df350",
+            "39c268c452d911ee916d54bf647df350"
+        ],
+        [
+            "39c268c052d911eea44454bf647df350",
+            "39c268d052d911ee927954bf647df350"
+        ],
+        [
+            "39c28fd052d911eea0ae54bf647df350",
+            "39c268be52d911eea80f54bf647df350"
+        ],
+        [
+            "39c28fd152d911eeb23d54bf647df350",
+            "39c241ae52d911eea0c354bf647df350"
+        ],
+        [
+            "39c268c152d911ee860954bf647df350",
+            "39c28fd552d911ee883d54bf647df350"
+        ],
+        [
+            "39c3532352d911eebd8a54bf647df350",
+            "39c28fe552d911ee9aef54bf647df350"
+        ],
+        [
+            "39c2b6ea52d911eeafb854bf647df350",
+            "39c1f39852d911eea0aa54bf647df350"
+        ],
+        [
+            "39c1f3a352d911eeb0ef54bf647df350",
+            "39c21ab052d911ee9b8154bf647df350"
+        ],
+        [
+            "39c21ab152d911ee8e1a54bf647df350",
+            "39c28fcf52d911ee96d754bf647df350"
+        ],
+        [
+            "39c3532952d911eebdcd54bf647df350",
+            "39c2ddf452d911ee827454bf647df350"
+        ],
+        [
+            "39c2ddf552d911eeade754bf647df350",
+            "39c2ddfc52d911ee9d7954bf647df350"
+        ],
+        [
+            "39c2ddfd52d911ee8e2f54bf647df350",
+            "39c2de0452d911ee9c8054bf647df350"
+        ],
+        [
+            "39c304fe52d911ee912854bf647df350",
+            "39c3050152d911ee8edc54bf647df350"
+        ],
+        [
+            "39c32c1652d911eeba4d54bf647df350",
+            "39c32c1d52d911ee8cce54bf647df350"
+        ],
+        [
+            "39c304fd52d911ee962654bf647df350",
+            "39c32c1552d911eeb8e954bf647df350"
+        ]
+    ],
+    "data_links": [
+        [
+            "39c17e6252d911ee837b54bf647df350",
+            "39c17e6652d911ee8de554bf647df350"
+        ],
+        [
+            "39c17e6a52d911ee93c254bf647df350",
+            "39c1a56652d911eeaaab54bf647df350"
+        ],
+        [
+            "39c1a56a52d911ee964954bf647df350",
+            "39c1a56e52d911eea0e154bf647df350"
+        ],
+        [
+            "39c1a57252d911eeb19754bf647df350",
+            "39c1a57652d911ee898e54bf647df350"
+        ],
+        [
+            "39c1cc8352d911eeaa5954bf647df350",
+            "39c1a57852d911eea6fb54bf647df350"
+        ],
+        [
+            "39c1cc8952d911ee9a3254bf647df350",
+            "39c1cc8d52d911ee894654bf647df350"
+        ],
+        [
+            "39c1cc9b52d911ee8d0554bf647df350",
+            "39c1cc8f52d911ee944054bf647df350"
+        ],
+        [
+            "39c1cc9752d911eebbbe54bf647df350",
+            "39c1f39252d911ee8d3854bf647df350"
+        ],
+        [
+            "39c1cc9752d911eebbbe54bf647df350",
+            "39c1f39a52d911ee9f5a54bf647df350"
+        ],
+        [
+            "39c1f39c52d911ee903f54bf647df350",
+            "39c1f3a152d911eeb6eb54bf647df350"
+        ],
+        [
+            "39c1f39452d911eeb1ad54bf647df350",
+            "39c1f3a752d911eeb93254bf647df350"
+        ],
+        [
+            "39c21ab852d911eeb97154bf647df350",
+            "39c21ab452d911eea79a54bf647df350"
+        ],
+        [
+            "39c1f3a952d911ee9df854bf647df350",
+            "39c241b652d911ee963b54bf647df350"
+        ],
+        [
+            "39c241ba52d911ee9cf554bf647df350",
+            "39c241c052d911eead7654bf647df350"
+        ],
+        [
+            "39c241c252d911eeaf1c54bf647df350",
+            "39c241b052d911eeb51554bf647df350"
+        ],
+        [
+            "39c268cc52d911eea7dc54bf647df350",
+            "39c1cc9152d911ee8bdc54bf647df350"
+        ],
+        [
+            "39c28fdd52d911eeb01554bf647df350",
+            "39c1cc9352d911ee955954bf647df350"
+        ],
+        [
+            "39c28fe152d911eea3aa54bf647df350",
+            "39c1cc9552d911ee892c54bf647df350"
+        ],
+        [
+            "39c2b6f352d911eea3ac54bf647df350",
+            "39c1a56852d911ee9e0a54bf647df350"
+        ],
+        [
+            "39c1a57a52d911eea96f54bf647df350",
+            "39c2b6eb52d911ee8fac54bf647df350"
+        ],
+        [
+            "39c2b6f752d911eea42b54bf647df350",
+            "39c268c852d911eeb1bb54bf647df350"
+        ],
+        [
+            "39c2b6fd52d911eebf8a54bf647df350",
+            "39c268d452d911ee835e54bf647df350"
+        ],
+        [
+            "39c2b70152d911eebcf754bf647df350",
+            "39c28fd952d911ee9ee554bf647df350"
+        ],
+        [
+            "39c1a57a52d911eea96f54bf647df350",
+            "39c2ddf652d911ee8d6554bf647df350"
+        ],
+        [
+            "39c1cc9752d911eebbbe54bf647df350",
+            "39c2ddfe52d911eebdfa54bf647df350"
+        ],
+        [
+            "39c2de0052d911eebec554bf647df350",
+            "39c2de0552d911ee9a1454bf647df350"
+        ],
+        [
+            "39c3050f52d911ee974f54bf647df350",
+            "39c32c1952d911eead5654bf647df350"
+        ],
+        [
+            "39c32c2952d911ee94f154bf647df350",
+            "39c3531c52d911eebdc154bf647df350"
+        ],
+        [
+            "39c1f3a952d911ee9df854bf647df350",
+            "39c32c2552d911ee8ca854bf647df350"
+        ],
+        [
+            "39c3531e52d911ee924554bf647df350",
+            "39c32c1f52d911ee995e54bf647df350"
+        ]
+    ],
+    "events": {
+        "39c3532252d911eeb34854bf647df350": "39c28fe452d911eeb0fe54bf647df350",
+        "39c3532852d911eea97254bf647df350": "39c2ddf352d911ee81c754bf647df350"
+    },
+    "vars": {
+        "39c1304b52d911ee9e2c54bf647df350": {
+            "name": [
+                "Project Name"
+            ],
+            "type": [
+                "String"
+            ],
+            "value": [
+                null
+            ],
+            "default_value": [
+                "GJ2023"
+            ],
+            "is_exposed": [
+                false
+            ],
+            "regex": [
+                ".+"
+            ]
+        },
+        "39c1304c52d911ee864854bf647df350": {
+            "name": [
+                "LDAP Password"
+            ],
+            "type": [
+                "Password"
+            ],
+            "value": [
+                null
+            ],
+            "default_value": [
+                ""
+            ],
+            "is_exposed": [
+                true
+            ],
+            "regex": [
+                ".+"
+            ],
+            "user_input_box_tag": "39c17e5e52d911ee8d6454bf647df350"
+        },
+        "39c1304d52d911eea1c254bf647df350": {
+            "name": [
+                "Unreal Installation Directory"
+            ],
+            "type": [
+                "String"
+            ],
+            "value": [
+                null
+            ],
+            "default_value": [
+                ""
+            ],
+            "is_exposed": [
+                true
+            ],
+            "regex": [
+                ".+"
+            ],
+            "user_input_box_tag": "39c17e5f52d911ee845754bf647df350"
+        },
+        "39c1575852d911eeb56354bf647df350": {
+            "name": [
+                "P4PORT"
+            ],
+            "type": [
+                "String"
+            ],
+            "value": [
+                null
+            ],
+            "default_value": [
+                "VNSGNSP4SRV:1666"
+            ],
+            "is_exposed": [
+                false
+            ],
+            "regex": [
+                ".+"
+            ]
+        },
+        "39c1575952d911eeba9054bf647df350": {
+            "name": [
+                "P4Charset"
+            ],
+            "type": [
+                "String"
+            ],
+            "value": [
+                null
+            ],
+            "default_value": [
+                "none"
+            ],
+            "is_exposed": [
+                false
+            ],
+            "regex": [
+                ".+"
+            ]
+        },
+        "39c1575a52d911eea92f54bf647df350": {
+            "name": [
+                "P4CLIENT"
+            ],
+            "type": [
+                "String"
+            ],
+            "value": [
+                null
+            ],
+            "default_value": [
+                ""
+            ],
+            "is_exposed": [
+                false
+            ],
+            "regex": [
+                ".+"
+            ]
+        }
+    }
+}

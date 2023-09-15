@@ -1,6 +1,6 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
      xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
-  <Package Name="Momotarou" Manufacturer="Tu Nguyen" Version="0.0.0.2" UpgradeCode="ea8657ca-05af-4381-b3ec-b6e2e4af99e9">
+  <Package Name="Momotarou" Manufacturer="Tu Nguyen" Version="0.0.0.1" UpgradeCode="ea8657ca-05af-4381-b3ec-b6e2e4af99e9">
     <MajorUpgrade DowngradeErrorMessage="!(loc.DowngradeError)" />
 
     <Feature Id="Main">

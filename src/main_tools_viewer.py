@@ -5,7 +5,7 @@ import logging
 from logging import Logger, Formatter, Handler
 from logging.handlers import QueueHandler, QueueListener
 
-from libs.constants import TOOLS_VIEWER_APP_NAME
+from libs.constants import TOOLS_VIEWER_APP_NAME, LOCALAPPDATA
 from multiprocessing import Queue
 from typing import Tuple
 import psutil
@@ -125,12 +125,11 @@ def _set_logger_level_on_debug_mode(logger: Logger, is_debug_mode: bool):
 
 
 def _get_log_output_dir(logger_name: str) -> str:
-    current_path = os.path.dirname(os.path.abspath(__file__))
-    log_folder = current_path + '/Logs'
+    log_folder = LOCALAPPDATA / 'Logs'
     if not os.path.exists(log_folder):
         os.mkdir(log_folder)
-    log_dir = log_folder + f'/{logger_name}.log'
-    return log_dir
+    log_dir = log_folder / f'{logger_name}.log'
+    return log_dir.as_posix()
 
 
 def _setup_file_handler(logger_name: str, handler_formatter: Formatter) -> Handler:

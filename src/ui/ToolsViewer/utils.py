@@ -7,7 +7,7 @@ def tkinter_file_dialog() -> Path:
     root = Tk()
     root.withdraw()  # Hide the main tkinter window
     file_path = filedialog.askopenfilename(title='Open Project',
-                                           filetypes=[('RPROJECT Files', '*.mproject')],
+                                           filetypes=[('MPROJECT Files', '*.mproject')],
                                            initialdir=Path(__file__).parent.parent.parent)
     return Path(file_path)
 
