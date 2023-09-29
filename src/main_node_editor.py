@@ -8,20 +8,17 @@ from multiprocessing import Queue
 from typing import Tuple
 
 import psutil
-import requests
 
 from core.executor import setup_executor_logger
 from core.utils import json_load_from_file_path
 from libs.constants import NODE_EDITOR_APP_NAME, LOCALAPPDATA
 from libs.p4util import setup_p4_logger
-from ui.NodeEditor.main_ui import initialize_node_editor_project, setup_dpg_font, setup_dpg_icon, initialize_dpg
+from ui.NodeEditor.main_ui import initialize_node_editor_project_and_get_update_status, setup_dpg_font, setup_dpg_icon, \
+    initialize_dpg
+from core.self_update import update_tool_to_lastest_version
 
 
 def main():
-    # s = requests.Session()
-    # s.verify = r"G:\gitlab\momotarou\src\certs\gitlab.crt"
-    # a = requests.get("https://vngitlab.virtuosgames.com/api/v4/projects", cert="certs/gitlab.pem")
-    # print(a.content)
     setting_file_path, packages_file_path, is_debug_mode, project_path = parse_argument()
     logger, logger_queue, queue_listener = setup_logger(is_debug_mode)
     logger.info("***** Load Config *****")
@@ -33,9 +30,10 @@ def main():
     setup_dpg_icon()
     # demo.show_demo()
     logger.info('**** Initialize Node Editor Project *****')
-    initialize_node_editor_project(setting_dict, packages_list, logger_queue, is_debug_mode, project_path)
+    is_schedule_update = initialize_node_editor_project_and_get_update_status(setting_dict, packages_list, logger_queue,
+                                                                              is_debug_mode, project_path)
     logger.info('**** DearPyGui Terminated! *****')
-    on_terminate_application(queue_listener)
+    on_terminate_application(queue_listener, is_schedule_update)
 
 
 def parse_argument():
@@ -175,11 +173,13 @@ def _construct_and_add_queue_handler_to_logger(logger: Logger, *args: Handler) -
     return logger_queue, ql
 
 
-def on_terminate_application(queue_listener: QueueListener):
+def on_terminate_application(queue_listener: QueueListener, is_schedule_update=False):
     queue_listener.stop()
     # Kill child processes if still alive
     this_proc = os.getpid()
     kill_proc_tree(this_proc)
+    if is_schedule_update:
+        update_tool_to_lastest_version()
 
 
 def kill_proc_tree(pid):

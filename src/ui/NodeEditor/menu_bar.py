@@ -218,7 +218,13 @@ def initialize_menu_bar(node_editor_project, setting_dict: dict):
             dpg.add_menu_item(
                 tag='Menu_Help_About',
                 label='About',
-                callback=callback_show_about_window
+                callback=callback_show_about_window,
+                user_data=setting_dict['version']
+            )
+            dpg.add_menu_item(
+                tag='Menu_Help_Update',
+                label='Check for update',
+                callback=node_editor_project.callback_check_for_update,
             )
 
 
@@ -232,9 +238,10 @@ def callback_report_issue(sender, app_data, user_data):
     webbrowser.open(repo_url + '-/issues/new')
 
 
-def callback_show_about_window():
+def callback_show_about_window(sender, app_data, user_data):
     with dpg.window(no_resize=True):
-        dpg.add_text('RIOT UNIVERSAL TOOL', indent=120)
+        dpg.add_text('MOMOTAROU', indent=140)
+        dpg.add_text(f'Version {user_data}', indent=143)
         dpg.add_separator()
         dpg.add_text('Made by the contribution of Character TS team @ Virtuos-Sparx:')
         dpg.add_text('Nguyen Vu Duc Thuy @thuy.nguyen', bullet=True)

@@ -295,3 +295,18 @@ def get_last_project_file_path() -> str:
 
 def save_this_session_data():
     pass
+
+
+def convert_version_to_int(version: str) -> int:
+    converted_string = version
+    if not version[-1].isdigit():
+        converted_string = version[:-1]
+    converted_int = 0
+    for i, sub_version in enumerate(converted_string.split('.')):
+        if i == 0:
+            converted_int += int(sub_version) * 100
+        if i == 1:
+            converted_int += int(sub_version) * 10
+        if i == 2:
+            converted_int += int(sub_version)
+    return converted_int

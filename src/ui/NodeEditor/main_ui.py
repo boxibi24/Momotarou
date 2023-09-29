@@ -40,8 +40,8 @@ def setup_dpg_icon():
     dpg.set_viewport_small_icon(icon_path.as_posix())
 
 
-def initialize_node_editor_project(setting_dict: dict, packages_list: list,
-                                   logger_queue: Queue, is_debug_mode: bool, project_path: str):
+def initialize_node_editor_project_and_get_update_status(setting_dict: dict, packages_list: list,
+                                                         logger_queue: Queue, is_debug_mode: bool, project_path: str) -> bool:
     create_localappdata_storage_dir()
     node_editor_project: NodeEditor = _initialize_primary_window_as_node_graph(setting_dict, packages_list,
                                                                                logger_queue,
@@ -55,7 +55,7 @@ def initialize_node_editor_project(setting_dict: dict, packages_list: list,
 
     render_dpg_frame(node_editor_project)
 
-    _on_close_project(node_editor_project)
+    return destruct_project_and_get_update_status(node_editor_project)
 
 
 def create_localappdata_storage_dir():
@@ -137,9 +137,10 @@ def _update_log_window():
         dpg.configure_item('log', default_value=f.read())
 
 
-def _on_close_project(node_editor_project: NodeEditor):
+def destruct_project_and_get_update_status(node_editor_project: NodeEditor) -> bool:
     node_editor_project.update_cached_user_inputs_files_with_current_tab()
     node_editor_project.cache_as_last_project()
+    is_schedule_update = node_editor_project.is_schedule_for_update
     for node in node_editor_project.current_node_editor_instance.node_instance_dict.values():
         node.on_node_deletion()
     node_editor_project.thread_pool.close()
@@ -147,3 +148,4 @@ def _on_close_project(node_editor_project: NodeEditor):
     # Remove cache folder
     shutil.rmtree(CACHE_DIR)
     dpg.destroy_context()
+    return is_schedule_update
