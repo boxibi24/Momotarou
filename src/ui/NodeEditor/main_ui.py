@@ -55,7 +55,7 @@ def initialize_node_editor_project_and_get_update_status(setting_dict: dict, pac
 
     render_dpg_frame(node_editor_project)
 
-    return destruct_project_and_get_update_status(node_editor_project)
+    return destroy_project_and_get_update_status(node_editor_project)
 
 
 def create_localappdata_storage_dir():
@@ -137,7 +137,7 @@ def _update_log_window():
         dpg.configure_item('log', default_value=f.read())
 
 
-def destruct_project_and_get_update_status(node_editor_project: NodeEditor) -> bool:
+def destroy_project_and_get_update_status(node_editor_project: NodeEditor) -> bool:
     node_editor_project.update_cached_user_inputs_files_with_current_tab()
     node_editor_project.cache_as_last_project()
     is_schedule_update = node_editor_project.is_schedule_for_update

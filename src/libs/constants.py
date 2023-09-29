@@ -9,4 +9,5 @@ CACHE_DIR = LOCALAPPDATA / 'Cache'
 INTERMEDIATE_DIR = LOCALAPPDATA / 'Intermediate'
 LAST_SESSIONS_DIR = LOCALAPPDATA / 'LastSessions'
 RECENT_PROJECTS_STORAGE_FILE_PATH = LOCALAPPDATA / 'recent_projects.json'
+TEMP_DIR = Path(os.environ.get('temp'))
 
