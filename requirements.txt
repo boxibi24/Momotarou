@@ -5,7 +5,7 @@ p4python==2023.1.2454917
 
 psutil~=5.9.5
 
-wxPython~=4.2.1
+wxPython~=4.1.1
 
 requests~=2.31.0
 
