@@ -29,7 +29,7 @@ build:
   before_script:
     - python --version  # For debugging
     - python -m pip install --upgrade pip wheel setuptools
-    - apt-get update -y && apt-get install -y libgl1 zip dpkg-dev build-essential python3-dev freeglut3-dev
+    - apt-get update -y && apt-get install -y libgl1 zip attrdict3
   script:
     - mkdir bin
     - sh entrypoint-windows.sh
