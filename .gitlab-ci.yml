@@ -29,8 +29,11 @@ build:
   before_script:
     - python --version  # For debugging
     - python -m pip install --upgrade pip wheel setuptools attrdict3
-    - apt-get update -y && apt-get install -y libgl1 zip libwxgtk3.0-gtk3-dev
+    - apt-get update -y && apt-get install -y libgl1 zip
   script:
+    - wget "https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-22.04/wxPython-4.2.1-cp311-cp311-linux_x86_64.whl"
+    - ls
+    - pip install wxPython-4.2.1-cp311-cp311-linux_x86_64.whl
     - mkdir bin
     - sh entrypoint-windows.sh
     - cd src/dist
