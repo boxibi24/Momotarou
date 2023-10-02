@@ -29,7 +29,7 @@ build:
   before_script:
     - python --version  # For debugging
     - python -m pip install --upgrade pip wheel setuptools attrdict3
-    - apt-get update -y && apt-get install -y libgl1 zip libgtk-3-dev
+    - apt-get update -y && apt-get install -y libgl1 zip libwxgtk3.0-gtk3-dev
   script:
     - mkdir bin
     - sh entrypoint-windows.sh
