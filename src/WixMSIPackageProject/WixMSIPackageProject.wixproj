@@ -1,4 +1,4 @@
-<Project Sdk="WixToolset.Sdk/4.0.0">
+<Project Sdk="WixToolset.Sdk/4.0.2">
   <PropertyGroup>
     <OutputName>Momotarou</OutputName>
   </PropertyGroup>
@@ -17,9 +17,9 @@
     <None Include="RemoveExeComponentsTransform.xslt" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="WixToolset.Heat" Version="4.0.1" />
+    <PackageReference Include="WixToolset.Heat" Version="4.0.2" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="WixToolset.UI.wixext" Version="4.0.1" />
+    <PackageReference Include="WixToolset.UI.wixext" Version="4.0.2" />
   </ItemGroup>
 </Project>
