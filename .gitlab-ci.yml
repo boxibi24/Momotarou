@@ -64,7 +64,7 @@ msiBuild:
     - cd src/WixMSIPackageProject
     - ls
     - dotnet tool install --global wix --version 4.0.2
-    - dotnet build ./WixMSIPackageProject.sln -t:Build
+    - dotnet build ./WixMSIPackageProject.sln -t:Build --arch x86 --configuration Release
   #   paths:
   #     - bin/
   #   when: on_success
