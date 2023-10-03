@@ -54,7 +54,9 @@ cp -r nodes ./dist/ToolsViewer
 cp -r ../examples ./dist/ToolsViewer
 
 cd WixMSIPackageProject
-ls -la ~/.wine/dosdevices/
+
+wine dotnet tool install --global wix --version 4.0.2
+#ls -la ~/.wine/dosdevices/
 
 #wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
 #chmod +x ./dotnet-install.sh
