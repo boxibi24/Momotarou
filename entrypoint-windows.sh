@@ -31,6 +31,7 @@ fi
 
 #cd $WORKDIR
 
+
 if [ -f requirements.txt ]; then
   pip install -r requirements.txt
 fi # [ -f requirements.txt ]
@@ -52,6 +53,11 @@ cp -r ../examples ./dist/NodeEditor
 cp -r nodes ./dist/ToolsViewer
 cp -r ../examples ./dist/ToolsViewer
 
-cd ..
+cd WixMSIPackageProject
+
+dotnet tool install --global wix --version 4.0.2
+dotnet build ./WixMSIPackageProject.sln --runtime win-x86 --configuration Release -p:ImportByWildcardBeforeSolution=false -p:GenerateSerializationAssemblies=Off
+
+cd ../..
 
 
