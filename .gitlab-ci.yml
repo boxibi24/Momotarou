@@ -52,7 +52,7 @@ msiBuild:
   stage: msiBuild
   image: 
     name: ghcr.io/rektinator/msbuild-docker:17.7.4
-    entrypoint: ["/bin/sh", "-c"]
+    entrypoint: ['/bin/sh', '-c']
   rules:
     - if: $CI_COMMIT_TAG
   # before_script:
