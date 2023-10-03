@@ -29,7 +29,7 @@ build:
   before_script:
     - python --version  # For debugging
     - python -m pip install --upgrade pip wheel setuptools attrdict3
-    - python -m pip install -U -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-20.04/ wxPython
+    - python -m pip install wxPython==4.1.1
     - apt-get update -y && apt-get install -y libgl1 zip
   script:
     # - wget --no-check-certificate "https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-18.04/wxPython-4.1.1-cp37-cp37m-linux_x86_64.whl"
