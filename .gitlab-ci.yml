@@ -3,6 +3,7 @@ default:
 
 stages:
   - build
+  - msiBuild
   - upload
   - release
   - pages
@@ -46,6 +47,22 @@ build:
     paths:
       - bin/
     when: on_success
+
+msiBuild:
+  stage: msiBuild
+  image: compulim/msbuild:latest
+  rules:
+    - if: $CI_COMMIT_TAG
+  before_script:
+    - ls
+  script:
+    # - wget --no-check-certificate "https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-18.04/wxPython-4.1.1-cp37-cp37m-linux_x86_64.whl"
+    # - ls
+    # - pip install wxPython-4.1.1-cp37-cp37m-linux_x86_64.whl
+    - msbuild
+  #   paths:
+  #     - bin/
+  #   when: on_success
 
 
 upload:
