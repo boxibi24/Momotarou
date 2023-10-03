@@ -83,7 +83,8 @@ pages:
     - virtualenv venv
     - source venv/bin/activate
     - apt-get update && apt-get install -y libgl1
-    - pip install dearpygui dill p4python psutil wxPython requests urllib3 pywin32
+    - python -m pip install --upgrade pip wheel setuptools attrdict3
+    - pip install dearpygui dill p4python psutil wxPython requests urllib3
     - pip install sphinx sphinx-book-theme sphinx-autodoc-typehints myst-nb sphinx-thebe
     - pip install pyinstaller
 
