@@ -59,7 +59,7 @@ msiBuild:
   #   - ls
   script:
     # - wget --no-check-certificate "https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-18.04/wxPython-4.1.1-cp37-cp37m-linux_x86_64.whl"
-    # - ls
+    - ls
     # - pip install wxPython-4.1.1-cp37-cp37m-linux_x86_64.whl
     - cd src/WixMSIPackageProject
     - msbuild WixMSIPackageProject.sln -t:Build
