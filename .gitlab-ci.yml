@@ -62,6 +62,7 @@ msiBuild:
     - ls
     # - pip install wxPython-4.1.1-cp37-cp37m-linux_x86_64.whl
     - cd src/WixMSIPackageProject
+    - ls
     - msbuild WixMSIPackageProject.sln -t:Build
   #   paths:
   #     - bin/
