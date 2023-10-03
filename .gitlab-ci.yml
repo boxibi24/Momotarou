@@ -50,13 +50,11 @@ build:
 
 msiBuild:
   stage: msiBuild
-  image: 
-    name: ghcr.io/rektinator/msbuild-docker:17.7.4
-    entrypoint: ['/bin/bash', '-c', 'ln -snf /bin/bash /bin/sh && /bin/bash -c $0']
+  image: ghcr.io/rektinator/msbuild-docker:17.7.4
   rules:
     - if: $CI_COMMIT_TAG
-  before_script:
-    - ls
+  # before_script:
+  #   - ls
   script:
     # - wget --no-check-certificate "https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-18.04/wxPython-4.1.1-cp37-cp37m-linux_x86_64.whl"
     # - ls
