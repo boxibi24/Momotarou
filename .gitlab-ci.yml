@@ -2,8 +2,8 @@ default:
   image: python:latest
 
 stages:
-  - build
   - msiBuild
+  - build
   - upload
   - release
   - pages
@@ -50,7 +50,7 @@ build:
 
 msiBuild:
   stage: msiBuild
-  image: mcr.microsoft.com/dotnet/sdk:6.0
+  image: ghcr.io/rektinator/msbuild-docker:17.7.4
   rules:
     - if: $CI_COMMIT_TAG
   before_script:
@@ -59,7 +59,8 @@ msiBuild:
     # - wget --no-check-certificate "https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-18.04/wxPython-4.1.1-cp37-cp37m-linux_x86_64.whl"
     # - ls
     # - pip install wxPython-4.1.1-cp37-cp37m-linux_x86_64.whl
-    - msbuild
+    - cd src/WixMSIPackageProject
+    - msbuild WixMSIPackageProject.sln -t:Build
   #   paths:
   #     - bin/
   #   when: on_success
