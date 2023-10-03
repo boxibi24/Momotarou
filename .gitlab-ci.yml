@@ -101,8 +101,7 @@ pages:
     - source venv/bin/activate
     - apt-get update && apt-get install -y libgl1
     - python -m pip install --upgrade pip wheel setuptools attrdict3
-    - pip install dill p4python psutil wxPython requests urllib3
-    - pip install dearpygui==1.9.1
+    - pip install dill p4python psutil requests urllib3
     - pip install sphinx sphinx-book-theme sphinx-autodoc-typehints myst-nb sphinx-thebe
     - pip install pyinstaller
 
