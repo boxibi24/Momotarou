@@ -29,6 +29,7 @@ if [[ "$PYPI_URL" != "https://pypi.python.org/" ]] || \
     cat /wine/drive_c/users/root/pip/pip.ini
 fi
 
+mkdir -p /wine/drive_c/indows/system32
 cp -r dependencies /wine/drive_c/windows/system32
 
 #cd $WORKDIR
