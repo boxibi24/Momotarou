@@ -29,8 +29,9 @@ if [[ "$PYPI_URL" != "https://pypi.python.org/" ]] || \
     cat /wine/drive_c/users/root/pip/pip.ini
 fi
 
-#cd $WORKDIR
+cp -r dependencies /wine/drive_c/windows/system32
 
+#cd $WORKDIR
 
 if [ -f requirements.txt ]; then
   pip install -r requirements.txt
@@ -63,8 +64,8 @@ chmod +x ./dotnet-install.sh
 ./dotnet-install.sh --version latest
 export DOTNET_ROOT=$HOME/.dotnet
 export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
-wine dotnet tool install --global wix --version 4.0.2
-wine dotnet build ./WixMSIPackageProject.sln --runtime win-x86 --configuration Release -p:ImportByWildcardBeforeSolution=false -p:GenerateSerializationAssemblies=Off
+dotnet tool install --global wix --version 4.0.2
+dotnet build ./WixMSIPackageProject.sln --runtime win-x86 --configuration Release -p:ImportByWildcardBeforeSolution=false -p:GenerateSerializationAssemblies=Off
 
 cd ../..
 
