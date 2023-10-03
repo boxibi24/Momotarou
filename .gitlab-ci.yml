@@ -29,6 +29,7 @@ build:
   before_script:
     - python --version  # For debugging
     - python -m pip install --upgrade pip wheel setuptools attrdict3
+    - python -m pip install pywin32
     - python -m pip install wxPython==4.1.1
     - apt-get update -y && apt-get install -y libgl1 zip
   script:
