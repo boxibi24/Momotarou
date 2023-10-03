@@ -51,7 +51,7 @@ build:
 msiBuild:
   stage: msiBuild
   image: 
-    name: mcr.microsoft.com/dotnet/sdk:6.0
+    name: mcr.microsoft.com/dotnet/sdk:7.0
     entrypoint: [""]
   rules:
     - if: $CI_COMMIT_TAG
@@ -64,7 +64,7 @@ msiBuild:
     - cd src/WixMSIPackageProject
     - ls
     - dotnet tool install --global wix --version 4.0.2
-    - dotnet build ./WixMSIPackageProject.sln --runtime win-x86 --configuration Release -p:ImportByWildcardBeforeSolution=false
+    - dotnet build ./WixMSIPackageProject.sln --runtime win-x86 --configuration Release -p:ImportByWildcardBeforeSolution=false -p:GenerateSerializationAssemblies=Off
   #   paths:
   #     - bin/
   #   when: on_success
