@@ -11,4 +11,4 @@ requests~=2.31.0
 
 urllib3~=2.0.4
 
-pywin32~=306
+pywin32==306
