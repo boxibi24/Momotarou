@@ -17,6 +17,7 @@ set -e
 #
 #mkdir -p /wine/drive_c/indows/system32
 #cp -r dependencies /wine/drive_c/windows/system32
+ls
 
 if [[ "$PYPI_URL" != "https://pypi.python.org/" ]] || \
    [[ "$PYPI_INDEX_URL" != "https://pypi.python.org/simple" ]]; then

@@ -7,7 +7,7 @@ block_cipher = None
 a = Analysis(
     ['main_node_editor.py'],
     pathex=['./'],
-    binaries=[(/dependencies/vcruntime140_1.dll, '.')],
+    binaries=[(vcruntime140_1.dll, '.')],
     datas=[('Config/*.cfg', 'Config'), ('font/*.ttf', 'font'), ('icons/*.ico', 'icons'), ('icons/*.png', 'icons')],
     hiddenimports=['wx'],
     hookspath=[],
