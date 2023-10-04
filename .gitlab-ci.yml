@@ -81,10 +81,11 @@ upload:
   rules:
     - if: $CI_COMMIT_TAG
   script:
+    - Remove-item alias:curl
     - |
-      curl --insecure -H "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file bin/${WINDOWS_BINARY} "${PACKAGE_REGISTRY_URL}/${WINDOWS_BINARY}"
+      curl --insecure --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file bin/${WINDOWS_BINARY} "${PACKAGE_REGISTRY_URL}/${WINDOWS_BINARY}"
     - |
-      curl --insecure -H "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file bin/${WINDOWS_MSI} "${PACKAGE_REGISTRY_URL}/${WINDOWS_MSI}"
+      curl --insecure -header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file bin/${WINDOWS_MSI} "${PACKAGE_REGISTRY_URL}/${WINDOWS_MSI}"
     # - |
     #   curl --insecure --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file bin/${WINDOWS_MSI} "${PACKAGE_REGISTRY_URL}/${WINDOWS_MSI}"
 
@@ -98,8 +99,12 @@ release:
   rules:
     - if: $CI_COMMIT_TAG
   script:
+    - $env:asset1 = "{\"name\":\"${WINDOWS_BINARY}\",\"url\":\"${PACKAGE_REGISTRY_URL}/${WINDOWS_BINARY}\"}"
+    - $env:asset2 = "{\"name\":\"${WINDOWS_MSI}\",\"url\":\"${PACKAGE_REGISTRY_URL}/${WINDOWS_MSI}\"}"
+    - $env:asset1json = $env:asset1 | ConvertTo-Json
+    - $env:asset2json = $env:asset2 | ConvertTo-Json
     - |
-      release-cli create --name "Release ${CI_COMMIT_TAG}" --tag-name ${CI_COMMIT_TAG} --assets-link "{\"name\":\"${WINDOWS_BINARY}\",\"url\":\"${PACKAGE_REGISTRY_URL}/${WINDOWS_BINARY}\"}" --assets-link "{\"name\":\"${WINDOWS_MSI}\",\"url\":\"${PACKAGE_REGISTRY_URL}/${WINDOWS_MSI}\"}"
+      release-cli create --name "Release ${CI_COMMIT_TAG}" --tag-name ${CI_COMMIT_TAG} --assets-link $env:asset1json --assets-link $env:asset2json
 
 pages:
   stage: pages
