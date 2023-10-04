@@ -15,8 +15,8 @@ set -e
 # In case the user specified a custom URL for PYPI, then use
 # that one, instead of the default one.
 #
-mkdir -p /wine/drive_c/indows/system32
-cp -r dependencies /wine/drive_c/windows/system32
+#mkdir -p /wine/drive_c/indows/system32
+#cp -r dependencies /wine/drive_c/windows/system32
 
 if [[ "$PYPI_URL" != "https://pypi.python.org/" ]] || \
    [[ "$PYPI_INDEX_URL" != "https://pypi.python.org/simple" ]]; then
