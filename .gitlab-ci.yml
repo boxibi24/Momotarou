@@ -14,6 +14,7 @@ variables:
   # See https://docs.gitlab.com/ee/user/packages/generic_packages/#publish-a-package-file
   PACKAGE_VERSION: "1.0.0"
   WINDOWS_BINARY: "momotarou_release_${PACKAGE_VERSION}.zip"
+  WINDOWS_MSI: "momotarou.msi"
   PACKAGE_REGISTRY_URL: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/releases/${PACKAGE_VERSION}"
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 
@@ -26,7 +27,7 @@ build:
     - if: $CI_COMMIT_TAG
   before_script:
     - python --version  # For debugging
-    - python -m pip install --upgrade pip wheel setuptools attrdict3
+    # - python -m pip install --upgrade pip wheel setuptools attrdict3
     - pip install -r requirements.txt
     # - python -m pip install pywin32
     # - python -m pip install wxPython==4.1.1
@@ -52,8 +53,7 @@ build:
     # - winget install Microsoft.DotNet.SDK.7
     # - dotnet tool install --global wix --version 4.0.2
     - cd WixMSIPackageProject
-    - msbuild -Restore
-    - msbuild ./WixMSIPackageProject.sln /t:Build /p:Configuration=Release /p:Platform=x64
+    - msbuild -Restore ./WixMSIPackageProject.sln /t:Build /p:Configuration=Release /p:Platform=x64
     - cp ./bin/x64/Release/en-US/Momotarou.msi ../../bin
     - cd ../dist
     # - zip -r ${WINDOWS_BINARY} *
@@ -67,18 +67,20 @@ build:
 
 upload:
   stage: upload
-  image: curlimages/curl:latest
+  # image: curlimages/curl:latest
   rules:
     - if: $CI_COMMIT_TAG
   script:
     - |
       curl --insecure --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file bin/${WINDOWS_BINARY} "${PACKAGE_REGISTRY_URL}/${WINDOWS_BINARY}"
+    - |
+      curl --insecure --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file bin/${WINDOWS_MSI} "${PACKAGE_REGISTRY_URL}/${WINDOWS_MSI}"
 
 release:
   # Caution, as of 2021-02-02 these assets links require a login, see:
   # https://gitlab.com/gitlab-org/gitlab/-/issues/299384
   stage: release
-  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  # image: registry.gitlab.com/gitlab-org/release-cli:latest
   variables:
     ADDITIONAL_CA_CERT_BUNDLE: $CA_CERT
   rules:
@@ -96,14 +98,15 @@ pages:
       - venv/
   before_script:
     - python --version  # For debugging
-    - pip install virtualenv
-    - virtualenv venv
-    - source venv/bin/activate
-    - apt-get update && apt-get install -y libgl1
-    - python -m pip install --upgrade pip wheel setuptools attrdict3
-    - pip install dill p4python psutil requests urllib3
+    # - pip install virtualenv
+    # - virtualenv venv
+    # - source venv/bin/activate
+    # - apt-get update && apt-get install -y libgl1
+    # - python -m pip install --upgrade pip wheel setuptools attrdict3
+    - pip install -r requirements.txt
+    # - pip install dill p4python psutil requests urllib3 
     - pip install sphinx sphinx-book-theme sphinx-autodoc-typehints myst-nb sphinx-thebe
-    - pip install pyinstaller
+    # - pip install pyinstaller
 
   script:
     - cd src/docs
