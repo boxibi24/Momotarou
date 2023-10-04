@@ -50,6 +50,11 @@ build:
     - cd src
     - pyinstaller --clean -y --dist ./dist --workpath /tmp NodeEditor.spec
     - pyinstaller --clean -y --dist ./dist --workpath /tmp ToolsViewer.spec
+    - cp -r nodes ./dist/NodeEditor
+    - cp -r ../examples ./dist/NodeEditor
+    - cp -r nodes ./dist/ToolsViewer
+    - cp -r ../examples ./dist/ToolsViewer
+
     # - winget install Microsoft.DotNet.SDK.7
     # - dotnet tool install --global wix --version 4.0.2
     - cd WixMSIPackageProject
