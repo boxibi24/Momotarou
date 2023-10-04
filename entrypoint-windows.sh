@@ -15,6 +15,9 @@ set -e
 # In case the user specified a custom URL for PYPI, then use
 # that one, instead of the default one.
 #
+mkdir -p /wine/drive_c/indows/system32
+cp -r dependencies /wine/drive_c/windows/system32
+
 if [[ "$PYPI_URL" != "https://pypi.python.org/" ]] || \
    [[ "$PYPI_INDEX_URL" != "https://pypi.python.org/simple" ]]; then
     # the funky looking regexp just extracts the hostname, excluding port
@@ -29,8 +32,6 @@ if [[ "$PYPI_URL" != "https://pypi.python.org/" ]] || \
     cat /wine/drive_c/users/root/pip/pip.ini
 fi
 
-mkdir -p /wine/drive_c/indows/system32
-cp -r dependencies /wine/drive_c/windows/system32
 
 #cd /wine/drive_c/windows/system32
 #ls
