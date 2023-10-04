@@ -15,9 +15,7 @@ set -e
 # In case the user specified a custom URL for PYPI, then use
 # that one, instead of the default one.
 #
-#mkdir -p /wine/drive_c/indows/system32
-#cp -r dependencies /wine/drive_c/windows/system32
-ls
+
 
 if [[ "$PYPI_URL" != "https://pypi.python.org/" ]] || \
    [[ "$PYPI_INDEX_URL" != "https://pypi.python.org/simple" ]]; then
@@ -33,6 +31,27 @@ if [[ "$PYPI_URL" != "https://pypi.python.org/" ]] || \
     cat /wine/drive_c/users/root/pip/pip.ini
 fi
 
+wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
+chmod +x ./dotnet-install.sh
+./dotnet-install.sh --version latest
+export DOTNET_ROOT=$HOME/.dotnet
+export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
+
+#mkdir -p /wine/drive_c/indows/system32
+cd src/dependencies
+#cp -r dependencies $W_SYSTEM_DLLS
+cp *.dll "$W_SYSTEM_DLLS"
+cd ..
+#ls
+
+cd WixMSIPackageProject
+
+#ls -la ~/.wine/dosdevices/
+#wine dotnet tool install --global wix --version 4.0.2
+dotnet tool install --global wix --version 4.0.2
+dotnet build ./WixMSIPackageProject.sln --runtime win-x86 --configuration Release -p:ImportByWildcardBeforeSolution=false -p:GenerateSerializationAssemblies=Off
+
+cd ../..
 
 #cd /wine/drive_c/windows/system32
 #ls
@@ -59,20 +78,5 @@ cp -r nodes ./dist/NodeEditor
 cp -r ../examples ./dist/NodeEditor
 cp -r nodes ./dist/ToolsViewer
 cp -r ../examples ./dist/ToolsViewer
-
-cd WixMSIPackageProject
-
-#ls -la ~/.wine/dosdevices/
-#wine dotnet tool install --global wix --version 4.0.2
-
-wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
-chmod +x ./dotnet-install.sh
-./dotnet-install.sh --version latest
-export DOTNET_ROOT=$HOME/.dotnet
-export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
-dotnet tool install --global wix --version 4.0.2
-dotnet build ./WixMSIPackageProject.sln --runtime win-x86 --configuration Release -p:ImportByWildcardBeforeSolution=false -p:GenerateSerializationAssemblies=Off
-
-cd ../..
 
 
