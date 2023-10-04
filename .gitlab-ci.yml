@@ -60,6 +60,8 @@ build:
     - powershell Compress-Archive .\ ${WINDOWS_BINARY}
     - dir
     - cp ${WINDOWS_BINARY} ../../bin
+    - cd ../../bin
+    - dir
   artifacts:
     paths:
       - bin/
