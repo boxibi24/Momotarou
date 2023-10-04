@@ -53,8 +53,7 @@ build:
     # - winget install Microsoft.DotNet.SDK.7
     # - dotnet tool install --global wix --version 4.0.2
     - cd WixMSIPackageProject
-    - $env:ProductVersion=${PACKAGE_VERSION}
-    - msbuild -Restore ./WixMSIPackageProject.sln /t:Build /p:Configuration=Release /p:Platform=x64 /p:ProductVersion=$env:ProductVersion
+    - msbuild -Restore ./WixMSIPackageProject.sln /t:Build /p:Configuration=Release /p:Platform=x64 /p:DefineConstants="ProductVersion=${PACKAGE_VERSION}"
     - cp ./bin/x64/Release/en-US/Momotarou.msi ../../bin
     - cd ../dist
     # - zip -r ${WINDOWS_BINARY} *
