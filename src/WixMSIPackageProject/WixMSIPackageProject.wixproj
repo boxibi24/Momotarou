@@ -1,6 +1,7 @@
 <Project Sdk="WixToolset.Sdk/4.0.2">
   <PropertyGroup>
     <OutputName>Momotarou</OutputName>
+    <SuppressValidation>true</SuppressValidation>
   </PropertyGroup>
   <ItemGroup>
     <HarvestDirectory Include="../dist">
