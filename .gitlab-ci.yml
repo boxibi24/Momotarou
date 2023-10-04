@@ -1,5 +1,3 @@
-default:
-  image: mcr.microsoft.com/windows-cssc/python3.7.2windows:ltsc2019
 
 stages:
   - build
@@ -51,10 +49,10 @@ build:
     - cd src
     - pyinstaller --clean -y --dist ./dist --workpath /tmp NodeEditor.spec
     - pyinstaller --clean -y --dist ./dist --workpath /tmp ToolsViewer.spec
-    - winget install Microsoft.DotNet.SDK.7
-    - dotnet tool install --global wix --version 4.0.2
+    # - winget install Microsoft.DotNet.SDK.7
+    # - dotnet tool install --global wix --version 4.0.2
     - cd WixMSIPackageProject
-    - dotnet build ./WixMSIPackageProject.sln --runtime win-x86 --configuration Release -p:ImportByWildcardBeforeSolution=false -p:GenerateSerializationAssemblies=Off -o ../../bin
+    - msbuild ./WixMSIPackageProject.sln --runtime win-x86 --configuration Release -p:ImportByWildcardBeforeSolution=false -p:GenerateSerializationAssemblies=Off -o ../../bin
     - cd ../dist
     # - zip -r ${WINDOWS_BINARY} *
     - powershell Compress-Archive .\ ${WINDOWS_BINARY}
