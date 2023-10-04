@@ -17,6 +17,7 @@ variables:
   WINDOWS_MSI: "Momotarou.msi"
   PACKAGE_REGISTRY_URL: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/releases/${PACKAGE_VERSION}"
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  CURLEXE: 'C:\Program Files\Git\mingw64\bin\curl.exe'
 
 build:
   stage: build
@@ -83,9 +84,9 @@ upload:
   script:
     - Remove-item alias:curl
     - |
-      curl --insecure --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file bin/${WINDOWS_BINARY} "${PACKAGE_REGISTRY_URL}/${WINDOWS_BINARY}"
+      ${CURLEXE} '--insecure', '--header', "JOB-TOKEN: ${CI_JOB_TOKEN}", '--upload-file', 'bin/${WINDOWS_BINARY}', "${PACKAGE_REGISTRY_URL}/${WINDOWS_BINARY}"
     - |
-      curl --insecure -header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file bin/${WINDOWS_MSI} "${PACKAGE_REGISTRY_URL}/${WINDOWS_MSI}"
+      ${CURLEXE} '--insecure', '--header', "JOB-TOKEN: ${CI_JOB_TOKEN}", '--upload-file', 'bin/${WINDOWS_MSI}', "${PACKAGE_REGISTRY_URL}/${WINDOWS_MSI}"
     # - |
     #   curl --insecure --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file bin/${WINDOWS_MSI} "${PACKAGE_REGISTRY_URL}/${WINDOWS_MSI}"
 
