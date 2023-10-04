@@ -32,9 +32,9 @@ fi
 mkdir -p /wine/drive_c/indows/system32
 cp -r dependencies /wine/drive_c/windows/system32
 
-cd /wine/drive_c/windows/system32
-ls
-cd ../../../../..
+#cd /wine/drive_c/windows/system32
+#ls
+#cd ../../../../..
 #cd $WORKDIR
 
 if [ -f requirements.txt ]; then
