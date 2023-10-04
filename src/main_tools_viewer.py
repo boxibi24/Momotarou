@@ -11,6 +11,8 @@ from typing import Tuple
 import psutil
 from core.executor import setup_executor_logger
 from core.utils import json_load_from_file_path
+from core.self_update import init_update_manager_ui
+
 from ui.ToolsViewer.main_ui import initialize_dpg, setup_dpg_font, setup_dpg_icon, initialize_tools_viewer_project
 
 
@@ -24,9 +26,9 @@ def main():
     setup_dpg_font()
     setup_dpg_icon()
     logger.info('**** Initialize Node Editor Project *****')
-    initialize_tools_viewer_project(setting_dict, logger_queue, is_debug_mode, project_path)
+    is_schedule_update = initialize_tools_viewer_project(setting_dict, logger_queue, is_debug_mode, project_path)
     logger.info('**** DearPyGui Terminated! *****')
-    on_terminate_application(queue_listener)
+    on_terminate_application(queue_listener, is_schedule_update)
 
 
 def parse_argument():
@@ -165,11 +167,14 @@ def _construct_and_add_queue_handler_to_logger(logger: Logger, *args: Handler) -
     return logger_queue, ql
 
 
-def on_terminate_application(queue_listener: QueueListener):
+def on_terminate_application(queue_listener: QueueListener, is_schedule_update=False):
     queue_listener.stop()
     # Kill child processes if still alive
     this_proc = os.getpid()
     kill_proc_tree(this_proc)
+    if is_schedule_update:
+        # update_tool_to_lastest_version()
+        init_update_manager_ui()
 
 
 def kill_proc_tree(pid):

@@ -54,7 +54,7 @@ def initialize_tools_viewer_project(setting_dict: dict, logger_queue: Queue,
             tools_viewer_project.callback_project_open(0, {'file_path_name': last_project_file_path})
     render_dpg_frame()
 
-    _on_close_project(tools_viewer_project)
+    return destroy_project_and_get_update_status(tools_viewer_project)
 
 
 def create_localappdata_storage_dir():
@@ -111,9 +111,11 @@ def _update_log_window():
         dpg.configure_item('log', default_value=f.read())
 
 
-def _on_close_project(tools_viewer_project: ToolsViewer):
+def destroy_project_and_get_update_status(tools_viewer_project: ToolsViewer):
     tools_viewer_project.update_cached_user_inputs_files_with_current_tab()
     tools_viewer_project.cache_as_last_project()
+    is_schedule_update = tools_viewer_project.is_schedule_for_update
     tools_viewer_project.thread_pool.close()
     tools_viewer_project.thread_pool.join()
     dpg.destroy_context()
+    return is_schedule_update

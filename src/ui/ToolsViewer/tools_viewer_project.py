@@ -9,6 +9,7 @@ from core.utils import create_queueHandler_logger, json_load_from_file_path, add
 from core.data_loader import refresh_core_data_with_json_dict
 from core.executor import execute_event
 from core.enum_types import NodeTypeFlag
+from core.self_update import is_user_schedule_update_task
 
 from collections import OrderedDict
 from pathlib import Path
@@ -59,8 +60,18 @@ class ToolsViewer:
         self.logging_queue = logging_queue
         self.logger = create_queueHandler_logger(__name__, logging_queue, self._use_debug_print)
 
+        # ------- UPDATE CHECK ------
+        self.is_schedule_for_update = False
+        self._check_for_update()
+
         # ------- INITIALIZATION ______
         self._init_main_viewport()
+
+    def callback_check_for_update(self, sender, app_data, user_data):
+        self._check_for_update(is_startup=False)
+
+    def _check_for_update(self, is_startup=True):
+        self.is_schedule_for_update = is_user_schedule_update_task(self._setting_dict['version'], is_startup)
 
     def _init_main_viewport(self):
         default_tab_name = 'Default'

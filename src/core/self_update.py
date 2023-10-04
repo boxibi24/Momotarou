@@ -44,8 +44,10 @@ class UpdateManager:
                 os.remove(self.msi_dir)
             else:
                 self.msi_dir.touch()
-            with requests.get('https://vngitlab.virtuosgames.com/techart/charactertech/projectsetup/momotarou/'
-                              '-/raw/main/installfile/Momotarou.msi', stream=True, verify=False) as r:
+
+            with requests.get(f'https://vngitlab.virtuosgames.com/api/v4/projects/110/'
+                              f'packages/generic/releases/{get_latest_version()}/{TOOLSET_NAME}.msi',
+                              stream=True, verify=False) as r:
                 self.progressbar['maximum'] = int(r.headers.get('Content-Length'))
                 r.raise_for_status()
 
@@ -72,38 +74,38 @@ class UpdateManager:
 
 
 def is_user_schedule_update_task(current_version: str, is_startup=True) -> bool:
-    # app = wx.App()
-    # if is_current_software_latest(current_version) and is_startup:
-    #     del app
-    #     return False
-    # elif is_current_software_latest(current_version) and not is_startup:
-    #     wx.MessageBox(
-    #         f'{TOOLSET_NAME} is already in latest version: {current_version}. '
-    #         'Update information',
-    #         wx.OK | wx.ICON_INFORMATION)
-    #     del app
-    #     return False
-    #
-    # msg_box_type = wx.YES | wx.NO | wx.ICON_WARNING
-    # result = wx.MessageBox(
-    #     f'{TOOLSET_NAME} {current_version} needs to update to version {get_latest_version()}. '
-    #     f'If not, some functions might not work!'
-    #     f'\nSchedule an update?',
-    #     'Update information',
-    #     msg_box_type)
-    #
-    # if result == wx.YES:
-    #     msg_box_type = wx.OK | wx.ICON_INFORMATION
-    #     wx.MessageBox(
-    #         "The update task has been scheduled to be run after you close the current session!",
-    #         'Update information',
-    #         msg_box_type)
-    #     del app
-    #     return True
-    # else:
-    #     del app
-    #     return False
-    return True
+    app = wx.App()
+    if is_current_software_latest(current_version) and is_startup:
+        del app
+        return False
+    elif is_current_software_latest(current_version) and not is_startup:
+        wx.MessageBox(
+            f'{TOOLSET_NAME} is already in latest version: {current_version}. '
+            'Update information',
+            wx.OK | wx.ICON_INFORMATION)
+        del app
+        return False
+
+    msg_box_type = wx.YES | wx.NO | wx.ICON_WARNING
+    result = wx.MessageBox(
+        f'{TOOLSET_NAME} {current_version} needs to update to version {get_latest_version()}. '
+        f'If not, some functions might not work!'
+        f'\nSchedule an update?',
+        'Update information',
+        msg_box_type)
+
+    if result == wx.YES:
+        msg_box_type = wx.OK | wx.ICON_INFORMATION
+        wx.MessageBox(
+            "The update task has been scheduled to be run after you close the current session!",
+            'Update information',
+            msg_box_type)
+        del app
+        return True
+    else:
+        del app
+        return False
+    # return True
 
 
 def is_current_software_latest(current_version: str) -> bool:
@@ -126,6 +128,6 @@ def update_tool_to_lastest_version():
     root.mainloop()
 
 
-def init_tkinter():
+def init_update_manager_ui():
     t1 = threading.Thread(target=update_tool_to_lastest_version)
     t1.start()

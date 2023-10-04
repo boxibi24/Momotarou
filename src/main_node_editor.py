@@ -15,7 +15,7 @@ from libs.constants import NODE_EDITOR_APP_NAME, LOCALAPPDATA
 from libs.p4util import setup_p4_logger
 from ui.NodeEditor.main_ui import initialize_node_editor_project_and_get_update_status, setup_dpg_font, setup_dpg_icon, \
     initialize_dpg
-from core.self_update import update_tool_to_lastest_version, init_tkinter
+from core.self_update import init_update_manager_ui
 
 
 def main():
@@ -180,7 +180,7 @@ def on_terminate_application(queue_listener: QueueListener, is_schedule_update=F
     kill_proc_tree(this_proc)
     if is_schedule_update:
         # update_tool_to_lastest_version()
-        init_tkinter()
+        init_update_manager_ui()
 
 
 def kill_proc_tree(pid):
