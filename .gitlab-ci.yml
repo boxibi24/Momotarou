@@ -54,6 +54,8 @@ build:
     # - dotnet tool install --global wix --version 4.0.2
     - cd WixMSIPackageProject
     - msbuild -Restore ./WixMSIPackageProject.sln /t:Build /p:Configuration=Release /p:Platform=x64 /p:DefineConstants="ProductVersion=${PACKAGE_VERSION}"
+    - cd ./bin/x64/Release/en-US
+    - dir
     - cp ./bin/x64/Release/en-US/${WINDOWS_MSI} ../../bin
     - cd ../dist
     # - zip -r ${WINDOWS_BINARY} *
