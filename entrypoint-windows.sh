@@ -40,12 +40,9 @@ export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
 #mkdir -p /wine/drive_c/indows/system32
 cd src/dependencies
 #cp -r dependencies $W_SYSTEM_DLLS
-cp *.dll "$W_SYSTEM_DLLS"
-cd ..
-#ls
+cp ./*.dll "$W_SYSTEM_DLLS"
 
-cd WixMSIPackageProject
-
+cd ../WixMSIPackageProject
 #ls -la ~/.wine/dosdevices/
 #wine dotnet tool install --global wix --version 4.0.2
 dotnet tool install --global wix --version 4.0.2
