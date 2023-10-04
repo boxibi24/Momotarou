@@ -8,7 +8,6 @@
     <CustomAction Id='AlreadyUpdated' Error='[ProductName] is already installed.' />
     <CustomAction Id='NoDowngrade' Error='A later version of [ProductName] is already installed.' />
     <Feature Id="Main">
-      <ComponentGroupRef Id="AppComponents" />
       <ComponentRef Id="NodeEditorShortcuts"/>
       <ComponentRef Id="ToolsViewerShortcuts"/>
       <ComponentRef Id="ProgramMenuDirNodeEditor"/>
