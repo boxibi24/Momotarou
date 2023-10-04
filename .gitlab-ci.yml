@@ -14,7 +14,7 @@ variables:
   # See https://docs.gitlab.com/ee/user/packages/generic_packages/#publish-a-package-file
   PACKAGE_VERSION: "1.0.1"
   WINDOWS_BINARY: "momotarou_release_v${PACKAGE_VERSION}.zip"
-  WINDOWS_MSI: "momotarou_release_v${PACKAGE_VERSION}.msi"
+  WINDOWS_MSI: "momotarou.msi"
   PACKAGE_REGISTRY_URL: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/releases/${PACKAGE_VERSION}"
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 
@@ -83,7 +83,9 @@ upload:
   script:
     - |
       curl --insecure --header "JOB-TOKEN: ${CI_JOB_TOKEN}" 
-      --upload-file bin/${WINDOWS_BINARY} "${PACKAGE_REGISTRY_URL}/${WINDOWS_BINARY}" 
+      --upload-file bin/${WINDOWS_BINARY} "${PACKAGE_REGISTRY_URL}/${WINDOWS_BINARY}"
+    - |
+      curl --insecure --header "JOB-TOKEN: ${CI_JOB_TOKEN}" 
       --upload-file bin/${WINDOWS_MSI} "${PACKAGE_REGISTRY_URL}/${WINDOWS_MSI}"
     # - |
     #   curl --insecure --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file bin/${WINDOWS_MSI} "${PACKAGE_REGISTRY_URL}/${WINDOWS_MSI}"
