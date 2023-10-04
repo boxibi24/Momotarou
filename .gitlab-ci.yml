@@ -82,10 +82,10 @@ upload:
     - if: $CI_COMMIT_TAG
   script:
     - |
-      curl --insecure --header "JOB-TOKEN: ${CI_JOB_TOKEN}" 
+      curl --insecure --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
       --upload-file bin/${WINDOWS_BINARY} "${PACKAGE_REGISTRY_URL}/${WINDOWS_BINARY}"
     - |
-      curl --insecure --header "JOB-TOKEN: ${CI_JOB_TOKEN}" 
+      curl --insecure --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
       --upload-file bin/${WINDOWS_MSI} "${PACKAGE_REGISTRY_URL}/${WINDOWS_MSI}"
     # - |
     #   curl --insecure --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file bin/${WINDOWS_MSI} "${PACKAGE_REGISTRY_URL}/${WINDOWS_MSI}"
@@ -102,7 +102,7 @@ release:
   script:
     - |
       release-cli create --name "Release ${CI_COMMIT_TAG}" --tag-name ${CI_COMMIT_TAG} \
-        --assets-link "{\"name\":\"${WINDOWS_BINARY}\",\"url\":\"${PACKAGE_REGISTRY_URL}/${WINDOWS_BINARY}\"}"
+        --assets-link "{\"name\":\"${WINDOWS_BINARY}\",\"url\":\"${PACKAGE_REGISTRY_URL}/${WINDOWS_BINARY}\"}" \
         --assets-link "{\"name\":\"${WINDOWS_MSI}\",\"url\":\"${PACKAGE_REGISTRY_URL}/${WINDOWS_MSI}\"}"
 
 pages:
