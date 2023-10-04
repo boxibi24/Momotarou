@@ -1,9 +1,8 @@
 default:
-  image: python:latest
+  image: mcr.microsoft.com/windows-cssc/python3.7.2windows:ltsc2019
 
 stages:
   - build
-  - msiBuild
   - upload
   - release
   - pages
@@ -22,17 +21,18 @@ variables:
 
 build:
   stage: build
-  image:
-    name: cdrx/pyinstaller-windows:python3
-    entrypoint: ['/bin/bash', '-c', 'ln -snf /bin/bash /bin/sh && /bin/bash -c $0']
+  # image:
+  #   name: cdrx/pyinstaller-windows:python3
+  #   entrypoint: ['/bin/bash', '-c', 'ln -snf /bin/bash /bin/sh && /bin/bash -c $0']
   rules:
     - if: $CI_COMMIT_TAG
   before_script:
     - python --version  # For debugging
     - python -m pip install --upgrade pip wheel setuptools attrdict3
+    - pip install -r requirements.txt
     # - python -m pip install pywin32
     # - python -m pip install wxPython==4.1.1
-    - apt-get update -y && apt-get install -y libgl1 zip
+    # - apt-get update -y && apt-get install -y libgl1 zip
   script:
     # - wget --no-check-certificate "https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-18.04/wxPython-4.1.1-cp37-cp37m-linux_x86_64.whl"
     # - ls
@@ -47,37 +47,23 @@ build:
     # - dotnet build ./WixMSIPackageProject.sln --runtime win-x86 --configuration Release -p:ImportByWildcardBeforeSolution=false -p:GenerateSerializationAssemblies=Off
     # - cd ../..
     - mkdir bin
-    - sh entrypoint-windows.sh
-    - cd src/dist
-    - zip -r ${WINDOWS_BINARY} *
-    - ls
+    # - sh entrypoint-windows.sh
+    - cd src
+    - pyinstaller --clean -y --dist ./dist --workpath /tmp NodeEditor.spec
+    - pyinstaller --clean -y --dist ./dist --workpath /tmp ToolsViewer.spec
+    - winget install Microsoft.DotNet.SDK.7
+    - dotnet tool install --global wix --version 4.0.2
+    - cd WixMSIPackageProject
+    - dotnet build ./WixMSIPackageProject.sln --runtime win-x86 --configuration Release -p:ImportByWildcardBeforeSolution=false -p:GenerateSerializationAssemblies=Off -o ../../bin
+    - cd ../dist
+    # - zip -r ${WINDOWS_BINARY} *
+    - powershell Compress-Archive .\ ${WINDOWS_BINARY}
+    - dir
     - cp ${WINDOWS_BINARY} ../../bin
   artifacts:
     paths:
       - bin/
     when: on_success
-
-msiBuild:
-  stage: msiBuild
-  image: 
-    name: mcr.microsoft.com/dotnet/sdk:7.0
-    entrypoint: [""]
-  rules:
-    - if: $CI_COMMIT_TAG
-  # before_script:
-  #   - ls
-  script:
-    # - wget --no-check-certificate "https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-18.04/wxPython-4.1.1-cp37-cp37m-linux_x86_64.whl"
-    - ls
-    # - pip install wxPython-4.1.1-cp37-cp37m-linux_x86_64.whl
-    - cd src/WixMSIPackageProject
-    - ls
-    - dotnet tool install --global wix --version 4.0.2
-    - dotnet build ./WixMSIPackageProject.sln --runtime win-x86 --configuration Release -p:ImportByWildcardBeforeSolution=false -p:GenerateSerializationAssemblies=Off
-  #   paths:
-  #     - bin/
-  #   when: on_success
-
 
 upload:
   stage: upload
