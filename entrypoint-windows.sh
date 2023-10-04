@@ -31,6 +31,16 @@ if [[ "$PYPI_URL" != "https://pypi.python.org/" ]] || \
     cat /wine/drive_c/users/root/pip/pip.ini
 fi
 
+
+echo $WINEARCH
+echo $WINEDEBUG
+echo $WINEPREFIX
+echo $W_DRIVE_C
+echo $W_WINDIR_UNIX
+echo $W_SYSTEM64_DLLS
+echo $W_SYSTEM_DLLS
+echo $W_TMP
+
 wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
 chmod +x ./dotnet-install.sh
 ./dotnet-install.sh --version latest
@@ -40,7 +50,7 @@ export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
 #mkdir -p /wine/drive_c/indows/system32
 cd src/dependencies
 #cp -r dependencies $W_SYSTEM_DLLS
-cp ./*.dll "$W_SYSTEM_DLLS"
+cp ./*.dll "$W_SYSTEM64_DLLS"
 
 cd ../WixMSIPackageProject
 #ls -la ~/.wine/dosdevices/
