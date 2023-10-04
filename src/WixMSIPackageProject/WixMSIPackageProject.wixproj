@@ -1,6 +1,6 @@
 <Project Sdk="WixToolset.Sdk/4.0.2">
   <PropertyGroup>
-    <OutputName>Momotarou_v$(ProductVersion)</OutputName>
+    <OutputName>Momotarou_release_v$(ProductVersion)</OutputName>
     <SuppressValidation>true</SuppressValidation>
   </PropertyGroup>
   <ItemGroup>
