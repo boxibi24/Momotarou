@@ -77,8 +77,11 @@ build:
 upload:
   stage: upload
   # image: curlimages/curl:latest
+  needs: ["build"]
   rules:
     - if: $CI_COMMIT_TAG
+  dependencies:
+    - build
   script:
     - Remove-item alias:curl
     - |
@@ -95,6 +98,7 @@ release:
   # image: registry.gitlab.com/gitlab-org/release-cli:latest
   variables:
     ADDITIONAL_CA_CERT_BUNDLE: $CA_CERT
+  needs: ["upload"]
   rules:
     - if: $CI_COMMIT_TAG
   script:
