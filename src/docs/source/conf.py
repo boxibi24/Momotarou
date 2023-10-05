@@ -85,7 +85,7 @@ html_theme_options = {
     "use_source_button": True,
     "use_repository_button": True,
     "use_download_button": True,
-    "use_issues_button": True,
+    # "use_issues_button": True,
     "use_sidenotes": True,
     "show_toc_level": 2,
     "logo": {

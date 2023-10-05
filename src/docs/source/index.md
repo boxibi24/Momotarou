@@ -1,11 +1,11 @@
 # Welcome to Momotarou's documentation!
 
 ```{toctree}
-:caption: Contents
+:caption: Master page contents
 :maxdepth: 1
 
-usage
-api
+GettingStarted
+NodesReferences
 ```
 
 
@@ -15,7 +15,7 @@ api
 <br />
 <div align="center">
   <a href="https://vngitlab.virtuosgames.com/techart/charactertech/projectsetup/momotarou">
-    <img src="_static/logo_square.svg" alt="Logo" width="80" height="80">
+    <img src="_static/logo_square.png" alt="Logo" width="80" height="80">
   </a>
 
 <h3 align="center">Momotarou</h3>
