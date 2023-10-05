@@ -12,13 +12,10 @@ variables:
   # Package version can only contain numbers (0-9), and dots (.).
   # Must be in the format of X.Y.Z, i.e. should match /\A\d+\.\d+\.\d+\z/ regular expresion.
   # See https://docs.gitlab.com/ee/user/packages/generic_packages/#publish-a-package-file
-  PACKAGE_VERSION: "1.0.1"
   WINDOWS_BINARY: "momotarou_release_v${PACKAGE_VERSION}.zip"
   WINDOWS_MSI: "Momotarou.msi"
   PACKAGE_REGISTRY_URL: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/releases/${PACKAGE_VERSION}"
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
-  CURLEXE: 'C:\Program Files\Git\mingw64\bin\curl.exe'
-  RELEASECLIEXE: 'D:\P4\JAV\Release-CLI\bin\release-cli.exe'
 
 build:
   stage: build
