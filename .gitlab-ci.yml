@@ -83,10 +83,14 @@ upload:
     - build
   script:
     - Remove-item alias:curl
+    # - |
+    #   ${CURLEXE}, '--insecure', '--header', "JOB-TOKEN: ${CI_JOB_TOKEN}", '--upload-file', 'bin/${WINDOWS_BINARY}', "${PACKAGE_REGISTRY_URL}/${WINDOWS_BINARY}"
     - |
-      ${CURLEXE}, '--insecure', '--header', "JOB-TOKEN: ${CI_JOB_TOKEN}", '--upload-file', 'bin/${WINDOWS_BINARY}', "${PACKAGE_REGISTRY_URL}/${WINDOWS_BINARY}"
+      curl.exe --insecure --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file bin/${WINDOWS_BINARY} "${PACKAGE_REGISTRY_URL}/${WINDOWS_BINARY}"
     - |
-      ${CURLEXE}, '--insecure', '--header', "JOB-TOKEN: ${CI_JOB_TOKEN}", '--upload-file', 'bin/${WINDOWS_MSI}', "${PACKAGE_REGISTRY_URL}/${WINDOWS_MSI}"
+      curl.exe --insecure --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file bin/${WINDOWS_MSI} "${PACKAGE_REGISTRY_URL}/${WINDOWS_MSI}"
+    # - |
+    #   ${CURLEXE}, '--insecure', '--header', "JOB-TOKEN: ${CI_JOB_TOKEN}", '--upload-file', 'bin/${WINDOWS_MSI}', "${PACKAGE_REGISTRY_URL}/${WINDOWS_MSI}"
     # - |
     #   curl --insecure --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file bin/${WINDOWS_MSI} "${PACKAGE_REGISTRY_URL}/${WINDOWS_MSI}"
 
