@@ -110,7 +110,7 @@ release:
     - $env:asset1json = $env:asset1 | ConvertTo-Json
     - $env:asset2json = $env:asset2 | ConvertTo-Json
     - |
-      ${RELEASECLIEXE}, 'create', '--name', "Release ${CI_COMMIT_TAG}", '--tag-name', '${CI_COMMIT_TAG}', '--assets-link', '$env:asset1json', '--assets-link', '$env:asset2json'
+      ${RELEASECLIEXE} create --name "Release ${CI_COMMIT_TAG}" --tag-name '${CI_COMMIT_TAG}' --assets-link $env:asset1json --assets-link $env:asset2json
 
 pages:
   stage: pages
