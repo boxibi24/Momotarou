@@ -36,11 +36,11 @@ def initialize_menu_bar(tools_viewer_project, setting_dict: dict):
                 callback=callback_show_about_window,
                 user_data=setting_dict['version']
             )
-            dpg.add_menu_item(
-                tag='Menu_Help_Update',
-                label='Check for update',
-                callback=tools_viewer_project.callback_check_for_update,
-            )
+            # dpg.add_menu_item(
+            #     tag='Menu_Help_Update',
+            #     label='Check for update',
+            #     callback=tools_viewer_project.callback_check_for_update,
+            # )
 
 
 def callback_open_doc_url(sender, app_data, user_data):

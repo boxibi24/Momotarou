@@ -8,6 +8,9 @@ import win32api
 import tkinter as tk
 from tkinter import ttk, PhotoImage
 import threading
+from threading import Thread
+import time
+from pubsub import pub
 
 # Disable SSL warnings
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -20,7 +23,7 @@ class UpdateManager:
         self.parent = parent
         self.window.grab_set()
         w = 350
-        h = 200
+        h = 100
         sw = self.window.winfo_screenwidth()
         sh = self.window.winfo_screenheight()
         x = (sw - w) / 2
@@ -58,6 +61,8 @@ class UpdateManager:
                             self.progressbar['value'] += 4096
             self.button1.config(text='Install', state=tk.NORMAL)
 
+        text = ttk.Label(self.window, text=f"Downloading {TOOLSET_NAME}.msi v{get_latest_version()}, please wait!")
+        text.place(relx=0.5, rely=0.3, anchor=tk.CENTER)
         self.progressbar = ttk.Progressbar(self.window,
                                            orient='horizontal',
                                            length=200,
@@ -67,8 +72,8 @@ class UpdateManager:
         self.progressbar.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
         self.button1 = ttk.Button(self.window, text='Wait!', state=tk.DISABLED, command=install_update)
         self.button1.place(x=-83, relx=1.0, y=-33, rely=1.0)
-        # Disable the [X] button
         self.window.protocol("WM_DELETE_WINDOW", disable_event)
+        print("it got here 2.5")
         self.t1 = threading.Thread(target=start_update_manager)
         self.t1.start()
 
@@ -80,7 +85,7 @@ def is_user_schedule_update_task(current_version: str, is_startup=True) -> bool:
         return False
     elif is_current_software_latest(current_version) and not is_startup:
         wx.MessageBox(
-            f'{TOOLSET_NAME} is already in latest version: {current_version}. '
+            f'{TOOLSET_NAME} is already in latest version: {current_version}. ',
             'Update information',
             wx.OK | wx.ICON_INFORMATION)
         del app
@@ -105,7 +110,6 @@ def is_user_schedule_update_task(current_version: str, is_startup=True) -> bool:
     else:
         del app
         return False
-    # return True
 
 
 def is_current_software_latest(current_version: str) -> bool:
@@ -116,14 +120,25 @@ def is_current_software_latest(current_version: str) -> bool:
 
 def get_latest_version() -> str:
     session = requests.Session()
-    packages_data = requests.get("https://vngitlab.virtuosgames.com/api/v4/projects/110/packages", verify=False).json()
-    return packages_data[-1]['version']
+    try:
+        packages_data = requests.get("https://vngitlab.virtuosgames.com/api/v4/projects/110/packages",
+                                     verify=False).json()
+        return packages_data[-1]['version']
+    except requests.exceptions.ConnectionError:
+        app = wx.App()
+        wx.MessageBox(
+            'Failed to connect to https://vngitlab.virtuosgames.com ! '
+            'Try turning off VPN or troubleshooting your internet connection.',
+            'Update connection error',
+            wx.OK | wx.ICON_ERROR)
+        del app
+        return '1.0.0'
 
 
 def update_tool_to_lastest_version():
     root = tk.Tk()
     root.withdraw()
-    root.title('Update manager')
+    root.title('Update Downloader')
     UpdateManager(root)
     root.mainloop()
 

@@ -136,7 +136,7 @@ class NodeEditor:
         self._init_flag = False
         self.logger.info('**** Loaded main viewport ****')
 
-    def callback_check_for_update(self, sender, app_data, user_data):
+    def callback_check_for_update(self):
         self._check_for_update(is_startup=False)
 
     def _check_for_update(self, is_startup=True):
