@@ -70,7 +70,6 @@ class UpdateManager:
         self.button1 = ttk.Button(self.window, text='Wait!', state=tk.DISABLED, command=install_update)
         self.button1.place(x=-83, relx=1.0, y=-33, rely=1.0)
         self.window.protocol("WM_DELETE_WINDOW", disable_event)
-        print("it got here 2.5")
         self.t1 = threading.Thread(target=start_update_manager)
         self.t1.start()
 
