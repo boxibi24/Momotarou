@@ -15,7 +15,7 @@ from collections import OrderedDict
 from pathlib import Path
 from typing import Tuple
 
-from libs.constants import CACHE_DIR, LAST_SESSIONS_DIR, RECENT_PROJECTS_STORAGE_FILE_PATH
+from libs.constants import CACHE_DIR, LAST_SESSIONS_DIR, RECENT_PROJECTS_STORAGE_FILE_PATH, TOOLS_VIEWER_LOG_DIR
 import subprocess
 
 
@@ -221,6 +221,10 @@ class ToolsViewer:
     def callback_project_open_in_node_editor(self):
         subprocess.Popen(f'../NodeEditor/NodeEditor.exe --project_path "{self.file_path.as_posix()}"')
         self.logger.info(f'**** Opening project {self.project_name} in NodeEditor ****')
+
+    def callback_open_project_log(self):
+        subprocess.Popen(f'notepad "{TOOLS_VIEWER_LOG_DIR}"')
+        self.logger.info(f'**** Opening Tools Viewer project log ****')
 
     def callback_execute_event(self, sender, app_data, user_data):
         event_tag = user_data

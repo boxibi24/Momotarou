@@ -4,7 +4,7 @@ from ui.NodeEditor.menu_bar import initialize_file_dialog, initialize_menu_bar
 from multiprocessing import Queue
 from pathlib import Path
 from libs.constants import NODE_EDITOR_APP_NAME, CACHE_DIR, LAST_SESSIONS_DIR, RECENT_PROJECTS_STORAGE_FILE_PATH, \
-    INTERMEDIATE_DIR, LOCALAPPDATA
+    INTERMEDIATE_DIR, LOCALAPPDATA, NODE_EDITOR_LOG_DIR
 from core.utils import camel_case_split, get_last_project_file_path, json_write_to_file_path
 import shutil
 
@@ -133,7 +133,7 @@ def render_dpg_frame(node_editor_project: NodeEditor):
 
 
 def _update_log_window():
-    with open(LOCALAPPDATA / 'Logs' / 'NodeEditor.log', 'r') as f:
+    with open(NODE_EDITOR_LOG_DIR) as f:
         dpg.configure_item('log', default_value=f.read())
 
 

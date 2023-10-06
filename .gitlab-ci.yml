@@ -48,8 +48,8 @@ build:
     - mkdir bin
     # - sh entrypoint-windows.sh
     - cd src
-    - pyinstaller --clean -y --dist ./dist --workpath /tmp NodeEditor.spec
-    - pyinstaller --clean -y --dist ./dist --workpath /tmp ToolsViewer.spec
+    - pyinstaller --noconsole --clean -y --dist ./dist --workpath /tmp NodeEditor.spec
+    - pyinstaller --noconsole --clean -y --dist ./dist --workpath /tmp ToolsViewer.spec
     - cp -r nodes ./dist/NodeEditor
     - cp -r ../examples ./dist/NodeEditor
     - cp -r nodes ./dist/ToolsViewer
@@ -134,7 +134,7 @@ pages:
     # - apt-get update && apt-get install -y libgl1
     # - python -m pip install --upgrade pip wheel setuptools attrdict3
     - pip install -r requirements.txt
-    # - pip install dill p4python psutil requests urllib3 
+    # - pip install dill p4python psutil requests urllib3
     - pip install sphinx sphinx-book-theme sphinx-autodoc-typehints myst-nb sphinx-thebe
     # - pip install pyinstaller
 

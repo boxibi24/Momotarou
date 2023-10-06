@@ -16,6 +16,11 @@ def initialize_menu_bar(tools_viewer_project, setting_dict: dict):
                 label='Open project in Node Editor',
                 callback=tools_viewer_project.callback_project_open_in_node_editor
             )
+            dpg.add_menu_item(
+                tag='Menu_Open_Project_Log',
+                label='Show log',
+                callback=tools_viewer_project.callback_open_project_log
+            )
         with dpg.menu(label='Help'):
             dpg.add_menu_item(
                 tag='Menu_Help_Documentation',

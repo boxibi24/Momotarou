@@ -26,7 +26,7 @@ from core.utils import create_queueHandler_logger, json_load_from_file_path, jso
 from core.data_loader import refresh_core_data_with_json_dict
 from core.executor import execute_event
 from core.self_update import is_user_schedule_update_task
-from libs.constants import CACHE_DIR, RECENT_PROJECTS_STORAGE_FILE_PATH, LAST_SESSIONS_DIR
+from libs.constants import CACHE_DIR, RECENT_PROJECTS_STORAGE_FILE_PATH, LAST_SESSIONS_DIR, NODE_EDITOR_LOG_DIR
 
 INTERNAL_NODE_CATEGORY = '_internal'
 EVENT_IMPORT_PATH = ''
@@ -822,3 +822,7 @@ class NodeEditor:
         self.callback_project_save(sender)
         subprocess.Popen(f'../ToolsViewer/ToolsViewer.exe --project_path "{project_file_path.as_posix()}"')
         self.logger.info(f'**** Opening project {self.project_name} in ToolsViewer ****')
+
+    def callback_open_project_log(self):
+        subprocess.Popen(f'notepad "{NODE_EDITOR_LOG_DIR}"')
+        self.logger.info(f'**** Opening Node Editor project log ****')

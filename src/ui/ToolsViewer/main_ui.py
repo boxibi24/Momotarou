@@ -3,7 +3,8 @@ from ui.ToolsViewer.tools_viewer_project import ToolsViewer
 from multiprocessing import Queue
 from pathlib import Path
 from ui.ToolsViewer.menu_bar import initialize_menu_bar
-from libs.constants import TOOLS_VIEWER_APP_NAME, RECENT_PROJECTS_STORAGE_FILE_PATH, LAST_SESSIONS_DIR, LOCALAPPDATA
+from libs.constants import TOOLS_VIEWER_APP_NAME, RECENT_PROJECTS_STORAGE_FILE_PATH, LAST_SESSIONS_DIR, LOCALAPPDATA,\
+    TOOLS_VIEWER_LOG_DIR
 from core.utils import camel_case_split, get_last_project_file_path, json_write_to_file_path
 
 
@@ -107,7 +108,7 @@ def render_dpg_frame():
 
 
 def _update_log_window():
-    with open(LOCALAPPDATA / 'Logs' / f'ToolsViewer.log', 'r') as f:
+    with open(TOOLS_VIEWER_LOG_DIR, 'r') as f:
         dpg.configure_item('log', default_value=f.read())
 
 
