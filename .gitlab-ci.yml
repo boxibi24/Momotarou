@@ -48,8 +48,8 @@ build:
     - mkdir bin
     # - sh entrypoint-windows.sh
     - cd src
-    - pyinstaller --noconsole --clean -y --dist ./dist --workpath /tmp NodeEditor.spec
-    - pyinstaller --noconsole --clean -y --dist ./dist --workpath /tmp ToolsViewer.spec
+    - pyinstaller --clean -y --dist ./dist --workpath /tmp NodeEditor.spec
+    - pyinstaller --clean -y --dist ./dist --workpath /tmp ToolsViewer.spec
     - cp -r nodes ./dist/NodeEditor
     - cp -r ../examples ./dist/NodeEditor
     - cp -r nodes ./dist/ToolsViewer
