@@ -4,11 +4,6 @@
   <Upgrade Id='ea8657ca-05af-4381-b3ec-b6e2e4af99e9'>
     <UpgradeVersion OnlyDetect='yes' Property='NEWERFOUND'
       Minimum='$(ProductVersion)' IncludeMinimum='no' />
-    <UpgradeVersion OnlyDetect='yes' Property='SELFFOUND'
-        Minimum='$(ProductVersion)' IncludeMinimum='yes' Maximum='$(ProductVersion)' IncludeMaximum='yes' />
-    <UpgradeVersion OnlyDetect='no' Property='PREVIOUSFOUND'
-        Minimum='1.0.0' IncludeMinimum='yes'
-        Maximum='$(ProductVersion)' IncludeMaximum='no' />
   </Upgrade>
     <CustomAction Id='AlreadyUpdated' Error='[ProductName] is already installed.' />
     <CustomAction Id='NoDowngrade' Error='A later version of [ProductName] is already installed.' />
@@ -38,8 +33,6 @@
     <MediaTemplate EmbedCab="yes" />
     <InstallExecuteSequence>
       <Custom Action="NoDowngrade" After="FindRelatedProducts" Condition="NEWERFOUND"/>
-      <Custom Action='AlreadyUpdated' After='FindRelatedProducts' Condition="SELFFOUND"/>
-      <RemoveExistingProducts Before="InstallInitialize" />
     </InstallExecuteSequence>
   </Package>
 </Wix>
