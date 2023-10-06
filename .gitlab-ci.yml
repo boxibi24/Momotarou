@@ -18,6 +18,8 @@ variables:
 
 build:
   stage: build
+  tags:
+    - pages
   # image:
   #   name: cdrx/pyinstaller-windows:python3
   #   entrypoint: ['/bin/bash', '-c', 'ln -snf /bin/bash /bin/sh && /bin/bash -c $0']
@@ -75,6 +77,8 @@ build:
 
 upload:
   stage: upload
+  tags:
+    - pages
   # image: curlimages/curl:latest
   needs: ["build"]
   rules:
@@ -98,6 +102,8 @@ release:
   # Caution, as of 2021-02-02 these assets links require a login, see:
   # https://gitlab.com/gitlab-org/gitlab/-/issues/299384
   stage: release
+  tags:
+    - pages
   # image: registry.gitlab.com/gitlab-org/release-cli:latest
   variables:
     ADDITIONAL_CA_CERT_BUNDLE: $CA_CERT
@@ -114,6 +120,8 @@ release:
 
 pages:
   stage: pages
+  tags:
+    - pages
   cache:
     paths:
       - .cache/pip
