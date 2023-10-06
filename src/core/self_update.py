@@ -8,9 +8,6 @@ import win32api
 import tkinter as tk
 from tkinter import ttk, PhotoImage
 import threading
-from threading import Thread
-import time
-from pubsub import pub
 
 # Disable SSL warnings
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
