@@ -235,7 +235,6 @@ class BaseNode:
             if self.pin_dict:
                 # First check node type to add common pins
                 if self.node_type & NodeTypeFlag.Pure:
-                    # TODO: change styling to Green background for example (pure functions in UE)
                     pass
                 # For Event pin, need to explicitly define PinEvent with special callback
                 if self.node_type & NodeTypeFlag.Event:

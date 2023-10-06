@@ -221,6 +221,7 @@ def initialize_menu_bar(node_editor_project, setting_dict: dict):
                 callback=callback_show_about_window,
                 user_data=setting_dict['version']
             )
+            # TODO: add check for update button for NE
             # dpg.add_menu_item(
             #     tag='Menu_Help_Update',
             #     label='Check for update',

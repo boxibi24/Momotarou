@@ -41,6 +41,7 @@ def initialize_menu_bar(tools_viewer_project, setting_dict: dict):
                 callback=callback_show_about_window,
                 user_data=setting_dict['version']
             )
+            # TODO: add check for update button for TV
             # dpg.add_menu_item(
             #     tag='Menu_Help_Update',
             #     label='Check for update',

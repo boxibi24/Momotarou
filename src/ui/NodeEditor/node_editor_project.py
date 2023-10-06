@@ -315,7 +315,6 @@ class NodeEditor:
             if not exposed_var_info['is_exposed'][0]:
                 continue
             exposed_var_name = exposed_var_info['name'][0]
-            # TODO: double check to reduce this code
             user_input_value = dpg_get_value(
                 self.current_node_editor_instance.var_dict[exposed_var_tag]['user_input_box_tag'])
             exposed_var_dict.update({exposed_var_name: user_input_value})
@@ -702,7 +701,6 @@ class NodeEditor:
         # shutil.rmtree(CACHE_DIR)
 
     def callback_project_save(self, sender):
-        # TODO:Cache and default project folder
         # If project is still temp, prompt to save project as another location
         if self.project_folder_path == CACHE_DIR / self.project_name:
             return callback_project_save_as()
