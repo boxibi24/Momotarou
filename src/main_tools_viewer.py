@@ -128,7 +128,9 @@ def _set_logger_level_on_debug_mode(logger: Logger, is_debug_mode: bool):
 
 def _get_log_output_dir(logger_name: str) -> str:
     log_folder = LOCALAPPDATA / 'Logs'
-    if not os.path.exists(log_folder):
+    if not LOCALAPPDATA.exists():
+        os.mkdir(LOCALAPPDATA)
+    if not log_folder.exists():
         os.mkdir(log_folder)
     log_dir = log_folder / f'{logger_name}.log'
     return log_dir.as_posix()
