@@ -1,4 +1,4 @@
-from tkinter import Tk, filedialog
+from tkinter import Tk, filedialog, PhotoImage
 import dearpygui.dearpygui as dpg
 from pathlib import Path
 
@@ -6,6 +6,8 @@ from pathlib import Path
 def tkinter_file_dialog() -> Path:
     root = Tk()
     root.withdraw()  # Hide the main tkinter window
+    icon_photo = PhotoImage(file='icons/logo_square.png')
+    root.iconphoto(False, icon_photo)
     file_path = filedialog.askopenfilename(title='Open Project',
                                            filetypes=[('MPROJECT Files', '*.mproject')],
                                            initialdir=Path(__file__).parent.parent.parent)
