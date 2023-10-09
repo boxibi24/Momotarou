@@ -122,10 +122,12 @@ pages:
   stage: pages
   tags:
     - pages
-  cache:
-    paths:
-      - .cache/pip
-      - venv/
+  rules:
+    - if: $CI_COMMIT_TAG
+  # cache:
+  #   paths:
+  #     - .cache/pip
+  #     - venv/
   before_script:
     - python --version  # For debugging
     # - pip install virtualenv
@@ -145,6 +147,4 @@ pages:
   artifacts:
     paths:
       - public
-  rules:
-    - if: $CI_COMMIT_TAG
 
