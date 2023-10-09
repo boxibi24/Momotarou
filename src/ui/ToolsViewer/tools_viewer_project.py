@@ -138,7 +138,11 @@ class ToolsViewer:
         self.tab_dict.pop(tab_name)
 
     def _batch_open_tools_in_project(self, project_file_path: Path, default_opening_tab_name=''):
-        project_dict = json_load_from_file_path(project_file_path)
+        project_dict = {}
+        try:
+            project_dict = json_load_from_file_path(project_file_path)
+        except IndexError:
+            self.logger.exception("Could not open project due to error: ")
         for tool_name, tool_relative_path in project_dict.items():
             tool_abs_path = Path(project_file_path).parent / tool_relative_path
             self.current_tab_name = tool_name

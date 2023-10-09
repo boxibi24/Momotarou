@@ -8,6 +8,7 @@ from core.classes.pin import *
 def get_pin_class(pin_type):
     """
     Get pin class that corresponds to pin_type
+
     :param enumerate pin_type: pin_type from pin enumeration
     :return: pin class
     """
@@ -165,6 +166,7 @@ class BaseNode:
     def construct_pin(self, pin_type, label='', callback=None):
         """
         Construct pin
+
         :param pin_type: type of the pin
         :param label: name of the pin (uuid is internally assigned)
         :param callback: callback function on pin's value changed
@@ -218,6 +220,7 @@ class BaseNode:
     def initialize_node(self, parent, label, pos=None):
         """
         Construct elements in current node instance
+
         :param parent: parent of the node, typically the Node Editor
         :param label: label of the node
         :param pos: spawn position

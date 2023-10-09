@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.abspath('../..'))
 project = 'Momotarou'
 copyright = '2023, Tu Nguyen'
 author = 'Tu Nguyen'
-release = '0.0.1b'
+release = '1.0.4'
 
 master_doc = "index"
 
@@ -102,7 +102,7 @@ html_theme_options = {
     },
 }
 html_logo = "_static/RUT_wide.svg"
-html_title = "Riot Universal Tool"
+html_title = "Momotarou"
 html_copy_source = True
 
 html_favicon = "_static/logo_square.svg"

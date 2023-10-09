@@ -618,7 +618,11 @@ class NodeEditor:
         self.clean_splitter_items()
 
     def _batch_import_tools_to_project(self, project_file_path: Path, default_opening_tab_name=''):
-        project_dict = json_load_from_file_path(project_file_path)
+        project_dict = {}
+        try:
+            project_dict = json_load_from_file_path(project_file_path)
+        except IndexError:
+            self.logger.exception("Could not open project due to error: ")
         i = 0
         _first_imported_node_editor_instance = None
         _first_tab_id = 0
