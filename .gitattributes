@@ -9,7 +9,6 @@
 *.pyi    text diff=python
 
 # Binary files
-# ============
 *.db     binary
 *.p      binary
 *.pkl    binary
@@ -17,11 +16,10 @@
 *.pyc    binary export-ignore
 *.pyo    binary export-ignore
 *.pyd    binary
-
 # Jupyter notebook
 *.ipynb  text
-
 # Note: .db, .p, and .pkl files are associated
 # with the python modules ``pickle``, ``dbm.*``,
 # ``shelve``, ``marshal``, ``anydbm``, & ``bsddb``
 # (among others).
+*.whl filter=lfs diff=lfs merge=lfs -text
