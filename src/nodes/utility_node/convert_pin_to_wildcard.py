@@ -16,4 +16,4 @@ class Node(BaseNode):
 
     @staticmethod
     def run(internal_data_dict):
-        internal_data_dict['Pin to convert'] = internal_data_dict['WildCard in']
+        internal_data_dict['WildCard out'] = internal_data_dict['Pin to convert']
