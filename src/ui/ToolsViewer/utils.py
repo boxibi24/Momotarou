@@ -11,6 +11,7 @@ def tkinter_file_dialog() -> Path:
     file_path = filedialog.askopenfilename(title='Open Project',
                                            filetypes=[('MPROJECT Files', '*.mproject')],
                                            initialdir=Path(__file__).parent.parent.parent)
+    root.destroy()
     return Path(file_path)
 
 

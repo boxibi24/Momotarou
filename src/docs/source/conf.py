@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.abspath('../..'))
 project = 'Momotarou'
 copyright = '2023, Tu Nguyen'
 author = 'Tu Nguyen'
-release = '1.0.5'
+release = '1.0.6'
 
 master_doc = "index"
 
